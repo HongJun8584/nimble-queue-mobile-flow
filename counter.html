@@ -13,8 +13,28 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-cyan-100 min-h-screen">
+    <!-- PIN Login Screen -->
+    <div id="pinScreen" class="min-h-screen flex flex-col justify-center items-center px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center">
+            <h1 class="text-2xl font-bold text-gray-800 mb-4">🎯 Counter Access</h1>
+            <p class="text-gray-600 mb-6">Enter PIN to access counter panel</p>
+            
+            <input type="password" id="pinInput" class="w-full border border-gray-300 p-3 rounded-lg text-center text-xl tracking-widest mb-4" placeholder="0000" maxlength="4">
+            <p id="pinError" class="text-red-500 text-sm text-center mb-4 hidden">Incorrect PIN. Please try again.</p>
+            
+            <div class="space-y-2">
+                <button id="pinSubmit" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
+                    Enter Counter Panel
+                </button>
+                <button id="pinCancel" class="w-full py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-all duration-300">
+                    Back to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Hamburger Menu -->
-    <div id="hamburgerMenu" class="fixed top-4 right-4 z-50">
+    <div id="hamburgerMenu" class="fixed top-4 right-4 z-50 hidden">
         <button id="menuToggle" class="bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
             <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -23,22 +43,8 @@
         
         <div id="menuPanel" class="absolute top-16 right-0 bg-white rounded-xl shadow-xl p-4 w-48 hidden">
             <a href="./index.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🏠 Home</a>
-            <button id="adminLink" class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">⚙️ Admin</button>
-            <button class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg bg-purple-50">🎯 Counter</button>
-        </div>
-    </div>
-
-    <!-- PIN Modal -->
-    <div id="pinModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-6 mx-4 max-w-sm w-full">
-            <h3 class="text-xl font-bold text-center mb-4">Counter Access</h3>
-            <p class="text-gray-600 text-center mb-4">Enter PIN to access counter panel</p>
-            <input type="password" id="pinInput" class="w-full border border-gray-300 p-3 rounded-lg text-center text-xl tracking-widest" placeholder="0000" maxlength="4">
-            <p id="pinError" class="text-red-500 text-sm text-center mt-2 hidden">Incorrect PIN. Please try again.</p>
-            <div class="flex gap-2 mt-4">
-                <button id="pinCancel" class="flex-1 py-2 border border-gray-300 rounded-lg text-gray-600">Cancel</button>
-                <button id="pinSubmit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Submit</button>
-            </div>
+            <a href="./admin.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">⚙️ Admin</a>
+            <a href="./counter.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg bg-purple-50">🎯 Counter</a>
         </div>
     </div>
 
@@ -120,17 +126,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Queue Joy - Counter panel loaded');
             
-            // Initialize PIN modal
-            initializePinModal();
-            
             // Check if already authenticated
             if (sessionStorage.getItem('counterAuth') === 'true') {
                 showMainContent();
+            } else {
+                initializePinScreen();
             }
         });
 
-        function initializePinModal() {
-            const pinModal = document.getElementById('pinModal');
+        function initializePinScreen() {
             const pinInput = document.getElementById('pinInput');
             const pinSubmit = document.getElementById('pinSubmit');
             const pinCancel = document.getElementById('pinCancel');
@@ -140,7 +144,6 @@
                 const pin = pinInput.value;
                 if (pin === '0108') {
                     sessionStorage.setItem('counterAuth', 'true');
-                    pinModal.classList.add('hidden');
                     showMainContent();
                 } else {
                     pinError.classList.remove('hidden');
@@ -163,7 +166,9 @@
         }
 
         function showMainContent() {
+            document.getElementById('pinScreen').classList.add('hidden');
             document.getElementById('mainContent').classList.remove('hidden');
+            document.getElementById('hamburgerMenu').classList.remove('hidden');
             
             // Initialize menu
             initializeNavigation();
@@ -228,16 +233,8 @@
             .then((result) => {
                 if (result.committed) {
                     const newNumber = result.snapshot.val();
-                    
-                    // Log to analytics
-                    const timestamp = Date.now();
                     const prefix = localStorage.getItem('queuePrefix') || 'A';
                     const queueId = prefix + newNumber;
-                    
-                    firebase.database().ref(`analytics/${today}/${queueId}`).set({
-                        calledTime: timestamp,
-                        waitTimeMinutes: calculateWaitTime(queueId)
-                    });
                     
                     statusMsg.textContent = `✅ Called ${queueId}`;
                     statusMsg.classList.remove('hidden');
@@ -317,16 +314,6 @@
                 statusMsg.classList.add('hidden');
                 errorMsg.classList.add('hidden');
             }, 3000);
-        }
-
-        function calculateWaitTime(queueId) {
-            // Simple wait time calculation - in real implementation, 
-            // you'd calculate based on when the number was issued
-            const suffix = parseInt(queueId.substring(1));
-            const currentTime = Date.now();
-            
-            // Assume average of 3 minutes per customer
-            return 3;
         }
     </script>
 </body>

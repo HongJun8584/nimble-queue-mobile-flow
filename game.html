@@ -31,21 +31,8 @@
             <a href="./index.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🏠 Home</a>
             <a href="./status.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">📊 Status</a>
             <a href="./game.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg bg-purple-50">🎮 Game</a>
-            <button id="adminLink" class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">⚙️ Admin</button>
-            <button id="counterLink" class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🎯 Counter</button>
-        </div>
-    </div>
-
-    <!-- PIN Modal -->
-    <div id="pinModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-xl p-6 mx-4 max-w-sm w-full">
-            <h3 class="text-xl font-bold text-center mb-4">Enter PIN</h3>
-            <input type="password" id="pinInput" class="w-full border border-gray-300 p-3 rounded-lg text-center text-xl tracking-widest" placeholder="0000" maxlength="4">
-            <p id="pinError" class="text-red-500 text-sm text-center mt-2 hidden">Incorrect PIN. Please try again.</p>
-            <div class="flex gap-2 mt-4">
-                <button id="pinCancel" class="flex-1 py-2 border border-gray-300 rounded-lg text-gray-600">Cancel</button>
-                <button id="pinSubmit" class="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Submit</button>
-            </div>
+            <a href="./admin.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">⚙️ Admin</a>
+            <a href="./counter.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🎯 Counter</a>
         </div>
     </div>
 
@@ -83,15 +70,6 @@
             <!-- Game Board -->
             <div id="gameBoard" class="grid grid-cols-4 gap-2 mb-6">
                 <!-- Cards will be generated here -->
-            </div>
-
-            <!-- Ad Banner -->
-            <div id="adBanner" class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4 mb-4 text-center">
-                <img id="adImage" src="" alt="Advertisement" class="w-full h-24 object-cover rounded-lg hidden">
-                <div id="defaultAd" class="text-sm text-gray-600">
-                    <p class="font-semibold">🎯 Queue Joy</p>
-                    <p>Making waiting enjoyable!</p>
-                </div>
             </div>
 
             <!-- Action Buttons -->
@@ -153,9 +131,6 @@
             // Set queue info
             document.getElementById('yourNumber').textContent = queueId;
             
-            // Load ad
-            loadAdvertisement();
-            
             // Start live queue updates
             startQueueUpdates();
             
@@ -168,17 +143,6 @@
                 window.location.href = './status.html';
             });
         });
-
-        function loadAdvertisement() {
-            firebase.database().ref('settings/adImage').once('value', (snapshot) => {
-                const adImage = snapshot.val();
-                if (adImage) {
-                    document.getElementById('adImage').src = adImage;
-                    document.getElementById('adImage').classList.remove('hidden');
-                    document.getElementById('defaultAd').classList.add('hidden');
-                }
-            });
-        }
 
         function startQueueUpdates() {
             const today = new Date().toISOString().split('T')[0];

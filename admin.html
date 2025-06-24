@@ -14,8 +14,28 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+    <!-- PIN Login Screen -->
+    <div id="pinScreen" class="min-h-screen flex flex-col justify-center items-center px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center">
+            <h1 class="text-2xl font-bold text-gray-800 mb-4">🔐 Admin Access</h1>
+            <p class="text-gray-600 mb-6">Enter PIN to access admin panel</p>
+            
+            <input type="password" id="pinInput" class="w-full border border-gray-300 p-3 rounded-lg text-center text-xl tracking-widest mb-4" placeholder="0000" maxlength="4">
+            <p id="pinError" class="text-red-500 text-sm text-center mb-4 hidden">Incorrect PIN. Please try again.</p>
+            
+            <div class="space-y-2">
+                <button id="pinSubmit" class="w-full py-3 bg-purple-600 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
+                    Enter Admin Panel
+                </button>
+                <button id="pinCancel" class="w-full py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-all duration-300">
+                    Back to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Hamburger Menu -->
-    <div id="hamburgerMenu" class="fixed top-4 right-4 z-50">
+    <div id="hamburgerMenu" class="fixed top-4 right-4 z-50 hidden">
         <button id="menuToggle" class="bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
             <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -24,22 +44,8 @@
         
         <div id="menuPanel" class="absolute top-16 right-0 bg-white rounded-xl shadow-xl p-4 w-48 hidden">
             <a href="./index.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🏠 Home</a>
-            <button class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg bg-purple-50">⚙️ Admin</button>
-            <button id="counterLink" class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🎯 Counter</button>
-        </div>
-    </div>
-
-    <!-- PIN Modal -->
-    <div id="pinModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-6 mx-4 max-w-sm w-full">
-            <h3 class="text-xl font-bold text-center mb-4">Admin Access</h3>
-            <p class="text-gray-600 text-center mb-4">Enter PIN to access admin panel</p>
-            <input type="password" id="pinInput" class="w-full border border-gray-300 p-3 rounded-lg text-center text-xl tracking-widest" placeholder="0000" maxlength="4">
-            <p id="pinError" class="text-red-500 text-sm text-center mt-2 hidden">Incorrect PIN. Please try again.</p>
-            <div class="flex gap-2 mt-4">
-                <button id="pinCancel" class="flex-1 py-2 border border-gray-300 rounded-lg text-gray-600">Cancel</button>
-                <button id="pinSubmit" class="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Submit</button>
-            </div>
+            <a href="./admin.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg bg-purple-50">⚙️ Admin</a>
+            <a href="./counter.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🎯 Counter</a>
         </div>
     </div>
 
@@ -83,31 +89,12 @@
                         </div>
                     </div>
 
-                    <!-- Advertisement Upload -->
-                    <div class="mb-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">📢 Advertisement</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <input type="file" id="adUpload" accept="image/*" class="w-full border border-gray-300 p-3 rounded-lg">
-                            </div>
-                            <div id="adPreview" class="hidden bg-gray-50 rounded-lg p-4">
-                                <img id="previewImage" src="" alt="Ad Preview" class="w-full h-32 object-cover rounded-lg">
-                            </div>
-                            <button id="uploadAdBtn" class="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
-                                📤 Upload Advertisement
-                            </button>
-                        </div>
-                    </div>
-
                     <!-- Reset Tools -->
                     <div class="mb-6">
                         <h3 class="text-lg font-bold text-gray-800 mb-4">🔄 Reset Tools</h3>
                         <div class="space-y-3">
                             <button id="resetQueueBtn" class="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
                                 🗑️ Reset Today's Queue
-                            </button>
-                            <button id="clearAnalyticsBtn" class="w-full py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-all duration-300">
-                                🧹 Clear Analytics
                             </button>
                         </div>
                     </div>
@@ -121,37 +108,13 @@
                     <div class="grid grid-cols-2 gap-4 mb-6">
                         <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 text-center">
                             <p class="text-sm text-gray-600">Today Served</p>
-                            <p id="todayServed" class="text-2xl font-bold text-green-600">23</p>
+                            <p id="todayServed" class="text-2xl font-bold text-green-600">0</p>
                         </div>
                         <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4 text-center">
-                            <p class="text-sm text-gray-600">Avg Wait</p>
-                            <p id="avgWait" class="text-2xl font-bold text-blue-600">8m</p>
+                            <p class="text-sm text-gray-600">In Queue</p>
+                            <p id="inQueue" class="text-2xl font-bold text-blue-600">0</p>
                         </div>
                     </div>
-
-                    <!-- Performance Metrics -->
-                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                        <h4 class="font-semibold text-gray-700 mb-3">Performance Metrics</h4>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between">
-                                <span>Fastest Served:</span>
-                                <span id="fastestServed" class="font-semibold">2m</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Slowest Served:</span>
-                                <span id="slowestServed" class="font-semibold">15m</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Peak Time:</span>
-                                <span id="peakTime" class="font-semibold">2:00 PM</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Export Button -->
-                    <button id="exportBtn" class="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
-                        📥 Export to CSV
-                    </button>
                 </div>
             </div>
 
@@ -178,17 +141,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('Queue Joy - Admin panel loaded');
             
-            // Initialize PIN modal
-            initializePinModal();
-            
             // Check if already authenticated
             if (sessionStorage.getItem('adminAuth') === 'true') {
                 showMainContent();
+            } else {
+                initializePinScreen();
             }
         });
 
-        function initializePinModal() {
-            const pinModal = document.getElementById('pinModal');
+        function initializePinScreen() {
             const pinInput = document.getElementById('pinInput');
             const pinSubmit = document.getElementById('pinSubmit');
             const pinCancel = document.getElementById('pinCancel');
@@ -198,7 +159,6 @@
                 const pin = pinInput.value;
                 if (pin === '0108') {
                     sessionStorage.setItem('adminAuth', 'true');
-                    pinModal.classList.add('hidden');
                     showMainContent();
                 } else {
                     pinError.classList.remove('hidden');
@@ -221,7 +181,9 @@
         }
 
         function showMainContent() {
+            document.getElementById('pinScreen').classList.add('hidden');
             document.getElementById('mainContent').classList.remove('hidden');
+            document.getElementById('hamburgerMenu').classList.remove('hidden');
             
             // Initialize menu
             initializeNavigation();
@@ -243,15 +205,9 @@
             
             // Settings
             document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
-            document.getElementById('uploadAdBtn').addEventListener('click', uploadAdvertisement);
-            document.getElementById('adUpload').addEventListener('change', previewAd);
             
             // Reset tools
             document.getElementById('resetQueueBtn').addEventListener('click', resetQueue);
-            document.getElementById('clearAnalyticsBtn').addEventListener('click', clearAnalytics);
-            
-            // Analytics
-            document.getElementById('exportBtn').addEventListener('click', exportAnalytics);
         }
 
         function switchTab(tab) {
@@ -303,72 +259,22 @@
                 });
         }
 
-        function previewAd(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('previewImage').src = e.target.result;
-                    document.getElementById('adPreview').classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function uploadAdvertisement() {
-            const fileInput = document.getElementById('adUpload');
-            const file = fileInput.files[0];
-            const statusMsg = document.getElementById('statusMsg');
-            
-            if (!file) {
-                showError('Please select an image file');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const base64Data = e.target.result;
-                
-                firebase.database().ref('settings/adImage').set(base64Data)
-                    .then(() => {
-                        statusMsg.textContent = '✅ Advertisement uploaded successfully!';
-                        statusMsg.classList.remove('hidden');
-                        setTimeout(() => statusMsg.classList.add('hidden'), 3000);
-                    })
-                    .catch((error) => {
-                        console.error('Error uploading ad:', error);
-                        showError('Failed to upload advertisement');
-                    });
-            };
-            reader.readAsDataURL(file);
-        }
-
         function loadAnalytics() {
             const today = new Date().toISOString().split('T')[0];
             
-            // Load today's analytics
-            firebase.database().ref(`analytics/${today}`).once('value', (snapshot) => {
+            // Load today's queue data
+            firebase.database().ref(`queues/${today}`).once('value', (snapshot) => {
                 const data = snapshot.val() || {};
-                const entries = Object.values(data);
+                const numbers = data.numbers || {};
+                const currentSuffix = data.currentNumberSuffix || 100;
+                const lastSuffix = data.lastSuffix || 100;
                 
-                document.getElementById('todayServed').textContent = entries.length;
+                // Calculate served and in queue
+                const served = Math.max(0, currentSuffix - 100);
+                const inQueue = Math.max(0, lastSuffix - currentSuffix);
                 
-                if (entries.length > 0) {
-                    const waitTimes = entries.map(entry => entry.waitTimeMinutes || 0);
-                    const avgWait = Math.round(waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length);
-                    const fastestWait = Math.min(...waitTimes);
-                    const slowestWait = Math.max(...waitTimes);
-                    
-                    document.getElementById('avgWait').textContent = avgWait + 'm';
-                    document.getElementById('fastestServed').textContent = fastestWait + 'm';
-                    document.getElementById('slowestServed').textContent = slowestWait + 'm';
-                } else {
-                    document.getElementById('avgWait').textContent = '0m';
-                    document.getElementById('fastestServed').textContent = '0m';
-                    document.getElementById('slowestServed').textContent = '0m';
-                }
-                
-                document.getElementById('peakTime').textContent = '2:00 PM'; // Mock data
+                document.getElementById('todayServed').textContent = served;
+                document.getElementById('inQueue').textContent = inQueue;
             });
         }
 
@@ -384,66 +290,13 @@
                 .then(() => {
                     statusMsg.textContent = '✅ Queue reset successfully!';
                     statusMsg.classList.remove('hidden');
+                    loadAnalytics(); // Refresh analytics
                     setTimeout(() => statusMsg.classList.add('hidden'), 3000);
                 })
                 .catch((error) => {
                     console.error('Error resetting queue:', error);
                     showError('Failed to reset queue');
                 });
-        }
-
-        function clearAnalytics() {
-            if (!confirm('Are you sure you want to clear all analytics data? This cannot be undone.')) {
-                return;
-            }
-            
-            const statusMsg = document.getElementById('statusMsg');
-            
-            firebase.database().ref('analytics').remove()
-                .then(() => {
-                    statusMsg.textContent = '✅ Analytics cleared successfully!';
-                    statusMsg.classList.remove('hidden');
-                    loadAnalytics(); // Refresh display
-                    setTimeout(() => statusMsg.classList.add('hidden'), 3000);
-                })
-                .catch((error) => {
-                    console.error('Error clearing analytics:', error);
-                    showError('Failed to clear analytics');
-                });
-        }
-
-        function exportAnalytics() {
-            const today = new Date().toISOString().split('T')[0];
-            
-            firebase.database().ref(`analytics/${today}`).once('value', (snapshot) => {
-                const data = snapshot.val() || {};
-                
-                // Convert to CSV
-                const headers = ['Queue ID', 'Called Time', 'Wait Time (minutes)'];
-                const rows = Object.entries(data).map(([queueId, entry]) => [
-                    queueId,
-                    new Date(entry.calledTime).toLocaleString(),
-                    entry.waitTimeMinutes
-                ]);
-                
-                const csvContent = [headers, ...rows]
-                    .map(row => row.join(','))
-                    .join('\n');
-                
-                // Download file
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `queue-analytics-${today}.csv`;
-                a.click();
-                window.URL.revokeObjectURL(url);
-                
-                const statusMsg = document.getElementById('statusMsg');
-                statusMsg.textContent = '✅ Analytics exported successfully!';
-                statusMsg.classList.remove('hidden');
-                setTimeout(() => statusMsg.classList.add('hidden'), 3000);
-            });
         }
 
         function showError(message) {
