@@ -1,24 +1,182 @@
+
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>nimble-queue-mobile-flow</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Joy - Get Your Number</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .mascot-bounce { animation: bounce 2s infinite; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+    <!-- Hamburger Menu -->
+    <div id="hamburgerMenu" class="fixed top-4 right-4 z-50">
+        <button id="menuToggle" class="bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        
+        <div id="menuPanel" class="absolute top-16 right-0 bg-white rounded-xl shadow-xl p-4 w-48 hidden">
+            <a href="./index.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🏠 Home</a>
+            <a href="./status.html" id="statusLink" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg hidden">📊 Status</a>
+            <a href="./game.html" id="gameLink" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg hidden">🎮 Game</a>
+            <button id="adminLink" class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">⚙️ Admin</button>
+            <button id="counterLink" class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🎯 Counter</button>
+        </div>
+    </div>
 
-    <meta property="og:title" content="nimble-queue-mobile-flow" />
-    <meta property="og:description" content="Lovable Generated Project" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <!-- PIN Modal -->
+    <div id="pinModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 mx-4 max-w-sm w-full">
+            <h3 class="text-xl font-bold text-center mb-4">Enter PIN</h3>
+            <input type="password" id="pinInput" class="w-full border border-gray-300 p-3 rounded-lg text-center text-xl tracking-widest" placeholder="0000" maxlength="4">
+            <p id="pinError" class="text-red-500 text-sm text-center mt-2 hidden">Incorrect PIN. Please try again.</p>
+            <div class="flex gap-2 mt-4">
+                <button id="pinCancel" class="flex-1 py-2 border border-gray-300 rounded-lg text-gray-600">Cancel</button>
+                <button id="pinSubmit" class="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Submit</button>
+            </div>
+        </div>
+    </div>
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
+    <!-- Main Content -->
+    <div class="min-h-screen flex flex-col justify-center items-center px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center">
+            <!-- Logo/Mascot -->
+            <div class="mb-6">
+                <div class="w-24 h-24 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full mx-auto flex items-center justify-center text-4xl mascot-bounce">
+                    🎫
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800 mt-4">Queue Joy</h1>
+                <p class="text-gray-600 mt-2">Skip the line, enjoy the wait!</p>
+            </div>
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+            <!-- Current Queue Status -->
+            <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 mb-6">
+                <p class="text-sm text-gray-600">Now Serving</p>
+                <p id="currentServing" class="text-2xl font-bold text-purple-600">A101</p>
+                <p class="text-xs text-gray-500 mt-1">Updated live</p>
+            </div>
+
+            <!-- Get Number Button -->
+            <button id="getNumberBtn" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300 mb-4">
+                <span class="text-lg">🎯 Get My Number</span>
+            </button>
+
+            <!-- Status Messages -->
+            <p id="statusMsg" class="text-sm text-green-600 hidden mt-2">✅ Number generated successfully!</p>
+            <p id="errorMsg" class="text-sm text-red-500 hidden mt-2">❌ Something went wrong. Please try again.</p>
+
+            <!-- Queue Info -->
+            <div class="mt-6 text-xs text-gray-500">
+                <p>📱 Mobile-optimized experience</p>
+                <p>🎮 Play games while waiting</p>
+                <p>📊 Real-time queue updates</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="./js/firebase-config.js"></script>
+    
+    <!-- Navigation Script -->
+    <script src="./js/navigation.js"></script>
+    
+    <!-- Main Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Queue Joy - Main page loaded');
+            
+            // Initialize menu
+            initializeNavigation();
+            
+            // Load current serving number
+            loadCurrentServing();
+            
+            // Get number button
+            document.getElementById('getNumberBtn').addEventListener('click', generateQueueNumber);
+        });
+
+        function loadCurrentServing() {
+            const today = new Date().toISOString().split('T')[0];
+            const currentServingRef = firebase.database().ref(`queues/${today}/currentNumberSuffix`);
+            
+            currentServingRef.on('value', (snapshot) => {
+                const suffix = snapshot.val() || 100;
+                const prefix = localStorage.getItem('queuePrefix') || 'A';
+                document.getElementById('currentServing').textContent = prefix + suffix;
+            });
+        }
+
+        function generateQueueNumber() {
+            console.log('Generating queue number...');
+            const button = document.getElementById('getNumberBtn');
+            const statusMsg = document.getElementById('statusMsg');
+            const errorMsg = document.getElementById('errorMsg');
+            
+            // Show loading state
+            button.innerHTML = '<span class="text-lg">🔄 Generating...</span>';
+            button.disabled = true;
+            
+            const today = new Date().toISOString().split('T')[0];
+            const timestamp = Date.now();
+            
+            // Get current settings
+            firebase.database().ref('settings/queueFormat').once('value', (snapshot) => {
+                const settings = snapshot.val() || { prefix: 'A', start: 100 };
+                const prefix = settings.prefix;
+                
+                // Get last number
+                firebase.database().ref(`queues/${today}/lastSuffix`).once('value', (lastSnapshot) => {
+                    const lastSuffix = lastSnapshot.val() || (settings.start - 1);
+                    const newSuffix = lastSuffix + 1;
+                    const queueId = prefix + newSuffix;
+                    
+                    // Save to Firebase
+                    const updates = {};
+                    updates[`queues/${today}/numbers/${queueId}`] = {
+                        status: 'waiting',
+                        timestamp: timestamp
+                    };
+                    updates[`queues/${today}/lastSuffix`] = newSuffix;
+                    
+                    firebase.database().ref().update(updates)
+                        .then(() => {
+                            // Save to localStorage
+                            localStorage.setItem('queueId', queueId);
+                            localStorage.setItem('queueTimestamp', timestamp);
+                            localStorage.setItem('queuePrefix', prefix);
+                            
+                            // Show success
+                            statusMsg.textContent = `✅ Your number is ${queueId}!`;
+                            statusMsg.classList.remove('hidden');
+                            errorMsg.classList.add('hidden');
+                            
+                            // Redirect after delay
+                            setTimeout(() => {
+                                window.location.href = './status.html';
+                            }, 1500);
+                        })
+                        .catch((error) => {
+                            console.error('Error generating number:', error);
+                            errorMsg.classList.remove('hidden');
+                            statusMsg.classList.add('hidden');
+                            
+                            // Reset button
+                            button.innerHTML = '<span class="text-lg">🎯 Get My Number</span>';
+                            button.disabled = false;
+                        });
+                });
+            });
+        }
+    </script>
+</body>
 </html>

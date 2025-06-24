@@ -1,0 +1,457 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Joy - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .tab-active { @apply bg-purple-600 text-white; }
+        .tab-inactive { @apply bg-gray-200 text-gray-600 hover:bg-gray-300; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+    <!-- Hamburger Menu -->
+    <div id="hamburgerMenu" class="fixed top-4 right-4 z-50">
+        <button id="menuToggle" class="bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        
+        <div id="menuPanel" class="absolute top-16 right-0 bg-white rounded-xl shadow-xl p-4 w-48 hidden">
+            <a href="./index.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🏠 Home</a>
+            <button class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg bg-purple-50">⚙️ Admin</button>
+            <button id="counterLink" class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🎯 Counter</button>
+        </div>
+    </div>
+
+    <!-- PIN Modal -->
+    <div id="pinModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 mx-4 max-w-sm w-full">
+            <h3 class="text-xl font-bold text-center mb-4">Admin Access</h3>
+            <p class="text-gray-600 text-center mb-4">Enter PIN to access admin panel</p>
+            <input type="password" id="pinInput" class="w-full border border-gray-300 p-3 rounded-lg text-center text-xl tracking-widest" placeholder="0000" maxlength="4">
+            <p id="pinError" class="text-red-500 text-sm text-center mt-2 hidden">Incorrect PIN. Please try again.</p>
+            <div class="flex gap-2 mt-4">
+                <button id="pinCancel" class="flex-1 py-2 border border-gray-300 rounded-lg text-gray-600">Cancel</button>
+                <button id="pinSubmit" class="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="min-h-screen px-4 py-8 hidden">
+        <div class="max-w-md mx-auto">
+            <!-- Header -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 text-center">
+                <h1 class="text-3xl font-bold text-gray-800">⚙️ Admin Panel</h1>
+                <p class="text-gray-600 mt-2">System configuration</p>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 mb-6">
+                <div class="grid grid-cols-2 gap-2 mb-6">
+                    <button id="settingsTab" class="tab-active py-2 px-4 rounded-lg font-semibold transition-all duration-300">Settings</button>
+                    <button id="analyticsTab" class="tab-inactive py-2 px-4 rounded-lg font-semibold transition-all duration-300">Analytics</button>
+                </div>
+
+                <!-- Settings Tab -->
+                <div id="settingsContent">
+                    <!-- Queue Settings -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">🎯 Queue Settings</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-2">Queue Prefix:</label>
+                                <select id="queuePrefix" class="w-full border border-gray-300 p-3 rounded-lg">
+                                    <option value="A">A (General)</option>
+                                    <option value="B">B (Priority)</option>
+                                    <option value="C">C (Special)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-2">Start Number:</label>
+                                <input type="number" id="startNumber" value="100" class="w-full border border-gray-300 p-3 rounded-lg">
+                            </div>
+                            <button id="saveSettingsBtn" class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
+                                💾 Save Settings
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Advertisement Upload -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">📢 Advertisement</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <input type="file" id="adUpload" accept="image/*" class="w-full border border-gray-300 p-3 rounded-lg">
+                            </div>
+                            <div id="adPreview" class="hidden bg-gray-50 rounded-lg p-4">
+                                <img id="previewImage" src="" alt="Ad Preview" class="w-full h-32 object-cover rounded-lg">
+                            </div>
+                            <button id="uploadAdBtn" class="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
+                                📤 Upload Advertisement
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Reset Tools -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">🔄 Reset Tools</h3>
+                        <div class="space-y-3">
+                            <button id="resetQueueBtn" class="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
+                                🗑️ Reset Today's Queue
+                            </button>
+                            <button id="clearAnalyticsBtn" class="w-full py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-all duration-300">
+                                🧹 Clear Analytics
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div id="analyticsContent" class="hidden">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">📊 Analytics Overview</h3>
+                    
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 text-center">
+                            <p class="text-sm text-gray-600">Today Served</p>
+                            <p id="todayServed" class="text-2xl font-bold text-green-600">23</p>
+                        </div>
+                        <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4 text-center">
+                            <p class="text-sm text-gray-600">Avg Wait</p>
+                            <p id="avgWait" class="text-2xl font-bold text-blue-600">8m</p>
+                        </div>
+                    </div>
+
+                    <!-- Performance Metrics -->
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <h4 class="font-semibold text-gray-700 mb-3">Performance Metrics</h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span>Fastest Served:</span>
+                                <span id="fastestServed" class="font-semibold">2m</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Slowest Served:</span>
+                                <span id="slowestServed" class="font-semibold">15m</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Peak Time:</span>
+                                <span id="peakTime" class="font-semibold">2:00 PM</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export Button -->
+                    <button id="exportBtn" class="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
+                        📥 Export to CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status Messages -->
+            <div class="text-center">
+                <p id="statusMsg" class="text-sm text-green-600 hidden">✅ Action completed!</p>
+                <p id="errorMsg" class="text-sm text-red-500 hidden">❌ Error occurred!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="./js/firebase-config.js"></script>
+    
+    <!-- Navigation Script -->
+    <script src="./js/navigation.js"></script>
+    
+    <!-- Main Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Queue Joy - Admin panel loaded');
+            
+            // Initialize PIN modal
+            initializePinModal();
+            
+            // Check if already authenticated
+            if (sessionStorage.getItem('adminAuth') === 'true') {
+                showMainContent();
+            }
+        });
+
+        function initializePinModal() {
+            const pinModal = document.getElementById('pinModal');
+            const pinInput = document.getElementById('pinInput');
+            const pinSubmit = document.getElementById('pinSubmit');
+            const pinCancel = document.getElementById('pinCancel');
+            const pinError = document.getElementById('pinError');
+            
+            pinSubmit.addEventListener('click', () => {
+                const pin = pinInput.value;
+                if (pin === '0108') {
+                    sessionStorage.setItem('adminAuth', 'true');
+                    pinModal.classList.add('hidden');
+                    showMainContent();
+                } else {
+                    pinError.classList.remove('hidden');
+                    pinInput.value = '';
+                    pinInput.focus();
+                }
+            });
+            
+            pinCancel.addEventListener('click', () => {
+                window.location.href = './index.html';
+            });
+            
+            pinInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    pinSubmit.click();
+                }
+            });
+            
+            pinInput.focus();
+        }
+
+        function showMainContent() {
+            document.getElementById('mainContent').classList.remove('hidden');
+            
+            // Initialize menu
+            initializeNavigation();
+            
+            // Load settings
+            loadSettings();
+            
+            // Load analytics
+            loadAnalytics();
+            
+            // Set up event listeners
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            // Tab switching
+            document.getElementById('settingsTab').addEventListener('click', () => switchTab('settings'));
+            document.getElementById('analyticsTab').addEventListener('click', () => switchTab('analytics'));
+            
+            // Settings
+            document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+            document.getElementById('uploadAdBtn').addEventListener('click', uploadAdvertisement);
+            document.getElementById('adUpload').addEventListener('change', previewAd);
+            
+            // Reset tools
+            document.getElementById('resetQueueBtn').addEventListener('click', resetQueue);
+            document.getElementById('clearAnalyticsBtn').addEventListener('click', clearAnalytics);
+            
+            // Analytics
+            document.getElementById('exportBtn').addEventListener('click', exportAnalytics);
+        }
+
+        function switchTab(tab) {
+            const settingsTab = document.getElementById('settingsTab');
+            const analyticsTab = document.getElementById('analyticsTab');
+            const settingsContent = document.getElementById('settingsContent');
+            const analyticsContent = document.getElementById('analyticsContent');
+            
+            if (tab === 'settings') {
+                settingsTab.className = 'tab-active py-2 px-4 rounded-lg font-semibold transition-all duration-300';
+                analyticsTab.className = 'tab-inactive py-2 px-4 rounded-lg font-semibold transition-all duration-300';
+                settingsContent.classList.remove('hidden');
+                analyticsContent.classList.add('hidden');
+            } else {
+                settingsTab.className = 'tab-inactive py-2 px-4 rounded-lg font-semibold transition-all duration-300';
+                analyticsTab.className = 'tab-active py-2 px-4 rounded-lg font-semibold transition-all duration-300';
+                settingsContent.classList.add('hidden');
+                analyticsContent.classList.remove('hidden');
+                loadAnalytics(); // Refresh analytics when switching to tab
+            }
+        }
+
+        function loadSettings() {
+            firebase.database().ref('settings/queueFormat').once('value', (snapshot) => {
+                const settings = snapshot.val() || { prefix: 'A', start: 100 };
+                document.getElementById('queuePrefix').value = settings.prefix;
+                document.getElementById('startNumber').value = settings.start;
+                localStorage.setItem('queuePrefix', settings.prefix);
+            });
+        }
+
+        function saveSettings() {
+            const prefix = document.getElementById('queuePrefix').value;
+            const start = parseInt(document.getElementById('startNumber').value);
+            const statusMsg = document.getElementById('statusMsg');
+            
+            const settings = { prefix, start };
+            
+            firebase.database().ref('settings/queueFormat').set(settings)
+                .then(() => {
+                    localStorage.setItem('queuePrefix', prefix);
+                    statusMsg.textContent = '✅ Settings saved successfully!';
+                    statusMsg.classList.remove('hidden');
+                    setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+                })
+                .catch((error) => {
+                    console.error('Error saving settings:', error);
+                    showError('Failed to save settings');
+                });
+        }
+
+        function previewAd(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('previewImage').src = e.target.result;
+                    document.getElementById('adPreview').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function uploadAdvertisement() {
+            const fileInput = document.getElementById('adUpload');
+            const file = fileInput.files[0];
+            const statusMsg = document.getElementById('statusMsg');
+            
+            if (!file) {
+                showError('Please select an image file');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64Data = e.target.result;
+                
+                firebase.database().ref('settings/adImage').set(base64Data)
+                    .then(() => {
+                        statusMsg.textContent = '✅ Advertisement uploaded successfully!';
+                        statusMsg.classList.remove('hidden');
+                        setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+                    })
+                    .catch((error) => {
+                        console.error('Error uploading ad:', error);
+                        showError('Failed to upload advertisement');
+                    });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function loadAnalytics() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Load today's analytics
+            firebase.database().ref(`analytics/${today}`).once('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                const entries = Object.values(data);
+                
+                document.getElementById('todayServed').textContent = entries.length;
+                
+                if (entries.length > 0) {
+                    const waitTimes = entries.map(entry => entry.waitTimeMinutes || 0);
+                    const avgWait = Math.round(waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length);
+                    const fastestWait = Math.min(...waitTimes);
+                    const slowestWait = Math.max(...waitTimes);
+                    
+                    document.getElementById('avgWait').textContent = avgWait + 'm';
+                    document.getElementById('fastestServed').textContent = fastestWait + 'm';
+                    document.getElementById('slowestServed').textContent = slowestWait + 'm';
+                } else {
+                    document.getElementById('avgWait').textContent = '0m';
+                    document.getElementById('fastestServed').textContent = '0m';
+                    document.getElementById('slowestServed').textContent = '0m';
+                }
+                
+                document.getElementById('peakTime').textContent = '2:00 PM'; // Mock data
+            });
+        }
+
+        function resetQueue() {
+            if (!confirm('Are you sure you want to reset today\'s queue? This cannot be undone.')) {
+                return;
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            const statusMsg = document.getElementById('statusMsg');
+            
+            firebase.database().ref(`queues/${today}`).remove()
+                .then(() => {
+                    statusMsg.textContent = '✅ Queue reset successfully!';
+                    statusMsg.classList.remove('hidden');
+                    setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+                })
+                .catch((error) => {
+                    console.error('Error resetting queue:', error);
+                    showError('Failed to reset queue');
+                });
+        }
+
+        function clearAnalytics() {
+            if (!confirm('Are you sure you want to clear all analytics data? This cannot be undone.')) {
+                return;
+            }
+            
+            const statusMsg = document.getElementById('statusMsg');
+            
+            firebase.database().ref('analytics').remove()
+                .then(() => {
+                    statusMsg.textContent = '✅ Analytics cleared successfully!';
+                    statusMsg.classList.remove('hidden');
+                    loadAnalytics(); // Refresh display
+                    setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+                })
+                .catch((error) => {
+                    console.error('Error clearing analytics:', error);
+                    showError('Failed to clear analytics');
+                });
+        }
+
+        function exportAnalytics() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            firebase.database().ref(`analytics/${today}`).once('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                
+                // Convert to CSV
+                const headers = ['Queue ID', 'Called Time', 'Wait Time (minutes)'];
+                const rows = Object.entries(data).map(([queueId, entry]) => [
+                    queueId,
+                    new Date(entry.calledTime).toLocaleString(),
+                    entry.waitTimeMinutes
+                ]);
+                
+                const csvContent = [headers, ...rows]
+                    .map(row => row.join(','))
+                    .join('\n');
+                
+                // Download file
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `queue-analytics-${today}.csv`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                
+                const statusMsg = document.getElementById('statusMsg');
+                statusMsg.textContent = '✅ Analytics exported successfully!';
+                statusMsg.classList.remove('hidden');
+                setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+            });
+        }
+
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.textContent = '❌ ' + message;
+            errorMsg.classList.remove('hidden');
+            setTimeout(() => errorMsg.classList.add('hidden'), 3000);
+        }
+    </script>
+</body>
+</html>

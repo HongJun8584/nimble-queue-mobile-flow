@@ -1,0 +1,333 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Joy - Counter Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .big-number { font-size: 4rem; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-cyan-100 min-h-screen">
+    <!-- Hamburger Menu -->
+    <div id="hamburgerMenu" class="fixed top-4 right-4 z-50">
+        <button id="menuToggle" class="bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        
+        <div id="menuPanel" class="absolute top-16 right-0 bg-white rounded-xl shadow-xl p-4 w-48 hidden">
+            <a href="./index.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🏠 Home</a>
+            <button id="adminLink" class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">⚙️ Admin</button>
+            <button class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg bg-purple-50">🎯 Counter</button>
+        </div>
+    </div>
+
+    <!-- PIN Modal -->
+    <div id="pinModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 mx-4 max-w-sm w-full">
+            <h3 class="text-xl font-bold text-center mb-4">Counter Access</h3>
+            <p class="text-gray-600 text-center mb-4">Enter PIN to access counter panel</p>
+            <input type="password" id="pinInput" class="w-full border border-gray-300 p-3 rounded-lg text-center text-xl tracking-widest" placeholder="0000" maxlength="4">
+            <p id="pinError" class="text-red-500 text-sm text-center mt-2 hidden">Incorrect PIN. Please try again.</p>
+            <div class="flex gap-2 mt-4">
+                <button id="pinCancel" class="flex-1 py-2 border border-gray-300 rounded-lg text-gray-600">Cancel</button>
+                <button id="pinSubmit" class="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="min-h-screen flex flex-col justify-center items-center px-4 py-8 hidden">
+        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">🎯 Counter Panel</h1>
+                <p class="text-gray-600 mt-2">Manage the queue</p>
+            </div>
+
+            <!-- Current Status -->
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 text-center">
+                    <p class="text-sm text-gray-600 mb-2">Now Serving</p>
+                    <p id="nowServing" class="big-number font-bold text-green-600">A101</p>
+                </div>
+                <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 text-center">
+                    <p class="text-sm text-gray-600 mb-2">Last Number</p>
+                    <p id="lastNumber" class="big-number font-bold text-blue-600">A105</p>
+                </div>
+            </div>
+
+            <!-- Queue Info -->
+            <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                        <p class="text-sm text-gray-500">In Queue</p>
+                        <p id="peopleInQueue" class="text-xl font-bold text-gray-700">4</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Today Total</p>
+                        <p id="todayTotal" class="text-xl font-bold text-gray-700">23</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-4">
+                <button id="callNextBtn" class="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
+                    📢 Call Next Number
+                </button>
+                
+                <button id="recallBtn" class="w-full py-3 bg-gradient-to-r from-orange-400 to-amber-400 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
+                    🔄 Recall Last Number
+                </button>
+                
+                <!-- Manual Jump -->
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <label class="block text-sm text-gray-600 mb-2">Jump to Number:</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="jumpNumber" placeholder="A110" class="flex-1 border border-gray-300 p-2 rounded-lg text-center">
+                        <button id="jumpBtn" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">Go</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Messages -->
+            <div class="mt-6">
+                <p id="statusMsg" class="text-sm text-green-600 hidden text-center">✅ Action completed!</p>
+                <p id="errorMsg" class="text-sm text-red-500 hidden text-center">❌ Error occurred!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="./js/firebase-config.js"></script>
+    
+    <!-- Navigation Script -->
+    <script src="./js/navigation.js"></script>
+    
+    <!-- Main Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Queue Joy - Counter panel loaded');
+            
+            // Initialize PIN modal
+            initializePinModal();
+            
+            // Check if already authenticated
+            if (sessionStorage.getItem('counterAuth') === 'true') {
+                showMainContent();
+            }
+        });
+
+        function initializePinModal() {
+            const pinModal = document.getElementById('pinModal');
+            const pinInput = document.getElementById('pinInput');
+            const pinSubmit = document.getElementById('pinSubmit');
+            const pinCancel = document.getElementById('pinCancel');
+            const pinError = document.getElementById('pinError');
+            
+            pinSubmit.addEventListener('click', () => {
+                const pin = pinInput.value;
+                if (pin === '0108') {
+                    sessionStorage.setItem('counterAuth', 'true');
+                    pinModal.classList.add('hidden');
+                    showMainContent();
+                } else {
+                    pinError.classList.remove('hidden');
+                    pinInput.value = '';
+                    pinInput.focus();
+                }
+            });
+            
+            pinCancel.addEventListener('click', () => {
+                window.location.href = './index.html';
+            });
+            
+            pinInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    pinSubmit.click();
+                }
+            });
+            
+            pinInput.focus();
+        }
+
+        function showMainContent() {
+            document.getElementById('mainContent').classList.remove('hidden');
+            
+            // Initialize menu
+            initializeNavigation();
+            
+            // Load counter data
+            loadCounterData();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Start live updates
+            startLiveUpdates();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('callNextBtn').addEventListener('click', callNextNumber);
+            document.getElementById('recallBtn').addEventListener('click', recallLastNumber);
+            document.getElementById('jumpBtn').addEventListener('click', jumpToNumber);
+        }
+
+        function loadCounterData() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Load current and last numbers
+            firebase.database().ref(`queues/${today}`).on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                const prefix = localStorage.getItem('queuePrefix') || 'A';
+                
+                const currentSuffix = data.currentNumberSuffix || 100;
+                const lastSuffix = data.lastSuffix || 100;
+                
+                document.getElementById('nowServing').textContent = prefix + currentSuffix;
+                document.getElementById('lastNumber').textContent = prefix + lastSuffix;
+                
+                // Calculate people in queue
+                const peopleInQueue = Math.max(0, lastSuffix - currentSuffix);
+                document.getElementById('peopleInQueue').textContent = peopleInQueue;
+                
+                // Calculate today's total
+                const numbers = data.numbers || {};
+                document.getElementById('todayTotal').textContent = Object.keys(numbers).length;
+            });
+        }
+
+        function startLiveUpdates() {
+            // Updates are handled by loadCounterData() using Firebase listeners
+        }
+
+        function callNextNumber() {
+            const btn = document.getElementById('callNextBtn');
+            const statusMsg = document.getElementById('statusMsg');
+            const errorMsg = document.getElementById('errorMsg');
+            
+            btn.innerHTML = '🔄 Calling...';
+            btn.disabled = true;
+            
+            const today = new Date().toISOString().split('T')[0];
+            
+            firebase.database().ref(`queues/${today}/currentNumberSuffix`).transaction((currentSuffix) => {
+                return (currentSuffix || 100) + 1;
+            })
+            .then((result) => {
+                if (result.committed) {
+                    const newNumber = result.snapshot.val();
+                    
+                    // Log to analytics
+                    const timestamp = Date.now();
+                    const prefix = localStorage.getItem('queuePrefix') || 'A';
+                    const queueId = prefix + newNumber;
+                    
+                    firebase.database().ref(`analytics/${today}/${queueId}`).set({
+                        calledTime: timestamp,
+                        waitTimeMinutes: calculateWaitTime(queueId)
+                    });
+                    
+                    statusMsg.textContent = `✅ Called ${queueId}`;
+                    statusMsg.classList.remove('hidden');
+                    errorMsg.classList.add('hidden');
+                } else {
+                    throw new Error('Transaction failed');
+                }
+            })
+            .catch((error) => {
+                console.error('Error calling next number:', error);
+                errorMsg.textContent = '❌ Failed to call next number';
+                errorMsg.classList.remove('hidden');
+                statusMsg.classList.add('hidden');
+            })
+            .finally(() => {
+                btn.innerHTML = '📢 Call Next Number';
+                btn.disabled = false;
+                
+                setTimeout(() => {
+                    statusMsg.classList.add('hidden');
+                    errorMsg.classList.add('hidden');
+                }, 3000);
+            });
+        }
+
+        function recallLastNumber() {
+            const btn = document.getElementById('recallBtn');
+            const statusMsg = document.getElementById('statusMsg');
+            
+            btn.innerHTML = '🔄 Recalling...';
+            btn.disabled = true;
+            
+            const nowServing = document.getElementById('nowServing').textContent;
+            
+            statusMsg.textContent = `📢 Recalled ${nowServing}`;
+            statusMsg.classList.remove('hidden');
+            
+            setTimeout(() => {
+                btn.innerHTML = '🔄 Recall Last Number';
+                btn.disabled = false;
+                statusMsg.classList.add('hidden');
+            }, 2000);
+        }
+
+        function jumpToNumber() {
+            const input = document.getElementById('jumpNumber');
+            const jumpNumber = input.value.toUpperCase().trim();
+            const statusMsg = document.getElementById('statusMsg');
+            const errorMsg = document.getElementById('errorMsg');
+            
+            if (!jumpNumber.match(/^[A-Z]\d+$/)) {
+                errorMsg.textContent = '❌ Invalid format. Use format like A110';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+            
+            const prefix = jumpNumber.charAt(0);
+            const suffix = parseInt(jumpNumber.substring(1));
+            
+            const today = new Date().toISOString().split('T')[0];
+            
+            firebase.database().ref(`queues/${today}/currentNumberSuffix`).set(suffix)
+                .then(() => {
+                    statusMsg.textContent = `✅ Jumped to ${jumpNumber}`;
+                    statusMsg.classList.remove('hidden');
+                    errorMsg.classList.add('hidden');
+                    input.value = '';
+                })
+                .catch((error) => {
+                    console.error('Error jumping to number:', error);
+                    errorMsg.textContent = '❌ Failed to jump to number';
+                    errorMsg.classList.remove('hidden');
+                    statusMsg.classList.add('hidden');
+                });
+            
+            setTimeout(() => {
+                statusMsg.classList.add('hidden');
+                errorMsg.classList.add('hidden');
+            }, 3000);
+        }
+
+        function calculateWaitTime(queueId) {
+            // Simple wait time calculation - in real implementation, 
+            // you'd calculate based on when the number was issued
+            const suffix = parseInt(queueId.substring(1));
+            const currentTime = Date.now();
+            
+            // Assume average of 3 minutes per customer
+            return 3;
+        }
+    </script>
+</body>
+</html>

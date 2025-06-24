@@ -1,0 +1,319 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Joy - Memory Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .card { 
+            transition: transform 0.3s;
+            aspect-ratio: 1;
+        }
+        .card:hover { transform: scale(0.95); }
+        .card.flipped { transform: rotateY(180deg); }
+        .card.matched { opacity: 0.6; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+    <!-- Hamburger Menu -->
+    <div id="hamburgerMenu" class="fixed top-4 right-4 z-50">
+        <button id="menuToggle" class="bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        
+        <div id="menuPanel" class="absolute top-16 right-0 bg-white rounded-xl shadow-xl p-4 w-48 hidden">
+            <a href="./index.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🏠 Home</a>
+            <a href="./status.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">📊 Status</a>
+            <a href="./game.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg bg-purple-50">🎮 Game</a>
+            <button id="adminLink" class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">⚙️ Admin</button>
+            <button id="counterLink" class="block w-full text-left py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🎯 Counter</button>
+        </div>
+    </div>
+
+    <!-- PIN Modal -->
+    <div id="pinModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-xl p-6 mx-4 max-w-sm w-full">
+            <h3 class="text-xl font-bold text-center mb-4">Enter PIN</h3>
+            <input type="password" id="pinInput" class="w-full border border-gray-300 p-3 rounded-lg text-center text-xl tracking-widest" placeholder="0000" maxlength="4">
+            <p id="pinError" class="text-red-500 text-sm text-center mt-2 hidden">Incorrect PIN. Please try again.</p>
+            <div class="flex gap-2 mt-4">
+                <button id="pinCancel" class="flex-1 py-2 border border-gray-300 rounded-lg text-gray-600">Cancel</button>
+                <button id="pinSubmit" class="flex-1 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="min-h-screen flex flex-col justify-center items-center px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
+            <!-- Header -->
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-800">🧠 Memory Match</h1>
+                <p class="text-sm text-gray-600 mt-1">Find matching pairs!</p>
+                
+                <!-- Queue Status Banner -->
+                <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-3 mt-4">
+                    <p class="text-xs text-gray-600">Your Number: <span id="yourNumber" class="font-bold text-purple-600">A105</span></p>
+                    <p class="text-xs text-gray-600">Now Serving: <span id="nowServing" class="font-bold text-green-600">A101</span></p>
+                </div>
+            </div>
+
+            <!-- Game Stats -->
+            <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+                <div class="bg-gray-50 rounded-lg p-2">
+                    <p class="text-xs text-gray-500">Moves</p>
+                    <p id="moves" class="text-lg font-bold text-gray-700">0</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-2">
+                    <p class="text-xs text-gray-500">Matches</p>
+                    <p id="matches" class="text-lg font-bold text-gray-700">0/8</p>
+                </div>
+                <div class="bg-gray-50 rounded-lg p-2">
+                    <p class="text-xs text-gray-500">Time</p>
+                    <p id="timer" class="text-lg font-bold text-gray-700">0:00</p>
+                </div>
+            </div>
+
+            <!-- Game Board -->
+            <div id="gameBoard" class="grid grid-cols-4 gap-2 mb-6">
+                <!-- Cards will be generated here -->
+            </div>
+
+            <!-- Ad Banner -->
+            <div id="adBanner" class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4 mb-4 text-center">
+                <img id="adImage" src="" alt="Advertisement" class="w-full h-24 object-cover rounded-lg hidden">
+                <div id="defaultAd" class="text-sm text-gray-600">
+                    <p class="font-semibold">🎯 Queue Joy</p>
+                    <p>Making waiting enjoyable!</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-2">
+                <button id="newGameBtn" class="w-full py-3 bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
+                    🔄 New Game
+                </button>
+                
+                <button id="backToStatusBtn" class="w-full py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-all duration-300">
+                    📊 Back to Status
+                </button>
+            </div>
+
+            <!-- Win Message -->
+            <div id="winMessage" class="hidden mt-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 text-center">
+                <p class="text-lg font-bold text-orange-600">🎉 Congratulations!</p>
+                <p class="text-sm text-gray-600">You completed the game!</p>
+                <p id="finalStats" class="text-xs text-gray-500 mt-1"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="./js/firebase-config.js"></script>
+    
+    <!-- Navigation Script -->
+    <script src="./js/navigation.js"></script>
+    
+    <!-- Game Script -->
+    <script>
+        let gameState = {
+            cards: [],
+            flippedCards: [],
+            matches: 0,
+            moves: 0,
+            startTime: null,
+            gameActive: false
+        };
+
+        const cardEmojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Queue Joy - Game page loaded');
+            
+            // Check if user has a queue number
+            const queueId = localStorage.getItem('queueId');
+            if (!queueId) {
+                window.location.href = './index.html';
+                return;
+            }
+            
+            // Initialize menu
+            initializeNavigation();
+            
+            // Set queue info
+            document.getElementById('yourNumber').textContent = queueId;
+            
+            // Load ad
+            loadAdvertisement();
+            
+            // Start live queue updates
+            startQueueUpdates();
+            
+            // Initialize game
+            initializeGame();
+            
+            // Button events
+            document.getElementById('newGameBtn').addEventListener('click', initializeGame);
+            document.getElementById('backToStatusBtn').addEventListener('click', () => {
+                window.location.href = './status.html';
+            });
+        });
+
+        function loadAdvertisement() {
+            firebase.database().ref('settings/adImage').once('value', (snapshot) => {
+                const adImage = snapshot.val();
+                if (adImage) {
+                    document.getElementById('adImage').src = adImage;
+                    document.getElementById('adImage').classList.remove('hidden');
+                    document.getElementById('defaultAd').classList.add('hidden');
+                }
+            });
+        }
+
+        function startQueueUpdates() {
+            const today = new Date().toISOString().split('T')[0];
+            const currentNumberRef = firebase.database().ref(`queues/${today}/currentNumberSuffix`);
+            
+            currentNumberRef.on('value', (snapshot) => {
+                const currentSuffix = snapshot.val() || 100;
+                const queueId = localStorage.getItem('queueId');
+                const prefix = queueId.charAt(0);
+                document.getElementById('nowServing').textContent = prefix + currentSuffix;
+            });
+        }
+
+        function initializeGame() {
+            console.log('Initializing new game');
+            
+            // Reset game state
+            gameState = {
+                cards: [],
+                flippedCards: [],
+                matches: 0,
+                moves: 0,
+                startTime: Date.now(),
+                gameActive: true
+            };
+            
+            // Hide win message
+            document.getElementById('winMessage').classList.add('hidden');
+            
+            // Create shuffled deck
+            const deck = [...cardEmojis, ...cardEmojis];
+            shuffleArray(deck);
+            
+            // Generate cards
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            
+            deck.forEach((emoji, index) => {
+                const card = document.createElement('div');
+                card.className = 'card bg-gradient-to-r from-purple-400 to-indigo-400 rounded-lg flex items-center justify-center text-2xl cursor-pointer shadow-lg';
+                card.dataset.emoji = emoji;
+                card.dataset.index = index;
+                card.innerHTML = '❓';
+                card.addEventListener('click', flipCard);
+                gameBoard.appendChild(card);
+                gameState.cards.push(card);
+            });
+            
+            // Start timer
+            startTimer();
+            
+            // Update stats
+            updateStats();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function flipCard(event) {
+            if (!gameState.gameActive) return;
+            
+            const card = event.target;
+            if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
+            if (gameState.flippedCards.length >= 2) return;
+            
+            // Flip card
+            card.innerHTML = card.dataset.emoji;
+            card.classList.add('flipped');
+            gameState.flippedCards.push(card);
+            
+            if (gameState.flippedCards.length === 2) {
+                gameState.moves++;
+                updateStats();
+                
+                setTimeout(() => {
+                    checkMatch();
+                }, 1000);
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = gameState.flippedCards;
+            
+            if (card1.dataset.emoji === card2.dataset.emoji) {
+                // Match found
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                gameState.matches++;
+                
+                // Check win condition
+                if (gameState.matches === cardEmojis.length) {
+                    gameWon();
+                }
+            } else {
+                // No match
+                card1.innerHTML = '❓';
+                card2.innerHTML = '❓';
+                card1.classList.remove('flipped');
+                card2.classList.remove('flipped');
+            }
+            
+            gameState.flippedCards = [];
+            updateStats();
+        }
+
+        function gameWon() {
+            gameState.gameActive = false;
+            const endTime = Date.now();
+            const timeElapsed = Math.floor((endTime - gameState.startTime) / 1000);
+            
+            document.getElementById('winMessage').classList.remove('hidden');
+            document.getElementById('finalStats').textContent = 
+                `Completed in ${timeElapsed}s with ${gameState.moves} moves!`;
+        }
+
+        function updateStats() {
+            document.getElementById('moves').textContent = gameState.moves;
+            document.getElementById('matches').textContent = `${gameState.matches}/${cardEmojis.length}`;
+        }
+
+        function startTimer() {
+            setInterval(() => {
+                if (!gameState.gameActive) return;
+                
+                const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                document.getElementById('timer').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
