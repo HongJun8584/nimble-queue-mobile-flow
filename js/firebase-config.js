@@ -18,7 +18,7 @@ firebase.initializeApp(firebaseConfig);
 // Initialize Realtime Database
 const database = firebase.database();
 
-console.log('Firebase initialized for Queue Joy');
+console.log('🔥 Firebase initialized for Queue Joy');
 
 // Demo data initialization
 function initializeDemoData() {
@@ -27,7 +27,7 @@ function initializeDemoData() {
   // Check if demo data already exists
   database.ref(`queues/${today}`).once('value', (snapshot) => {
     if (!snapshot.exists()) {
-      console.log('Initializing demo queue data...');
+      console.log('🎯 Initializing demo queue data...');
       
       // Set initial queue state
       const demoQueue = {
@@ -45,14 +45,16 @@ function initializeDemoData() {
         }
       };
       
-      database.ref(`queues/${today}`).set(demoQueue);
+      database.ref(`queues/${today}`).set(demoQueue)
+        .then(() => console.log('✅ Demo queue data initialized'))
+        .catch(error => console.error('❌ Error initializing demo data:', error));
     }
   });
   
   // Initialize default settings
   database.ref('settings').once('value', (snapshot) => {
     if (!snapshot.exists()) {
-      console.log('Initializing default settings...');
+      console.log('⚙️ Initializing default settings...');
       
       const defaultSettings = {
         queueFormat: {
@@ -63,14 +65,16 @@ function initializeDemoData() {
         adImage: '' // Empty initially
       };
       
-      database.ref('settings').set(defaultSettings);
+      database.ref('settings').set(defaultSettings)
+        .then(() => console.log('✅ Default settings initialized'))
+        .catch(error => console.error('❌ Error initializing settings:', error));
     }
   });
   
   // Initialize demo analytics
   database.ref(`analytics/${today}`).once('value', (snapshot) => {
     if (!snapshot.exists()) {
-      console.log('Initializing demo analytics...');
+      console.log('📊 Initializing demo analytics...');
       
       const demoAnalytics = {
         'A101': { calledTime: Date.now() - 3600000, waitTimeMinutes: 5 },
@@ -78,7 +82,9 @@ function initializeDemoData() {
         'A103': { calledTime: Date.now() - 1800000, waitTimeMinutes: 3 }
       };
       
-      database.ref(`analytics/${today}`).set(demoAnalytics);
+      database.ref(`analytics/${today}`).set(demoAnalytics)
+        .then(() => console.log('✅ Demo analytics initialized'))
+        .catch(error => console.error('❌ Error initializing analytics:', error));
     }
   });
 }
@@ -88,11 +94,17 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(initializeDemoData, 1000); // Small delay to ensure Firebase is ready
 });
 
-// Error handling
+// Error handling and connection monitoring
 database.ref('.info/connected').on('value', (snapshot) => {
   if (snapshot.val() === true) {
     console.log('✅ Connected to Firebase Realtime Database');
   } else {
     console.log('❌ Disconnected from Firebase Realtime Database');
   }
+});
+
+// Global error handler for Firebase operations
+window.addEventListener('unhandledrejection', event => {
+  console.error('🔥 Firebase operation failed:', event.reason);
+  event.preventDefault();
 });

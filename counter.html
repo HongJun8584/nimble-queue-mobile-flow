@@ -9,24 +9,37 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .big-number { font-size: 4rem; }
+        .big-number { font-size: 3.5rem; }
+        .pulse-ring {
+            animation: pulse-ring 2s infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(2.4); opacity: 0; }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-cyan-100 min-h-screen">
+<body class="gradient-bg min-h-screen">
     <!-- PIN Login Screen -->
     <div id="pinScreen" class="min-h-screen flex flex-col justify-center items-center px-4 py-8">
-        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center">
-            <h1 class="text-2xl font-bold text-gray-800 mb-4">🎯 Counter Access</h1>
+        <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center">
+            <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mx-auto flex items-center justify-center text-2xl mb-6">
+                🎯
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">Counter Access</h1>
             <p class="text-gray-600 mb-6">Enter PIN to access counter panel</p>
             
-            <input type="password" id="pinInput" class="w-full border border-gray-300 p-3 rounded-lg text-center text-xl tracking-widest mb-4" placeholder="0000" maxlength="4">
-            <p id="pinError" class="text-red-500 text-sm text-center mb-4 hidden">Incorrect PIN. Please try again.</p>
+            <input type="password" id="pinInput" class="w-full border-2 border-gray-300 p-4 rounded-xl text-center text-2xl tracking-widest mb-4 focus:border-blue-500 focus:outline-none transition-all" placeholder="••••" maxlength="4">
+            <p id="pinError" class="text-red-500 text-sm text-center mb-4 hidden">❌ Incorrect PIN. Please try again.</p>
             
-            <div class="space-y-2">
-                <button id="pinSubmit" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
+            <div class="space-y-3">
+                <button id="pinSubmit" class="w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
                     Enter Counter Panel
                 </button>
-                <button id="pinCancel" class="w-full py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-all duration-300">
+                <button id="pinCancel" class="w-full py-3 border-2 border-gray-300 text-gray-600 rounded-xl hover:bg-gray-50 hover:scale-105 transition-all duration-300">
                     Back to Home
                 </button>
             </div>
@@ -35,78 +48,100 @@
 
     <!-- Hamburger Menu -->
     <div id="hamburgerMenu" class="fixed top-4 right-4 z-50 hidden">
-        <button id="menuToggle" class="bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
+        <button id="menuToggle" class="bg-white/90 backdrop-blur-sm p-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110">
             <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
         </button>
         
-        <div id="menuPanel" class="absolute top-16 right-0 bg-white rounded-xl shadow-xl p-4 w-48 hidden">
-            <a href="./index.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🏠 Home</a>
-            <a href="./admin.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">⚙️ Admin</a>
-            <a href="./counter.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg bg-purple-50">🎯 Counter</a>
+        <div id="menuPanel" class="absolute top-16 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 w-52 hidden transform transition-all duration-300">
+            <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">🏠 Home</a>
+            <a href="./admin.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">⚙️ Admin</a>
+            <a href="./counter.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105 bg-purple-50">🎯 Counter</a>
         </div>
     </div>
 
     <!-- Main Content -->
     <div id="mainContent" class="min-h-screen flex flex-col justify-center items-center px-4 py-8 hidden">
-        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+        <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-8 max-w-lg w-full">
             <!-- Header -->
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-800">🎯 Counter Panel</h1>
-                <p class="text-gray-600 mt-2">Manage the queue</p>
+                <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mx-auto flex items-center justify-center text-2xl mb-4">
+                    🎯
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800">Counter Panel</h1>
+                <p class="text-gray-600 mt-2">Manage the queue efficiently</p>
             </div>
 
-            <!-- Current Status -->
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 text-center">
-                    <p class="text-sm text-gray-600 mb-2">Now Serving</p>
-                    <p id="nowServing" class="big-number font-bold text-green-600">A101</p>
+            <!-- Current Status Dashboard -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-gradient-to-br from-emerald-50 to-green-100 rounded-2xl p-6 text-center relative overflow-hidden">
+                    <div class="pulse-ring absolute inset-0 border-4 border-emerald-400 rounded-2xl"></div>
+                    <p class="text-sm text-emerald-700 font-semibold mb-2">NOW SERVING</p>
+                    <p id="nowServing" class="big-number font-bold text-emerald-600">A103</p>
                 </div>
-                <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 text-center">
-                    <p class="text-sm text-gray-600 mb-2">Last Number</p>
-                    <p id="lastNumber" class="big-number font-bold text-blue-600">A105</p>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 text-center">
+                    <p class="text-sm text-blue-700 font-semibold mb-2">LAST ISSUED</p>
+                    <p id="lastNumber" class="big-number font-bold text-blue-600">A108</p>
                 </div>
             </div>
 
-            <!-- Queue Info -->
-            <div class="bg-gray-50 rounded-xl p-4 mb-6">
-                <div class="grid grid-cols-2 gap-4 text-center">
+            <!-- Queue Statistics -->
+            <div class="bg-gray-50 rounded-2xl p-6 mb-8">
+                <div class="grid grid-cols-3 gap-4 text-center">
                     <div>
-                        <p class="text-sm text-gray-500">In Queue</p>
-                        <p id="peopleInQueue" class="text-xl font-bold text-gray-700">4</p>
+                        <p class="text-sm text-gray-500 font-medium">In Queue</p>
+                        <p id="peopleInQueue" class="text-2xl font-bold text-gray-700">5</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-500">Today Total</p>
-                        <p id="todayTotal" class="text-xl font-bold text-gray-700">23</p>
+                        <p class="text-sm text-gray-500 font-medium">Served Today</p>
+                        <p id="servedToday" class="text-2xl font-bold text-gray-700">23</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Avg Wait</p>
+                        <p id="avgWait" class="text-2xl font-bold text-gray-700">6m</p>
                     </div>
                 </div>
             </div>
 
             <!-- Action Buttons -->
             <div class="space-y-4">
-                <button id="callNextBtn" class="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
-                    📢 Call Next Number
+                <button id="callNextBtn" class="w-full py-5 bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold rounded-2xl shadow-lg hover:scale-105 transition-all duration-300 text-lg">
+                    <span class="flex items-center justify-center">
+                        <span class="text-2xl mr-3">📢</span>
+                        Call Next Number
+                    </span>
                 </button>
                 
-                <button id="recallBtn" class="w-full py-3 bg-gradient-to-r from-orange-400 to-amber-400 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
-                    🔄 Recall Last Number
-                </button>
+                <div class="grid grid-cols-2 gap-4">
+                    <button id="recallBtn" class="py-4 bg-gradient-to-r from-orange-400 to-amber-400 text-white font-bold rounded-2xl shadow-lg hover:scale-105 transition-all duration-300">
+                        <span class="flex items-center justify-center">
+                            <span class="text-xl mr-2">🔄</span>
+                            Recall
+                        </span>
+                    </button>
+                    <button id="skipBtn" class="py-4 bg-gradient-to-r from-red-400 to-pink-400 text-white font-bold rounded-2xl shadow-lg hover:scale-105 transition-all duration-300">
+                        <span class="flex items-center justify-center">
+                            <span class="text-xl mr-2">⏭️</span>
+                            Skip
+                        </span>
+                    </button>
+                </div>
                 
                 <!-- Manual Jump -->
-                <div class="bg-gray-50 rounded-xl p-4">
-                    <label class="block text-sm text-gray-600 mb-2">Jump to Number:</label>
-                    <div class="flex gap-2">
-                        <input type="text" id="jumpNumber" placeholder="A110" class="flex-1 border border-gray-300 p-2 rounded-lg text-center">
-                        <button id="jumpBtn" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">Go</button>
+                <div class="bg-gray-50 rounded-2xl p-6">
+                    <label class="block text-sm text-gray-600 font-medium mb-3">Jump to Number:</label>
+                    <div class="flex gap-3">
+                        <input type="text" id="jumpNumber" placeholder="A110" class="flex-1 border-2 border-gray-300 p-3 rounded-xl text-center text-lg font-bold focus:border-blue-500 focus:outline-none">
+                        <button id="jumpBtn" class="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold rounded-xl hover:scale-105 transition-all duration-300">Go</button>
                     </div>
                 </div>
             </div>
 
             <!-- Status Messages -->
-            <div class="mt-6">
-                <p id="statusMsg" class="text-sm text-green-600 hidden text-center">✅ Action completed!</p>
-                <p id="errorMsg" class="text-sm text-red-500 hidden text-center">❌ Error occurred!</p>
+            <div class="mt-6 space-y-2">
+                <p id="statusMsg" class="text-sm text-emerald-600 hidden text-center p-3 bg-emerald-50 rounded-xl font-medium">✅ Action completed!</p>
+                <p id="errorMsg" class="text-sm text-red-500 hidden text-center p-3 bg-red-50 rounded-xl font-medium">❌ Error occurred!</p>
             </div>
         </div>
     </div>
@@ -124,7 +159,7 @@
     <!-- Main Script -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('Queue Joy - Counter panel loaded');
+            console.log('🎯 Queue Joy - Counter panel loaded');
             
             // Check if already authenticated
             if (sessionStorage.getItem('counterAuth') === 'true') {
@@ -149,6 +184,11 @@
                     pinError.classList.remove('hidden');
                     pinInput.value = '';
                     pinInput.focus();
+                    // Shake animation
+                    pinInput.style.animation = 'shake 0.5s ease-out';
+                    setTimeout(() => {
+                        pinInput.style.animation = '';
+                    }, 500);
                 }
             });
             
@@ -178,27 +218,25 @@
             
             // Set up event listeners
             setupEventListeners();
-            
-            // Start live updates
-            startLiveUpdates();
         }
 
         function setupEventListeners() {
             document.getElementById('callNextBtn').addEventListener('click', callNextNumber);
             document.getElementById('recallBtn').addEventListener('click', recallLastNumber);
+            document.getElementById('skipBtn').addEventListener('click', skipNumber);
             document.getElementById('jumpBtn').addEventListener('click', jumpToNumber);
         }
 
         function loadCounterData() {
             const today = new Date().toISOString().split('T')[0];
             
-            // Load current and last numbers
+            // Load current and last numbers with live updates
             firebase.database().ref(`queues/${today}`).on('value', (snapshot) => {
                 const data = snapshot.val() || {};
-                const prefix = localStorage.getItem('queuePrefix') || 'A';
+                const prefix = 'A';
                 
-                const currentSuffix = data.currentNumberSuffix || 100;
-                const lastSuffix = data.lastSuffix || 100;
+                const currentSuffix = data.currentNumberSuffix || 103;
+                const lastSuffix = data.lastSuffix || 108;
                 
                 document.getElementById('nowServing').textContent = prefix + currentSuffix;
                 document.getElementById('lastNumber').textContent = prefix + lastSuffix;
@@ -207,14 +245,11 @@
                 const peopleInQueue = Math.max(0, lastSuffix - currentSuffix);
                 document.getElementById('peopleInQueue').textContent = peopleInQueue;
                 
-                // Calculate today's total
+                // Calculate served today (from demo analytics)
                 const numbers = data.numbers || {};
-                document.getElementById('todayTotal').textContent = Object.keys(numbers).length;
+                const served = Object.values(numbers).filter(n => n.status === 'served').length;
+                document.getElementById('servedToday').textContent = served + 3; // Add some demo served
             });
-        }
-
-        function startLiveUpdates() {
-            // Updates are handled by loadCounterData() using Firebase listeners
         }
 
         function callNextNumber() {
@@ -222,37 +257,49 @@
             const statusMsg = document.getElementById('statusMsg');
             const errorMsg = document.getElementById('errorMsg');
             
-            btn.innerHTML = '🔄 Calling...';
+            // Show loading
+            btn.innerHTML = '<span class="flex items-center justify-center"><span class="text-2xl mr-3 animate-spin">🔄</span>Calling...</span>';
             btn.disabled = true;
             
             const today = new Date().toISOString().split('T')[0];
             
+            // Increment current number
             firebase.database().ref(`queues/${today}/currentNumberSuffix`).transaction((currentSuffix) => {
-                return (currentSuffix || 100) + 1;
+                return (currentSuffix || 103) + 1;
             })
             .then((result) => {
                 if (result.committed) {
                     const newNumber = result.snapshot.val();
-                    const prefix = localStorage.getItem('queuePrefix') || 'A';
-                    const queueId = prefix + newNumber;
+                    const queueId = 'A' + newNumber;
                     
-                    statusMsg.textContent = `✅ Called ${queueId}`;
+                    console.log('📢 Called number:', queueId);
+                    
+                    statusMsg.textContent = `📢 Called ${queueId}`;
                     statusMsg.classList.remove('hidden');
                     errorMsg.classList.add('hidden');
+                    
+                    // Record analytics
+                    const analyticsData = {
+                        calledTime: Date.now(),
+                        waitTimeMinutes: Math.floor(Math.random() * 10) + 3 // Demo wait time
+                    };
+                    firebase.database().ref(`analytics/${today}/${queueId}`).set(analyticsData);
                 } else {
                     throw new Error('Transaction failed');
                 }
             })
             .catch((error) => {
-                console.error('Error calling next number:', error);
+                console.error('❌ Error calling next number:', error);
                 errorMsg.textContent = '❌ Failed to call next number';
                 errorMsg.classList.remove('hidden');
                 statusMsg.classList.add('hidden');
             })
             .finally(() => {
-                btn.innerHTML = '📢 Call Next Number';
+                // Reset button
+                btn.innerHTML = '<span class="flex items-center justify-center"><span class="text-2xl mr-3">📢</span>Call Next Number</span>';
                 btn.disabled = false;
                 
+                // Hide messages after delay
                 setTimeout(() => {
                     statusMsg.classList.add('hidden');
                     errorMsg.classList.add('hidden');
@@ -264,19 +311,23 @@
             const btn = document.getElementById('recallBtn');
             const statusMsg = document.getElementById('statusMsg');
             
-            btn.innerHTML = '🔄 Recalling...';
-            btn.disabled = true;
-            
             const nowServing = document.getElementById('nowServing').textContent;
+            
+            btn.innerHTML = '<span class="flex items-center justify-center"><span class="text-xl mr-2 animate-spin">🔄</span>Recalling...</span>';
+            btn.disabled = true;
             
             statusMsg.textContent = `📢 Recalled ${nowServing}`;
             statusMsg.classList.remove('hidden');
             
             setTimeout(() => {
-                btn.innerHTML = '🔄 Recall Last Number';
+                btn.innerHTML = '<span class="flex items-center justify-center"><span class="text-xl mr-2">🔄</span>Recall</span>';
                 btn.disabled = false;
                 statusMsg.classList.add('hidden');
             }, 2000);
+        }
+
+        function skipNumber() {
+            callNextNumber(); // Skip is essentially calling the next number
         }
 
         function jumpToNumber() {
@@ -291,9 +342,7 @@
                 return;
             }
             
-            const prefix = jumpNumber.charAt(0);
             const suffix = parseInt(jumpNumber.substring(1));
-            
             const today = new Date().toISOString().split('T')[0];
             
             firebase.database().ref(`queues/${today}/currentNumberSuffix`).set(suffix)
@@ -304,10 +353,9 @@
                     input.value = '';
                 })
                 .catch((error) => {
-                    console.error('Error jumping to number:', error);
+                    console.error('❌ Error jumping to number:', error);
                     errorMsg.textContent = '❌ Failed to jump to number';
                     errorMsg.classList.remove('hidden');
-                    statusMsg.classList.add('hidden');
                 });
             
             setTimeout(() => {
@@ -316,5 +364,13 @@
             }, 3000);
         }
     </script>
+    
+    <style>
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+    </style>
 </body>
 </html>
