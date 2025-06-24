@@ -12,6 +12,10 @@
         .mascot-bounce { animation: bounce 2s infinite; }
         .glow-pulse { animation: glow-pulse 2s infinite; }
         .slide-up { animation: slideUp 0.6s ease-out; }
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        .loading-spinner { animation: spin 1s linear infinite; }
+        .pulse-success { animation: pulse-success 0.6s ease-out; }
+        
         @keyframes glow-pulse {
             0%, 100% { box-shadow: 0 0 20px rgba(147, 51, 234, 0.3); }
             50% { box-shadow: 0 0 40px rgba(147, 51, 234, 0.6); }
@@ -20,15 +24,21 @@
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .loading-spinner {
-            animation: spin 1s linear infinite;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
+        }
+        @keyframes pulse-success {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
     </style>
 </head>
@@ -44,7 +54,6 @@
         <div id="menuPanel" class="absolute top-20 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 w-52 hidden transform transition-all duration-300">
             <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105 bg-purple-50">🏠 Home</a>
             <a href="./status.html" id="statusLink" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105 hidden">📊 Status</a>
-            <a href="./game.html" id="gameLink" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105 hidden">🎮 Game</a>
             <a href="./admin.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">⚙️ Admin</a>
             <a href="./counter.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">🎯 Counter</a>
         </div>
@@ -54,45 +63,47 @@
     <div class="min-h-screen flex flex-col justify-center items-center px-6 py-12">
         <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-10 max-w-md w-full text-center slide-up">
             <!-- Logo/Mascot -->
-            <div class="mb-8">
-                <div class="w-28 h-28 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full mx-auto flex items-center justify-center text-5xl mascot-bounce shadow-lg">
+            <div class="mb-8 fade-in">
+                <div class="w-32 h-32 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full mx-auto flex items-center justify-center text-6xl mascot-bounce shadow-xl">
                     🎫
                 </div>
                 <h1 class="text-4xl font-bold text-gray-800 mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Queue Joy</h1>
-                <p class="text-gray-600 mt-3 text-lg">Skip the line, enjoy the wait!</p>
+                <p class="text-gray-600 mt-3 text-lg font-medium">Skip the line, enjoy the wait!</p>
             </div>
 
             <!-- Current Queue Status -->
-            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 mb-8 glow-pulse">
-                <p class="text-sm text-gray-600 font-medium">Now Serving</p>
-                <p id="currentServing" class="text-3xl font-bold text-emerald-600 mt-2">A103</p>
-                <p class="text-xs text-gray-500 mt-2 flex items-center justify-center">
+            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 mb-8 glow-pulse border border-emerald-200">
+                <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Now Serving</p>
+                <p id="currentServing" class="text-4xl font-bold text-emerald-600 mt-2 mb-2">A103</p>
+                <p class="text-xs text-gray-500 flex items-center justify-center">
                     <span class="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"></span>
-                    Updated live
+                    Live Updates
                 </p>
             </div>
 
             <!-- Get Number Button -->
-            <button id="getNumberBtn" class="w-full py-5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 mb-6 text-lg">
+            <button id="getNumberBtn" class="w-full py-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 mb-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed">
                 <span id="buttonContent" class="flex items-center justify-center">
-                    <span class="text-2xl mr-3">🎯</span>
+                    <span class="text-3xl mr-3">🎯</span>
                     Get My Number
                 </span>
             </button>
 
             <!-- Status Messages -->
-            <div id="statusMsg" class="hidden mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                <p class="text-emerald-700 font-medium">✅ Number generated successfully!</p>
+            <div id="statusMsg" class="hidden mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl pulse-success">
+                <p class="text-emerald-700 font-bold text-lg">✅ Your number: <span id="generatedNumber" class="text-2xl">A000</span></p>
+                <p class="text-emerald-600 text-sm mt-1">Redirecting to status page...</p>
             </div>
             <div id="errorMsg" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p class="text-red-700 font-medium">❌ Something went wrong. Please try again.</p>
+                <p class="text-red-700 font-medium">❌ Failed to generate number. Please try again.</p>
             </div>
 
             <!-- Queue Info -->
-            <div class="mt-8 space-y-2 text-sm text-gray-500">
-                <p class="flex items-center justify-center"><span class="mr-2">📱</span>Mobile-optimized experience</p>
-                <p class="flex items-center justify-center"><span class="mr-2">🎮</span>Play games while waiting</p>
-                <p class="flex items-center justify-center"><span class="mr-2">📊</span>Real-time queue updates</p>
+            <div class="mt-8 space-y-3 text-sm text-gray-500 fade-in">
+                <p class="flex items-center justify-center"><span class="mr-3 text-lg">📱</span>Mobile-optimized experience</p>
+                <p class="flex items-center justify-center"><span class="mr-3 text-lg">🎮</span>Play games while waiting</p>
+                <p class="flex items-center justify-center"><span class="mr-3 text-lg">📊</span>Real-time queue updates</p>
+                <p class="flex items-center justify-center"><span class="mr-3 text-lg">⚡</span>Instant notifications</p>
             </div>
         </div>
     </div>
@@ -110,15 +121,15 @@
     <!-- Main Script -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('Queue Joy - Main page loaded');
+            console.log('🚀 Queue Joy initialized');
             
-            // Initialize menu
+            // Initialize navigation
             initializeNavigation();
             
             // Load current serving number
             loadCurrentServing();
             
-            // Get number button
+            // Set up generate button
             document.getElementById('getNumberBtn').addEventListener('click', generateQueueNumber);
         });
 
@@ -134,81 +145,98 @@
         }
 
         function generateQueueNumber() {
-            console.log('🎯 Generating queue number...');
+            console.log('🎯 Starting number generation...');
+            
             const button = document.getElementById('getNumberBtn');
             const buttonContent = document.getElementById('buttonContent');
             const statusMsg = document.getElementById('statusMsg');
             const errorMsg = document.getElementById('errorMsg');
+            const generatedNumberSpan = document.getElementById('generatedNumber');
             
-            // Hide previous messages
+            // Reset UI
             statusMsg.classList.add('hidden');
             errorMsg.classList.add('hidden');
             
             // Show loading state
-            buttonContent.innerHTML = '<span class="loading-spinner text-2xl mr-3">🔄</span>Generating...';
+            buttonContent.innerHTML = '<span class="loading-spinner text-3xl mr-3">🔄</span>Generating...';
             button.disabled = true;
             
             const today = new Date().toISOString().split('T')[0];
             const timestamp = Date.now();
             
-            // Get current settings and generate number
-            firebase.database().ref('settings/queueFormat').once('value', (snapshot) => {
-                const settings = snapshot.val() || { prefix: 'A', start: 100 };
-                const prefix = settings.prefix;
-                
-                // Get last number and increment
-                firebase.database().ref(`queues/${today}/lastSuffix`).transaction((lastSuffix) => {
-                    const currentLast = lastSuffix || (settings.start + 7); // Start from A108 for demo
-                    return currentLast + 1;
+            // Get settings and generate number
+            firebase.database().ref('settings/queueFormat').once('value')
+                .then((snapshot) => {
+                    const settings = snapshot.val() || { prefix: 'A', start: 100 };
+                    const prefix = settings.prefix;
+                    
+                    console.log('📝 Settings loaded:', settings);
+                    
+                    // Get and increment last number
+                    return firebase.database().ref(`queues/${today}/lastSuffix`).transaction((lastSuffix) => {
+                        const currentLast = lastSuffix || (settings.start + 8); // Start from 108
+                        const newSuffix = currentLast + 1;
+                        console.log('📊 New suffix:', newSuffix);
+                        return newSuffix;
+                    });
                 })
                 .then((result) => {
-                    if (result.committed) {
-                        const newSuffix = result.snapshot.val();
-                        const queueId = prefix + newSuffix;
-                        
-                        // Save the new number to the queue
-                        const updates = {};
-                        updates[`queues/${today}/numbers/${queueId}`] = {
-                            status: 'waiting',
-                            timestamp: timestamp
-                        };
-                        
-                        return firebase.database().ref().update(updates).then(() => {
-                            // Save to localStorage
-                            localStorage.setItem('queueId', queueId);
-                            localStorage.setItem('queueTimestamp', timestamp);
-                            localStorage.setItem('queuePrefix', prefix);
-                            
-                            console.log('✅ Queue number generated:', queueId);
-                            
-                            // Show success
-                            statusMsg.querySelector('p').textContent = `✅ Your number is ${queueId}!`;
-                            statusMsg.classList.remove('hidden');
-                            
-                            // Update menu visibility
-                            updateMenuVisibility();
-                            
-                            // Redirect after short delay
-                            setTimeout(() => {
-                                console.log('🔄 Redirecting to status page...');
-                                window.location.href = './status.html';
-                            }, 1500);
-                        });
-                    } else {
-                        throw new Error('Failed to generate number');
+                    if (!result.committed) {
+                        throw new Error('Transaction failed');
                     }
+                    
+                    const newSuffix = result.snapshot.val();
+                    const queueId = 'A' + newSuffix;
+                    
+                    console.log('✅ Generated queue ID:', queueId);
+                    
+                    // Save to Firebase
+                    const updates = {};
+                    updates[`queues/${today}/numbers/${queueId}`] = {
+                        status: 'waiting',
+                        timestamp: timestamp
+                    };
+                    
+                    return firebase.database().ref().update(updates).then(() => {
+                        // Store in localStorage
+                        localStorage.setItem('queueId', queueId);
+                        localStorage.setItem('queueTimestamp', timestamp.toString());
+                        localStorage.setItem('queueDate', today);
+                        
+                        console.log('💾 Data saved to localStorage:', {
+                            queueId,
+                            timestamp,
+                            today
+                        });
+                        
+                        // Show success message
+                        generatedNumberSpan.textContent = queueId;
+                        statusMsg.classList.remove('hidden');
+                        
+                        // Update menu visibility
+                        updateMenuVisibility();
+                        
+                        console.log('🔄 Redirecting to status page in 2 seconds...');
+                        
+                        // Redirect after showing success
+                        setTimeout(() => {
+                            window.location.href = './status.html';
+                        }, 2000);
+                        
+                        return queueId;
+                    });
                 })
                 .catch((error) => {
                     console.error('❌ Error generating number:', error);
-                    errorMsg.querySelector('p').textContent = '❌ Failed to generate number. Please try again.';
                     errorMsg.classList.remove('hidden');
                 })
                 .finally(() => {
-                    // Reset button
-                    buttonContent.innerHTML = '<span class="text-2xl mr-3">🎯</span>Get My Number';
-                    button.disabled = false;
+                    // Reset button after delay
+                    setTimeout(() => {
+                        buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
+                        button.disabled = false;
+                    }, 3000);
                 });
-            });
         }
     </script>
 </body>
