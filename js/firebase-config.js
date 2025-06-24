@@ -59,7 +59,8 @@ function initializeDemoData() {
           prefix: 'A',
           start: 100
         },
-        counterCount: 3
+        counterCount: 3,
+        adImage: '' // Empty initially
       };
       
       database.ref('settings').set(defaultSettings);

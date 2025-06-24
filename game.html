@@ -6,88 +6,118 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Queue Joy - Memory Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .card { 
-            transition: transform 0.3s;
+            transition: transform 0.3s, box-shadow 0.3s;
             aspect-ratio: 1;
         }
-        .card:hover { transform: scale(0.95); }
+        .card:hover { 
+            transform: scale(0.95); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
         .card.flipped { transform: rotateY(180deg); }
-        .card.matched { opacity: 0.6; }
+        .card.matched { opacity: 0.6; transform: scale(0.9); }
+        .slide-up { animation: slideUp 0.6s ease-out; }
+        .fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+<body class="gradient-bg min-h-screen">
     <!-- Hamburger Menu -->
-    <div id="hamburgerMenu" class="fixed top-4 right-4 z-50">
-        <button id="menuToggle" class="bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
-            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div id="hamburgerMenu" class="fixed top-6 right-6 z-50">
+        <button id="menuToggle" class="bg-white/90 backdrop-blur-sm p-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110">
+            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
         </button>
         
-        <div id="menuPanel" class="absolute top-16 right-0 bg-white rounded-xl shadow-xl p-4 w-48 hidden">
-            <a href="./index.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🏠 Home</a>
-            <a href="./status.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">📊 Status</a>
-            <a href="./game.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg bg-purple-50">🎮 Game</a>
-            <a href="./admin.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">⚙️ Admin</a>
-            <a href="./counter.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🎯 Counter</a>
+        <div id="menuPanel" class="absolute top-20 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 w-52 hidden transform transition-all duration-300">
+            <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">🏠 Home</a>
+            <a href="./status.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">📊 Status</a>
+            <a href="./game.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105 bg-purple-50">🎮 Game</a>
+            <a href="./admin.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">⚙️ Admin</a>
+            <a href="./counter.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">🎯 Counter</a>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div class="min-h-screen flex flex-col justify-center items-center px-4 py-8">
-        <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full">
+    <div class="min-h-screen flex flex-col justify-center items-center px-6 py-12">
+        <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-8 max-w-md w-full slide-up">
             <!-- Header -->
-            <div class="text-center mb-6">
-                <h1 class="text-2xl font-bold text-gray-800">🧠 Memory Match</h1>
-                <p class="text-sm text-gray-600 mt-1">Find matching pairs!</p>
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">🧠 Memory Match</h1>
+                <p class="text-gray-600 mt-2 font-medium">Find matching pairs!</p>
                 
                 <!-- Queue Status Banner -->
-                <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-3 mt-4">
-                    <p class="text-xs text-gray-600">Your Number: <span id="yourNumber" class="font-bold text-purple-600">A105</span></p>
-                    <p class="text-xs text-gray-600">Now Serving: <span id="nowServing" class="font-bold text-green-600">A101</span></p>
+                <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-4 mt-6 fade-in">
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div>
+                            <p class="text-xs text-gray-500 font-medium">Your Number</p>
+                            <p id="yourNumber" class="text-lg font-bold text-purple-600">A105</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500 font-medium">Now Serving</p>
+                            <p id="nowServing" class="text-lg font-bold text-emerald-600">A101</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Game Stats -->
-            <div class="grid grid-cols-3 gap-2 mb-4 text-center">
-                <div class="bg-gray-50 rounded-lg p-2">
-                    <p class="text-xs text-gray-500">Moves</p>
-                    <p id="moves" class="text-lg font-bold text-gray-700">0</p>
+            <div class="grid grid-cols-3 gap-3 mb-6 text-center">
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 fade-in">
+                    <p class="text-xs text-gray-500 font-medium">Moves</p>
+                    <p id="moves" class="text-xl font-bold text-blue-600">0</p>
                 </div>
-                <div class="bg-gray-50 rounded-lg p-2">
-                    <p class="text-xs text-gray-500">Matches</p>
-                    <p id="matches" class="text-lg font-bold text-gray-700">0/8</p>
+                <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-3 fade-in">
+                    <p class="text-xs text-gray-500 font-medium">Matches</p>
+                    <p id="matches" class="text-xl font-bold text-emerald-600">0/8</p>
                 </div>
-                <div class="bg-gray-50 rounded-lg p-2">
-                    <p class="text-xs text-gray-500">Time</p>
-                    <p id="timer" class="text-lg font-bold text-gray-700">0:00</p>
+                <div class="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-3 fade-in">
+                    <p class="text-xs text-gray-500 font-medium">Time</p>
+                    <p id="timer" class="text-xl font-bold text-orange-600">0:00</p>
                 </div>
             </div>
 
             <!-- Game Board -->
-            <div id="gameBoard" class="grid grid-cols-4 gap-2 mb-6">
+            <div id="gameBoard" class="grid grid-cols-4 gap-2 mb-8">
                 <!-- Cards will be generated here -->
             </div>
 
             <!-- Action Buttons -->
-            <div class="space-y-2">
-                <button id="newGameBtn" class="w-full py-3 bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
-                    🔄 New Game
+            <div class="space-y-3">
+                <button id="newGameBtn" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+                    <span class="flex items-center justify-center">
+                        <span class="text-xl mr-3">🔄</span>
+                        New Game
+                    </span>
                 </button>
                 
-                <button id="backToStatusBtn" class="w-full py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-all duration-300">
-                    📊 Back to Status
+                <button id="backToStatusBtn" class="w-full py-3 border-2 border-gray-300 text-gray-600 rounded-2xl hover:bg-gray-50 hover:scale-105 transition-all duration-300 font-medium">
+                    <span class="flex items-center justify-center">
+                        <span class="text-xl mr-2">📊</span>
+                        Back to Status
+                    </span>
                 </button>
             </div>
 
             <!-- Win Message -->
-            <div id="winMessage" class="hidden mt-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 text-center">
-                <p class="text-lg font-bold text-orange-600">🎉 Congratulations!</p>
-                <p class="text-sm text-gray-600">You completed the game!</p>
-                <p id="finalStats" class="text-xs text-gray-500 mt-1"></p>
+            <div id="winMessage" class="hidden mt-6 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-6 text-center border-2 border-yellow-200">
+                <p class="text-2xl font-bold text-orange-600 mb-2">🎉 Congratulations!</p>
+                <p class="text-gray-600 font-medium">You completed the game!</p>
+                <p id="finalStats" class="text-sm text-gray-500 mt-2"></p>
             </div>
         </div>
     </div>
@@ -182,7 +212,7 @@
             
             deck.forEach((emoji, index) => {
                 const card = document.createElement('div');
-                card.className = 'card bg-gradient-to-r from-purple-400 to-indigo-400 rounded-lg flex items-center justify-center text-2xl cursor-pointer shadow-lg';
+                card.className = 'card bg-gradient-to-r from-purple-400 to-indigo-400 rounded-xl flex items-center justify-center text-2xl cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300';
                 card.dataset.emoji = emoji;
                 card.dataset.index = index;
                 card.innerHTML = '❓';

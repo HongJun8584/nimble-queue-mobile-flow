@@ -6,63 +6,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Queue Joy - Get Your Number</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         .mascot-bounce { animation: bounce 2s infinite; }
+        .glow-pulse { animation: glow-pulse 2s infinite; }
+        .slide-up { animation: slideUp 0.6s ease-out; }
+        @keyframes glow-pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(147, 51, 234, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(147, 51, 234, 0.6); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+<body class="gradient-bg min-h-screen">
     <!-- Hamburger Menu -->
-    <div id="hamburgerMenu" class="fixed top-4 right-4 z-50">
-        <button id="menuToggle" class="bg-white p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300">
-            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div id="hamburgerMenu" class="fixed top-6 right-6 z-50">
+        <button id="menuToggle" class="bg-white/90 backdrop-blur-sm p-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110">
+            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
         </button>
         
-        <div id="menuPanel" class="absolute top-16 right-0 bg-white rounded-xl shadow-xl p-4 w-48 hidden">
-            <a href="./index.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🏠 Home</a>
-            <a href="./status.html" id="statusLink" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg hidden">📊 Status</a>
-            <a href="./game.html" id="gameLink" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg hidden">🎮 Game</a>
-            <a href="./admin.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">⚙️ Admin</a>
-            <a href="./counter.html" class="block py-2 px-3 text-gray-700 hover:bg-purple-50 rounded-lg">🎯 Counter</a>
+        <div id="menuPanel" class="absolute top-20 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 w-52 hidden transform transition-all duration-300">
+            <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105 bg-purple-50">🏠 Home</a>
+            <a href="./status.html" id="statusLink" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105 hidden">📊 Status</a>
+            <a href="./game.html" id="gameLink" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105 hidden">🎮 Game</a>
+            <a href="./admin.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">⚙️ Admin</a>
+            <a href="./counter.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">🎯 Counter</a>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div class="min-h-screen flex flex-col justify-center items-center px-4 py-8">
-        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center">
+    <div class="min-h-screen flex flex-col justify-center items-center px-6 py-12">
+        <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-10 max-w-md w-full text-center slide-up">
             <!-- Logo/Mascot -->
-            <div class="mb-6">
-                <div class="w-24 h-24 bg-gradient-to-r from-purple-400 to-indigo-400 rounded-full mx-auto flex items-center justify-center text-4xl mascot-bounce">
+            <div class="mb-8">
+                <div class="w-28 h-28 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full mx-auto flex items-center justify-center text-5xl mascot-bounce shadow-lg">
                     🎫
                 </div>
-                <h1 class="text-3xl font-bold text-gray-800 mt-4">Queue Joy</h1>
-                <p class="text-gray-600 mt-2">Skip the line, enjoy the wait!</p>
+                <h1 class="text-4xl font-bold text-gray-800 mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Queue Joy</h1>
+                <p class="text-gray-600 mt-3 text-lg">Skip the line, enjoy the wait!</p>
             </div>
 
             <!-- Current Queue Status -->
-            <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 mb-6">
-                <p class="text-sm text-gray-600">Now Serving</p>
-                <p id="currentServing" class="text-2xl font-bold text-purple-600">A101</p>
-                <p class="text-xs text-gray-500 mt-1">Updated live</p>
+            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 mb-8 glow-pulse">
+                <p class="text-sm text-gray-600 font-medium">Now Serving</p>
+                <p id="currentServing" class="text-3xl font-bold text-emerald-600 mt-2">A101</p>
+                <p class="text-xs text-gray-500 mt-2 flex items-center justify-center">
+                    <span class="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"></span>
+                    Updated live
+                </p>
             </div>
 
             <!-- Get Number Button -->
-            <button id="getNumberBtn" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300 mb-4">
-                <span class="text-lg">🎯 Get My Number</span>
+            <button id="getNumberBtn" class="w-full py-5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 mb-6 text-lg">
+                <span class="flex items-center justify-center">
+                    <span class="text-2xl mr-3">🎯</span>
+                    Get My Number
+                </span>
             </button>
 
             <!-- Status Messages -->
-            <p id="statusMsg" class="text-sm text-green-600 hidden mt-2">✅ Number generated successfully!</p>
-            <p id="errorMsg" class="text-sm text-red-500 hidden mt-2">❌ Something went wrong. Please try again.</p>
+            <div id="statusMsg" class="hidden mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                <p class="text-emerald-700 font-medium">✅ Number generated successfully!</p>
+            </div>
+            <div id="errorMsg" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <p class="text-red-700 font-medium">❌ Something went wrong. Please try again.</p>
+            </div>
 
             <!-- Queue Info -->
-            <div class="mt-6 text-xs text-gray-500">
-                <p>📱 Mobile-optimized experience</p>
-                <p>🎮 Play games while waiting</p>
-                <p>📊 Real-time queue updates</p>
+            <div class="mt-8 space-y-2 text-sm text-gray-500">
+                <p class="flex items-center justify-center"><span class="mr-2">📱</span>Mobile-optimized experience</p>
+                <p class="flex items-center justify-center"><span class="mr-2">🎮</span>Play games while waiting</p>
+                <p class="flex items-center justify-center"><span class="mr-2">📊</span>Real-time queue updates</p>
             </div>
         </div>
     </div>
@@ -109,8 +132,12 @@
             const statusMsg = document.getElementById('statusMsg');
             const errorMsg = document.getElementById('errorMsg');
             
+            // Hide previous messages
+            statusMsg.classList.add('hidden');
+            errorMsg.classList.add('hidden');
+            
             // Show loading state
-            button.innerHTML = '<span class="text-lg">🔄 Generating...</span>';
+            button.innerHTML = '<span class="flex items-center justify-center"><span class="text-2xl mr-3 animate-spin">🔄</span>Generating...</span>';
             button.disabled = true;
             
             const today = new Date().toISOString().split('T')[0];
@@ -143,22 +170,23 @@
                             localStorage.setItem('queuePrefix', prefix);
                             
                             // Show success
-                            statusMsg.textContent = `✅ Your number is ${queueId}!`;
+                            statusMsg.querySelector('p').textContent = `✅ Your number is ${queueId}!`;
                             statusMsg.classList.remove('hidden');
-                            errorMsg.classList.add('hidden');
+                            
+                            // Update menu visibility
+                            updateMenuVisibility();
                             
                             // Redirect after delay
                             setTimeout(() => {
                                 window.location.href = './status.html';
-                            }, 1500);
+                            }, 2000);
                         })
                         .catch((error) => {
                             console.error('Error generating number:', error);
                             errorMsg.classList.remove('hidden');
-                            statusMsg.classList.add('hidden');
                             
                             // Reset button
-                            button.innerHTML = '<span class="text-lg">🎯 Get My Number</span>';
+                            button.innerHTML = '<span class="flex items-center justify-center"><span class="text-2xl mr-3">🎯</span>Get My Number</span>';
                             button.disabled = false;
                         });
                 });
