@@ -1,7 +1,5 @@
 
 // Firebase Configuration for Queue Joy
-// Replace with your Firebase project credentials
-
 const firebaseConfig = {
   apiKey: "demo-api-key",
   authDomain: "queue-joy-demo.firebaseapp.com",
@@ -14,87 +12,34 @@ const firebaseConfig = {
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
-
-// Initialize Realtime Database
 const database = firebase.database();
 
 console.log('🔥 Firebase initialized for Queue Joy');
 
-// Demo data initialization
 function initializeDemoData() {
-  const today = new Date().toISOString().split('T')[0];
-  
-  // Check if demo data already exists
-  database.ref(`queues/${today}`).once('value', (snapshot) => {
+  // Initialize queue state
+  database.ref('queue').once('value', (snapshot) => {
     if (!snapshot.exists()) {
       console.log('🎯 Initializing demo queue data...');
       
-      // Set initial queue state
       const demoQueue = {
-        currentNumberSuffix: 103,
-        lastSuffix: 108,
+        currentServing: 'A001',
+        lastNumber: 3,
         numbers: {
-          'A101': { status: 'served', timestamp: Date.now() - 3600000 },
-          'A102': { status: 'served', timestamp: Date.now() - 3000000 },
-          'A103': { status: 'serving', timestamp: Date.now() - 1800000 },
-          'A104': { status: 'waiting', timestamp: Date.now() - 1200000 },
-          'A105': { status: 'waiting', timestamp: Date.now() - 900000 },
-          'A106': { status: 'waiting', timestamp: Date.now() - 600000 },
-          'A107': { status: 'waiting', timestamp: Date.now() - 300000 },
-          'A108': { status: 'waiting', timestamp: Date.now() }
+          'A001': { status: 'serving', timestamp: Date.now() - 1800000 },
+          'A002': { status: 'waiting', timestamp: Date.now() - 1200000 },
+          'A003': { status: 'waiting', timestamp: Date.now() - 600000 }
         }
       };
       
-      database.ref(`queues/${today}`).set(demoQueue)
+      database.ref('queue').set(demoQueue)
         .then(() => console.log('✅ Demo queue data initialized'))
         .catch(error => console.error('❌ Error initializing demo data:', error));
     }
   });
-  
-  // Initialize default settings
-  database.ref('settings').once('value', (snapshot) => {
-    if (!snapshot.exists()) {
-      console.log('⚙️ Initializing default settings...');
-      
-      const defaultSettings = {
-        queueFormat: {
-          prefix: 'A',
-          start: 100
-        },
-        counterCount: 3,
-        adImage: '' // Empty initially
-      };
-      
-      database.ref('settings').set(defaultSettings)
-        .then(() => console.log('✅ Default settings initialized'))
-        .catch(error => console.error('❌ Error initializing settings:', error));
-    }
-  });
-  
-  // Initialize demo analytics
-  database.ref(`analytics/${today}`).once('value', (snapshot) => {
-    if (!snapshot.exists()) {
-      console.log('📊 Initializing demo analytics...');
-      
-      const demoAnalytics = {
-        'A101': { calledTime: Date.now() - 3600000, waitTimeMinutes: 5 },
-        'A102': { calledTime: Date.now() - 3000000, waitTimeMinutes: 8 },
-        'A103': { calledTime: Date.now() - 1800000, waitTimeMinutes: 3 }
-      };
-      
-      database.ref(`analytics/${today}`).set(demoAnalytics)
-        .then(() => console.log('✅ Demo analytics initialized'))
-        .catch(error => console.error('❌ Error initializing analytics:', error));
-    }
-  });
 }
 
-// Initialize demo data when script loads
-document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(initializeDemoData, 1000); // Small delay to ensure Firebase is ready
-});
-
-// Error handling and connection monitoring
+// Connection monitoring
 database.ref('.info/connected').on('value', (snapshot) => {
   if (snapshot.val() === true) {
     console.log('✅ Connected to Firebase Realtime Database');
@@ -103,7 +48,11 @@ database.ref('.info/connected').on('value', (snapshot) => {
   }
 });
 
-// Global error handler for Firebase operations
+// Initialize demo data when script loads
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(initializeDemoData, 1000);
+});
+
 window.addEventListener('unhandledrejection', event => {
   console.error('🔥 Firebase operation failed:', event.reason);
   event.preventDefault();

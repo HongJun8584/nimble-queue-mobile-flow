@@ -31,24 +31,6 @@ function setupHamburgerMenu() {
         }
     });
     
-    // Direct navigation for admin and counter (no PIN required)
-    const adminLink = document.querySelector('a[href="./admin.html"]');
-    const counterLink = document.querySelector('a[href="./counter.html"]');
-    
-    if (adminLink) {
-        adminLink.addEventListener('click', (e) => {
-            console.log('⚙️ Navigating to admin');
-            // Direct navigation - no PIN required
-        });
-    }
-    
-    if (counterLink) {
-        counterLink.addEventListener('click', (e) => {
-            console.log('🎯 Navigating to counter');
-            // Direct navigation - no PIN required
-        });
-    }
-    
     console.log('✅ Hamburger menu initialized');
 }
 
@@ -67,7 +49,6 @@ function openMenu() {
     const menuPanel = document.getElementById('menuPanel');
     menuPanel.classList.remove('hidden');
     
-    // Smooth animation
     setTimeout(() => {
         menuPanel.style.transform = 'scale(1)';
         menuPanel.style.opacity = '1';
@@ -86,12 +67,11 @@ function closeMenu() {
 }
 
 function updateMenuVisibility() {
-    const queueId = localStorage.getItem('queueId');
+    const queueId = sessionStorage.getItem('queueId');
     const statusLink = document.getElementById('statusLink');
     
     console.log('🔍 Updating menu visibility, queueId:', queueId);
     
-    // Show/hide status link based on whether user has a queue number
     if (statusLink) {
         if (queueId) {
             statusLink.classList.remove('hidden');
@@ -103,7 +83,6 @@ function updateMenuVisibility() {
     }
 }
 
-// Add smooth CSS animations
 const style = document.createElement('style');
 style.textContent = `
     @keyframes fadeIn {

@@ -74,7 +74,7 @@
             <!-- Current Queue Status -->
             <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 mb-8 glow-pulse border border-emerald-200">
                 <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Now Serving</p>
-                <p id="currentServing" class="text-4xl font-bold text-emerald-600 mt-2 mb-2">A103</p>
+                <p id="currentServing" class="text-4xl font-bold text-emerald-600 mt-2 mb-2">A001</p>
                 <p class="text-xs text-gray-500 flex items-center justify-center">
                     <span class="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"></span>
                     Live Updates
@@ -134,18 +134,16 @@
         });
 
         function loadCurrentServing() {
-            const today = new Date().toISOString().split('T')[0];
-            const currentServingRef = firebase.database().ref(`queues/${today}/currentNumberSuffix`);
+            const currentRef = firebase.database().ref('queue/currentServing');
             
-            currentServingRef.on('value', (snapshot) => {
-                const suffix = snapshot.val() || 103;
-                const prefix = 'A';
-                document.getElementById('currentServing').textContent = prefix + suffix;
+            currentRef.on('value', (snapshot) => {
+                const current = snapshot.val() || 'A001';
+                document.getElementById('currentServing').textContent = current;
             });
         }
 
         function generateQueueNumber() {
-            console.log('🎯 Starting number generation...');
+            console.log('🎯 Generating queue number...');
             
             const button = document.getElementById('getNumberBtn');
             const buttonContent = document.getElementById('buttonContent');
@@ -161,82 +159,62 @@
             buttonContent.innerHTML = '<span class="loading-spinner text-3xl mr-3">🔄</span>Generating...';
             button.disabled = true;
             
-            const today = new Date().toISOString().split('T')[0];
-            const timestamp = Date.now();
+            // Get next number using Firebase transaction
+            const lastNumberRef = firebase.database().ref('queue/lastNumber');
             
-            // Get settings and generate number
-            firebase.database().ref('settings/queueFormat').once('value')
-                .then((snapshot) => {
-                    const settings = snapshot.val() || { prefix: 'A', start: 100 };
-                    const prefix = settings.prefix;
-                    
-                    console.log('📝 Settings loaded:', settings);
-                    
-                    // Get and increment last number
-                    return firebase.database().ref(`queues/${today}/lastSuffix`).transaction((lastSuffix) => {
-                        const currentLast = lastSuffix || (settings.start + 8); // Start from 108
-                        const newSuffix = currentLast + 1;
-                        console.log('📊 New suffix:', newSuffix);
-                        return newSuffix;
-                    });
-                })
-                .then((result) => {
-                    if (!result.committed) {
-                        throw new Error('Transaction failed');
-                    }
-                    
-                    const newSuffix = result.snapshot.val();
-                    const queueId = 'A' + newSuffix;
-                    
-                    console.log('✅ Generated queue ID:', queueId);
-                    
-                    // Save to Firebase
-                    const updates = {};
-                    updates[`queues/${today}/numbers/${queueId}`] = {
-                        status: 'waiting',
-                        timestamp: timestamp
-                    };
-                    
-                    return firebase.database().ref().update(updates).then(() => {
-                        // Store in localStorage
-                        localStorage.setItem('queueId', queueId);
-                        localStorage.setItem('queueTimestamp', timestamp.toString());
-                        localStorage.setItem('queueDate', today);
-                        
-                        console.log('💾 Data saved to localStorage:', {
-                            queueId,
-                            timestamp,
-                            today
-                        });
-                        
+            lastNumberRef.transaction((currentLast) => {
+                const lastNum = currentLast || 0;
+                const newNum = lastNum + 1;
+                console.log('📊 Generated number:', newNum);
+                return newNum;
+            })
+            .then((result) => {
+                if (!result.committed) {
+                    throw new Error('Transaction failed');
+                }
+                
+                const newNumber = result.snapshot.val();
+                const queueId = 'A' + String(newNumber).padStart(3, '0');
+                
+                console.log('✅ Queue ID generated:', queueId);
+                
+                // Store in sessionStorage
+                sessionStorage.setItem('queueId', queueId);
+                sessionStorage.setItem('queueTimestamp', Date.now().toString());
+                
+                // Add to queue
+                const queueData = {
+                    status: 'waiting',
+                    timestamp: Date.now()
+                };
+                
+                return firebase.database().ref(`queue/numbers/${queueId}`).set(queueData)
+                    .then(() => {
                         // Show success message
                         generatedNumberSpan.textContent = queueId;
                         statusMsg.classList.remove('hidden');
                         
-                        // Update menu visibility
-                        updateMenuVisibility();
+                        console.log('🔄 Redirecting to status page...');
                         
-                        console.log('🔄 Redirecting to status page in 2 seconds...');
-                        
-                        // Redirect after showing success
+                        // Redirect after 1.5 seconds
                         setTimeout(() => {
                             window.location.href = './status.html';
-                        }, 2000);
+                        }, 1500);
                         
                         return queueId;
                     });
-                })
-                .catch((error) => {
-                    console.error('❌ Error generating number:', error);
-                    errorMsg.classList.remove('hidden');
-                })
-                .finally(() => {
-                    // Reset button after delay
-                    setTimeout(() => {
-                        buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
-                        button.disabled = false;
-                    }, 3000);
-                });
+            })
+            .catch((error) => {
+                console.error('❌ Error generating number:', error);
+                errorMsg.classList.remove('hidden');
+            })
+            .finally(() => {
+                // Reset button after delay
+                setTimeout(() => {
+                    buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
+                    button.disabled = false;
+                }, 3000);
+            });
         }
     </script>
 </body>
