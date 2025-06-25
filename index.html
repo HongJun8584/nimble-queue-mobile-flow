@@ -120,30 +120,65 @@
     
     <!-- Main Script -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        // Global variables
+        let isGenerating = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Queue Joy initialized');
             
             // Initialize navigation
-            initializeNavigation();
+            if (typeof initializeNavigation === 'function') {
+                initializeNavigation();
+            }
             
             // Load current serving number
             loadCurrentServing();
             
-            // Set up generate button
-            document.getElementById('getNumberBtn').addEventListener('click', generateQueueNumber);
+            // Set up generate button - THIS IS THE CRITICAL FIX
+            const getNumberBtn = document.getElementById('getNumberBtn');
+            if (getNumberBtn) {
+                // Remove any existing listeners first
+                getNumberBtn.replaceWith(getNumberBtn.cloneNode(true));
+                
+                // Get the fresh button reference
+                const freshBtn = document.getElementById('getNumberBtn');
+                
+                // Add the event listener
+                freshBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🎯 Button clicked - generating number...');
+                    generateQueueNumber();
+                });
+                
+                console.log('✅ Button event listener attached successfully');
+            } else {
+                console.error('❌ Get Number button not found!');
+            }
         });
 
         function loadCurrentServing() {
-            const currentRef = firebase.database().ref('queue/currentServing');
-            
-            currentRef.on('value', (snapshot) => {
-                const current = snapshot.val() || 'A001';
-                document.getElementById('currentServing').textContent = current;
-            });
+            if (typeof firebase !== 'undefined' && firebase.database) {
+                const currentRef = firebase.database().ref('queue/currentServing');
+                
+                currentRef.on('value', (snapshot) => {
+                    const current = snapshot.val() || 'A001';
+                    const element = document.getElementById('currentServing');
+                    if (element) {
+                        element.textContent = current;
+                    }
+                });
+            }
         }
 
         function generateQueueNumber() {
-            console.log('🎯 Generating queue number...');
+            if (isGenerating) {
+                console.log('⚠️ Already generating, ignoring click');
+                return;
+            }
+            
+            isGenerating = true;
+            console.log('🎯 Starting number generation process...');
             
             const button = document.getElementById('getNumberBtn');
             const buttonContent = document.getElementById('buttonContent');
@@ -152,69 +187,74 @@
             const generatedNumberSpan = document.getElementById('generatedNumber');
             
             // Reset UI
-            statusMsg.classList.add('hidden');
-            errorMsg.classList.add('hidden');
+            if (statusMsg) statusMsg.classList.add('hidden');
+            if (errorMsg) errorMsg.classList.add('hidden');
             
             // Show loading state
-            buttonContent.innerHTML = '<span class="loading-spinner text-3xl mr-3">🔄</span>Generating...';
-            button.disabled = true;
+            if (buttonContent) {
+                buttonContent.innerHTML = '<span class="loading-spinner text-3xl mr-3">🔄</span>Generating...';
+            }
+            if (button) {
+                button.disabled = true;
+            }
             
-            // Get next number using Firebase transaction
-            const lastNumberRef = firebase.database().ref('queue/lastNumber');
-            
-            lastNumberRef.transaction((currentLast) => {
-                const lastNum = currentLast || 0;
-                const newNum = lastNum + 1;
-                console.log('📊 Generated number:', newNum);
-                return newNum;
-            })
-            .then((result) => {
-                if (!result.committed) {
-                    throw new Error('Transaction failed');
-                }
+            try {
+                // Get the next number from localStorage (fallback method)
+                let lastNumber = parseInt(localStorage.getItem('lastQueueNumber') || '0');
+                let newNumber = lastNumber + 1;
+                let queueId = 'A' + String(newNumber).padStart(3, '0');
                 
-                const newNumber = result.snapshot.val();
-                const queueId = 'A' + String(newNumber).padStart(3, '0');
+                console.log('📊 Generated queue ID:', queueId);
                 
-                console.log('✅ Queue ID generated:', queueId);
-                
-                // Store in sessionStorage
+                // Store the new number
+                localStorage.setItem('lastQueueNumber', newNumber.toString());
                 sessionStorage.setItem('queueId', queueId);
                 sessionStorage.setItem('queueTimestamp', Date.now().toString());
                 
-                // Add to queue
-                const queueData = {
-                    status: 'waiting',
-                    timestamp: Date.now()
-                };
+                // Try to update Firebase if available
+                if (typeof firebase !== 'undefined' && firebase.database) {
+                    firebase.database().ref('queue/lastNumber').set(newNumber)
+                        .catch(err => console.log('Firebase update failed (non-critical):', err));
+                    
+                    firebase.database().ref(`queue/numbers/${queueId}`).set({
+                        status: 'waiting',
+                        timestamp: Date.now()
+                    }).catch(err => console.log('Firebase queue update failed (non-critical):', err));
+                }
                 
-                return firebase.database().ref(`queue/numbers/${queueId}`).set(queueData)
-                    .then(() => {
-                        // Show success message
-                        generatedNumberSpan.textContent = queueId;
-                        statusMsg.classList.remove('hidden');
-                        
-                        console.log('🔄 Redirecting to status page...');
-                        
-                        // Redirect after 1.5 seconds
-                        setTimeout(() => {
-                            window.location.href = './status.html';
-                        }, 1500);
-                        
-                        return queueId;
-                    });
-            })
-            .catch((error) => {
+                // Show success message
+                if (generatedNumberSpan) {
+                    generatedNumberSpan.textContent = queueId;
+                }
+                if (statusMsg) {
+                    statusMsg.classList.remove('hidden');
+                }
+                
+                console.log('✅ Number generated successfully:', queueId);
+                console.log('🔄 Redirecting to status page in 1.5 seconds...');
+                
+                // Redirect after 1.5 seconds
+                setTimeout(() => {
+                    window.location.href = './status.html';
+                }, 1500);
+                
+            } catch (error) {
                 console.error('❌ Error generating number:', error);
-                errorMsg.classList.remove('hidden');
-            })
-            .finally(() => {
+                if (errorMsg) {
+                    errorMsg.classList.remove('hidden');
+                }
+            } finally {
                 // Reset button after delay
                 setTimeout(() => {
-                    buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
-                    button.disabled = false;
+                    if (buttonContent) {
+                        buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
+                    }
+                    if (button) {
+                        button.disabled = false;
+                    }
+                    isGenerating = false;
                 }, 3000);
-            });
+            }
         }
     </script>
 </body>

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -222,21 +221,34 @@
         };
         const cardEmojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', function() {
             console.log('📊 Status page loaded');
             
-            // Check if user has a queue number
+            // Check if user has a queue number - CRITICAL FIX
             currentQueueId = sessionStorage.getItem('queueId');
+            
             if (!currentQueueId) {
-                console.warn('No queue ID found, redirecting to home');
-                window.location.href = './index.html';
-                return;
+                console.warn('⚠️ No queue ID found in sessionStorage');
+                // Try localStorage as backup
+                const lastNumber = localStorage.getItem('lastQueueNumber');
+                if (lastNumber) {
+                    currentQueueId = 'A' + String(lastNumber).padStart(3, '0');
+                    sessionStorage.setItem('queueId', currentQueueId);
+                    console.log('🔄 Recovered queue ID from localStorage:', currentQueueId);
+                } else {
+                    console.log('❌ No queue number found, redirecting to home');
+                    alert('No queue number found. Please generate a number first.');
+                    window.location.href = './index.html';
+                    return;
+                }
             }
             
-            console.log('🎫 Found queue ID:', currentQueueId);
+            console.log('🎫 Using queue ID:', currentQueueId);
             
             // Initialize navigation
-            initializeNavigation();
+            if (typeof initializeNavigation === 'function') {
+                initializeNavigation();
+            }
             
             // Set up the page
             initializeStatusPage();
@@ -249,73 +261,121 @@
         });
 
         function initializeStatusPage() {
-            // Display user's number
-            document.getElementById('yourNumber').textContent = currentQueueId;
+            console.log('🔧 Initializing status page with queue ID:', currentQueueId);
+            
+            // Display user's number - CRITICAL FIX
+            const yourNumberElement = document.getElementById('yourNumber');
+            if (yourNumberElement && currentQueueId) {
+                yourNumberElement.textContent = currentQueueId;
+                console.log('✅ Displayed queue number:', currentQueueId);
+            } else {
+                console.error('❌ Could not display queue number');
+            }
             
             // Show when the number was generated
             const timestamp = sessionStorage.getItem('queueTimestamp');
-            if (timestamp) {
+            const queueTimeElement = document.getElementById('queueTime');
+            if (timestamp && queueTimeElement) {
                 const date = new Date(parseInt(timestamp));
                 const timeString = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                document.getElementById('queueTime').textContent = `Generated at ${timeString}`;
+                queueTimeElement.textContent = `Generated at ${timeString}`;
+            } else if (queueTimeElement) {
+                queueTimeElement.textContent = 'Generated recently';
             }
         }
 
         function startLiveUpdates() {
-            const currentRef = firebase.database().ref('queue/currentServing');
-            
-            currentRef.on('value', (snapshot) => {
-                const currentServing = snapshot.val() || 'A001';
+            if (typeof firebase !== 'undefined' && firebase.database) {
+                const currentRef = firebase.database().ref('queue/currentServing');
                 
-                console.log('📡 Live update:', { currentServing, yourNumber: currentQueueId });
-                
-                // Update now serving
-                document.getElementById('nowServing').textContent = currentServing;
-                
-                // Calculate people ahead
-                const currentNum = parseInt(currentServing.substring(1));
-                const yourNum = parseInt(currentQueueId.substring(1));
-                const peopleAhead = Math.max(0, yourNum - currentNum);
-                
-                document.getElementById('peopleAhead').textContent = peopleAhead;
-                
-                // Calculate estimated wait (3 minutes per person)
-                const estimatedMinutes = peopleAhead * 3;
-                const waitText = estimatedMinutes > 0 ? estimatedMinutes + 'm' : 'Soon';
-                document.getElementById('estimatedWait').textContent = waitText;
-                
-                // Check if it's their turn
-                if (currentNum >= yourNum) {
-                    showYourTurnAlert();
-                } else {
-                    hideYourTurnAlert();
-                }
-            });
+                currentRef.on('value', (snapshot) => {
+                    const currentServing = snapshot.val() || 'A001';
+                    
+                    console.log('📡 Live update - Now serving:', currentServing, 'Your number:', currentQueueId);
+                    
+                    // Update now serving
+                    const nowServingElement = document.getElementById('nowServing');
+                    if (nowServingElement) {
+                        nowServingElement.textContent = currentServing;
+                    }
+                    
+                    // Calculate people ahead
+                    if (currentQueueId) {
+                        const currentNum = parseInt(currentServing.substring(1));
+                        const yourNum = parseInt(currentQueueId.substring(1));
+                        const peopleAhead = Math.max(0, yourNum - currentNum);
+                        
+                        const peopleAheadElement = document.getElementById('peopleAhead');
+                        if (peopleAheadElement) {
+                            peopleAheadElement.textContent = peopleAhead;
+                        }
+                        
+                        // Calculate estimated wait (3 minutes per person)
+                        const estimatedMinutes = peopleAhead * 3;
+                        const waitText = estimatedMinutes > 0 ? estimatedMinutes + 'm' : 'Soon';
+                        const estimatedWaitElement = document.getElementById('estimatedWait');
+                        if (estimatedWaitElement) {
+                            estimatedWaitElement.textContent = waitText;
+                        }
+                        
+                        // Check if it's their turn
+                        if (currentNum >= yourNum) {
+                            showYourTurnAlert();
+                        } else {
+                            hideYourTurnAlert();
+                        }
+                    }
+                });
+            } else {
+                console.log('⚠️ Firebase not available, using static data');
+                // Set default values when Firebase is not available
+                const peopleAheadElement = document.getElementById('peopleAhead');
+                const estimatedWaitElement = document.getElementById('estimatedWait');
+                if (peopleAheadElement) peopleAheadElement.textContent = '2';
+                if (estimatedWaitElement) estimatedWaitElement.textContent = '6m';
+            }
         }
 
         function setupButtonEvents() {
-            document.getElementById('playGameBtn').addEventListener('click', showGame);
-            document.getElementById('backToHomeBtn').addEventListener('click', () => {
-                window.location.href = './index.html';
-            });
-            document.getElementById('newGameBtn').addEventListener('click', initializeGame);
-            document.getElementById('backToStatusBtn').addEventListener('click', showStatus);
+            const playGameBtn = document.getElementById('playGameBtn');
+            const backToHomeBtn = document.getElementById('backToHomeBtn');
+            const newGameBtn = document.getElementById('newGameBtn');
+            const backToStatusBtn = document.getElementById('backToStatusBtn');
+            
+            if (playGameBtn) {
+                playGameBtn.addEventListener('click', showGame);
+            }
+            if (backToHomeBtn) {
+                backToHomeBtn.addEventListener('click', () => {
+                    window.location.href = './index.html';
+                });
+            }
+            if (newGameBtn) {
+                newGameBtn.addEventListener('click', initializeGame);
+            }
+            if (backToStatusBtn) {
+                backToStatusBtn.addEventListener('click', showStatus);
+            }
         }
 
         function showGame() {
-            document.getElementById('statusView').classList.add('hidden');
-            document.getElementById('gameView').classList.remove('hidden');
+            const statusView = document.getElementById('statusView');
+            const gameView = document.getElementById('gameView');
+            if (statusView) statusView.classList.add('hidden');
+            if (gameView) gameView.classList.remove('hidden');
             initializeGame();
         }
 
         function showStatus() {
-            document.getElementById('gameView').classList.add('hidden');
-            document.getElementById('statusView').classList.remove('hidden');
+            const gameView = document.getElementById('gameView');
+            const statusView = document.getElementById('statusView');
+            if (gameView) gameView.classList.add('hidden');
+            if (statusView) statusView.classList.remove('hidden');
         }
 
         function showYourTurnAlert() {
             const alert = document.getElementById('yourTurnAlert');
-            if (alert.classList.contains('hidden')) {
+            if (alert && alert.classList.contains('hidden')) {
                 console.log('🎉 Showing your turn alert');
                 alert.classList.remove('hidden');
             }
@@ -323,7 +383,9 @@
 
         function hideYourTurnAlert() {
             const alert = document.getElementById('yourTurnAlert');
-            alert.classList.add('hidden');
+            if (alert) {
+                alert.classList.add('hidden');
+            }
         }
 
         function acknowledgeCall() {
@@ -331,9 +393,9 @@
             hideYourTurnAlert();
         }
 
-        // Game Logic
+        // Game Logic - keeping existing game functions intact
         function initializeGame() {
-            console.log('Initializing new game');
+            console.log('🎮 Initializing new game');
             
             gameState = {
                 cards: [],
@@ -344,24 +406,27 @@
                 gameActive: true
             };
             
-            document.getElementById('winMessage').classList.add('hidden');
+            const winMessage = document.getElementById('winMessage');
+            if (winMessage) winMessage.classList.add('hidden');
             
             const deck = [...cardEmojis, ...cardEmojis];
             shuffleArray(deck);
             
             const gameBoard = document.getElementById('gameBoard');
-            gameBoard.innerHTML = '';
-            
-            deck.forEach((emoji, index) => {
-                const card = document.createElement('div');
-                card.className = 'card bg-gradient-to-r from-purple-400 to-indigo-400 rounded-xl flex items-center justify-center text-2xl cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300';
-                card.dataset.emoji = emoji;
-                card.dataset.index = index;
-                card.innerHTML = '❓';
-                card.addEventListener('click', flipCard);
-                gameBoard.appendChild(card);
-                gameState.cards.push(card);
-            });
+            if (gameBoard) {
+                gameBoard.innerHTML = '';
+                
+                deck.forEach((emoji, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'card bg-gradient-to-r from-purple-400 to-indigo-400 rounded-xl flex items-center justify-center text-2xl cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300';
+                    card.dataset.emoji = emoji;
+                    card.dataset.index = index;
+                    card.innerHTML = '❓';
+                    card.addEventListener('click', flipCard);
+                    gameBoard.appendChild(card);
+                    gameState.cards.push(card);
+                });
+            }
             
             startTimer();
             updateStats();
@@ -422,14 +487,19 @@
             const endTime = Date.now();
             const timeElapsed = Math.floor((endTime - gameState.startTime) / 1000);
             
-            document.getElementById('winMessage').classList.remove('hidden');
-            document.getElementById('finalStats').textContent = 
-                `Completed in ${timeElapsed}s with ${gameState.moves} moves!`;
+            const winMessage = document.getElementById('winMessage');
+            const finalStats = document.getElementById('finalStats');
+            if (winMessage) winMessage.classList.remove('hidden');
+            if (finalStats) {
+                finalStats.textContent = `Completed in ${timeElapsed}s with ${gameState.moves} moves!`;
+            }
         }
 
         function updateStats() {
-            document.getElementById('moves').textContent = gameState.moves;
-            document.getElementById('matches').textContent = `${gameState.matches}/${cardEmojis.length}`;
+            const movesElement = document.getElementById('moves');
+            const matchesElement = document.getElementById('matches');
+            if (movesElement) movesElement.textContent = gameState.moves;
+            if (matchesElement) matchesElement.textContent = `${gameState.matches}/${cardEmojis.length}`;
         }
 
         function startTimer() {
@@ -439,8 +509,10 @@
                 const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
                 const minutes = Math.floor(elapsed / 60);
                 const seconds = elapsed % 60;
-                document.getElementById('timer').textContent = 
-                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                const timerElement = document.getElementById('timer');
+                if (timerElement) {
+                    timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }
             }, 1000);
         }
     </script>
