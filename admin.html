@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,89 +55,56 @@
             <!-- Header -->
             <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 text-center">
                 <h1 class="text-3xl font-bold text-gray-800">⚙️ Admin Panel</h1>
-                <p class="text-gray-600 mt-2">Queue Management System</p>
+                <p class="text-gray-600 mt-2">System configuration</p>
             </div>
 
             <!-- Tab Navigation -->
             <div class="bg-white rounded-2xl shadow-xl p-6 mb-6">
-                <div class="grid grid-cols-3 gap-2 mb-6">
-                    <button id="queueTab" class="tab-active py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm">Queue</button>
-                    <button id="settingsTab" class="tab-inactive py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm">Settings</button>
-                    <button id="analyticsTab" class="tab-inactive py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm">Analytics</button>
-                </div>
-
-                <!-- Queue Management Tab -->
-                <div id="queueContent">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">🎯 Queue Control</h3>
-                    
-                    <!-- Current Status -->
-                    <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 mb-4 border border-emerald-200">
-                        <div class="grid grid-cols-2 gap-4 text-center">
-                            <div>
-                                <p class="text-xs text-gray-600 font-medium">Now Serving</p>
-                                <p id="adminCurrentServing" class="text-2xl font-bold text-emerald-600">A001</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-600 font-medium">Last Issued</p>
-                                <p id="adminLastIssued" class="text-2xl font-bold text-blue-600">A001</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Queue Actions -->
-                    <div class="space-y-3">
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-2">Set Now Serving:</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="setServingInput" placeholder="A001" class="flex-1 border border-gray-300 p-2 rounded-lg text-center">
-                                <button id="setServingBtn" class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all">Set</button>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-2">Jump to Number:</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="jumpToInput" placeholder="A100" class="flex-1 border border-gray-300 p-2 rounded-lg text-center">
-                                <button id="jumpToBtn" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all">Jump</button>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2">
-                            <button id="pauseQueueBtn" class="py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all font-medium">
-                                <span id="pauseQueueText">⏸️ Pause</span>
-                            </button>
-                            <button id="resetQueueBtn" class="py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all font-medium">🗑️ Reset</button>
-                        </div>
-                    </div>
+                <div class="grid grid-cols-2 gap-2 mb-6">
+                    <button id="settingsTab" class="tab-active py-2 px-4 rounded-lg font-semibold transition-all duration-300">Settings</button>
+                    <button id="analyticsTab" class="tab-inactive py-2 px-4 rounded-lg font-semibold transition-all duration-300">Analytics</button>
                 </div>
 
                 <!-- Settings Tab -->
-                <div id="settingsContent" class="hidden">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">⚙️ Queue Settings</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-2">Queue Prefix:</label>
-                            <select id="queuePrefix" class="w-full border border-gray-300 p-3 rounded-lg">
-                                <option value="A">A (General)</option>
-                                <option value="B">B (Priority)</option>
-                                <option value="C">C (Special)</option>
-                                <option value="VIP">VIP (VIP Service)</option>
-                            </select>
+                <div id="settingsContent">
+                    <!-- Queue Settings -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">🎯 Queue Settings</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-2">Queue Prefix:</label>
+                                <select id="queuePrefix" class="w-full border border-gray-300 p-3 rounded-lg">
+                                    <option value="A">A (General)</option>
+                                    <option value="B">B (Priority)</option>
+                                    <option value="C">C (Special)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-2">Start Number:</label>
+                                <input type="number" id="startNumber" value="100" class="w-full border border-gray-300 p-3 rounded-lg">
+                            </div>
+                            <button id="saveSettingsBtn" class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
+                                💾 Save Settings
+                            </button>
                         </div>
-                        <div>
-                            <label class="block text-sm text-gray-600 mb-2">Starting Number:</label>
-                            <input type="number" id="startNumber" value="1" min="1" max="999" class="w-full border border-gray-300 p-3 rounded-lg">
+                    </div>
+
+                    <!-- Reset Tools -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">🔄 Reset Tools</h3>
+                        <div class="space-y-3">
+                            <button id="resetQueueBtn" class="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
+                                🗑️ Reset Today's Queue
+                            </button>
                         </div>
-                        <button id="saveSettingsBtn" class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
-                            💾 Save Settings
-                        </button>
                     </div>
                 </div>
 
                 <!-- Analytics Tab -->
                 <div id="analyticsContent" class="hidden">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">📊 Queue Analytics</h3>
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">📊 Analytics Overview</h3>
                     
+                    <!-- Stats Cards -->
                     <div class="grid grid-cols-2 gap-4 mb-6">
                         <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 text-center">
                             <p class="text-sm text-gray-600">Today Served</p>
@@ -145,14 +113,6 @@
                         <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4 text-center">
                             <p class="text-sm text-gray-600">In Queue</p>
                             <p id="inQueue" class="text-2xl font-bold text-blue-600">0</p>
-                        </div>
-                    </div>
-
-                    <!-- Active Numbers List -->
-                    <div class="bg-gray-50 rounded-xl p-4">
-                        <h4 class="font-bold text-gray-700 mb-3">Active Queue Numbers:</h4>
-                        <div id="activeNumbers" class="text-sm text-gray-600">
-                            <p class="text-center py-2">No active numbers</p>
                         </div>
                     </div>
                 </div>
@@ -178,11 +138,10 @@
     
     <!-- Main Script -->
     <script>
-        let queueSettings = { prefix: 'A', startNumber: 1, isPaused: false };
-
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🔧 Admin panel loaded');
+            console.log('Queue Joy - Admin panel loaded');
             
+            // Check if already authenticated
             if (sessionStorage.getItem('adminAuth') === 'true') {
                 showMainContent();
             } else {
@@ -226,193 +185,118 @@
             document.getElementById('mainContent').classList.remove('hidden');
             document.getElementById('hamburgerMenu').classList.remove('hidden');
             
+            // Initialize menu
             initializeNavigation();
-            loadQueueData();
+            
+            // Load settings
+            loadSettings();
+            
+            // Load analytics
+            loadAnalytics();
+            
+            // Set up event listeners
             setupEventListeners();
-            startLiveUpdates();
         }
 
         function setupEventListeners() {
             // Tab switching
-            document.getElementById('queueTab').addEventListener('click', () => switchTab('queue'));
             document.getElementById('settingsTab').addEventListener('click', () => switchTab('settings'));
             document.getElementById('analyticsTab').addEventListener('click', () => switchTab('analytics'));
             
-            // Queue actions
-            document.getElementById('setServingBtn').addEventListener('click', setCurrentServing);
-            document.getElementById('jumpToBtn').addEventListener('click', jumpToNumber);
-            document.getElementById('pauseQueueBtn').addEventListener('click', togglePauseQueue);
-            document.getElementById('resetQueueBtn').addEventListener('click', resetQueue);
-            
             // Settings
             document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+            
+            // Reset tools
+            document.getElementById('resetQueueBtn').addEventListener('click', resetQueue);
         }
 
         function switchTab(tab) {
-            const tabs = ['queue', 'settings', 'analytics'];
-            tabs.forEach(t => {
-                const tabBtn = document.getElementById(t + 'Tab');
-                const content = document.getElementById(t + 'Content');
-                if (t === tab) {
-                    tabBtn.className = 'tab-active py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm';
-                    content.classList.remove('hidden');
-                } else {
-                    tabBtn.className = 'tab-inactive py-2 px-3 rounded-lg font-semibold transition-all duration-300 text-sm';
-                    content.classList.add('hidden');
-                }
-            });
+            const settingsTab = document.getElementById('settingsTab');
+            const analyticsTab = document.getElementById('analyticsTab');
+            const settingsContent = document.getElementById('settingsContent');
+            const analyticsContent = document.getElementById('analyticsContent');
             
-            if (tab === 'analytics') {
-                loadAnalytics();
-            }
-        }
-
-        function loadQueueData() {
-            firebase.database().ref('queue/settings').once('value', (snapshot) => {
-                const settings = snapshot.val() || { prefix: 'A', startNumber: 1, isPaused: false };
-                queueSettings = settings;
-                
-                document.getElementById('queuePrefix').value = settings.prefix;
-                document.getElementById('startNumber').value = settings.startNumber;
-                
-                updatePauseButton();
-            });
-        }
-
-        function startLiveUpdates() {
-            firebase.database().ref('queue').on('value', (snapshot) => {
-                const data = snapshot.val() || {};
-                
-                document.getElementById('adminCurrentServing').textContent = data.currentServing || 'A001';
-                document.getElementById('adminLastIssued').textContent = data.lastNumber ? 
-                    (queueSettings.prefix + String(data.lastNumber).padStart(3, '0')) : 'A001';
-            });
-        }
-
-        function setCurrentServing() {
-            const input = document.getElementById('setServingInput');
-            const newServing = input.value.trim().toUpperCase();
-            
-            if (!newServing.match(/^[A-Z]{1,3}\d{3}$/)) {
-                showError('Invalid format. Use format like A001');
-                return;
-            }
-            
-            firebase.database().ref('queue/currentServing').set(newServing)
-                .then(() => {
-                    showStatus('Now serving updated to ' + newServing);
-                    input.value = '';
-                })
-                .catch(error => showError('Failed to update: ' + error.message));
-        }
-
-        function jumpToNumber() {
-            const input = document.getElementById('jumpToInput');
-            const jumpTo = input.value.trim().toUpperCase();
-            
-            if (!jumpTo.match(/^[A-Z]{1,3}\d{3}$/)) {
-                showError('Invalid format. Use format like A100');
-                return;
-            }
-            
-            const numberPart = parseInt(jumpTo.replace(/[A-Z]/g, ''));
-            
-            firebase.database().ref('queue/lastNumber').set(numberPart)
-                .then(() => {
-                    showStatus('Queue jumped to ' + jumpTo);
-                    input.value = '';
-                })
-                .catch(error => showError('Failed to jump: ' + error.message));
-        }
-
-        function togglePauseQueue() {
-            queueSettings.isPaused = !queueSettings.isPaused;
-            
-            firebase.database().ref('queue/settings/isPaused').set(queueSettings.isPaused)
-                .then(() => {
-                    updatePauseButton();
-                    showStatus(queueSettings.isPaused ? 'Queue paused' : 'Queue resumed');
-                })
-                .catch(error => showError('Failed to toggle pause: ' + error.message));
-        }
-
-        function updatePauseButton() {
-            const btn = document.getElementById('pauseQueueBtn');
-            const text = document.getElementById('pauseQueueText');
-            if (queueSettings.isPaused) {
-                btn.className = 'py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all font-medium';
-                text.textContent = '▶️ Resume';
+            if (tab === 'settings') {
+                settingsTab.className = 'tab-active py-2 px-4 rounded-lg font-semibold transition-all duration-300';
+                analyticsTab.className = 'tab-inactive py-2 px-4 rounded-lg font-semibold transition-all duration-300';
+                settingsContent.classList.remove('hidden');
+                analyticsContent.classList.add('hidden');
             } else {
-                btn.className = 'py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all font-medium';
-                text.textContent = '⏸️ Pause';
+                settingsTab.className = 'tab-inactive py-2 px-4 rounded-lg font-semibold transition-all duration-300';
+                analyticsTab.className = 'tab-active py-2 px-4 rounded-lg font-semibold transition-all duration-300';
+                settingsContent.classList.add('hidden');
+                analyticsContent.classList.remove('hidden');
+                loadAnalytics(); // Refresh analytics when switching to tab
             }
         }
 
-        function resetQueue() {
-            if (!confirm('Are you sure you want to reset the entire queue? This cannot be undone.')) {
-                return;
-            }
-            
-            const resetData = {
-                currentServing: queueSettings.prefix + '001',
-                lastNumber: queueSettings.startNumber,
-                numbers: {}
-            };
-            
-            firebase.database().ref('queue').update(resetData)
-                .then(() => {
-                    showStatus('Queue reset successfully');
-                    loadAnalytics();
-                })
-                .catch(error => showError('Failed to reset queue: ' + error.message));
+        function loadSettings() {
+            firebase.database().ref('settings/queueFormat').once('value', (snapshot) => {
+                const settings = snapshot.val() || { prefix: 'A', start: 100 };
+                document.getElementById('queuePrefix').value = settings.prefix;
+                document.getElementById('startNumber').value = settings.start;
+                localStorage.setItem('queuePrefix', settings.prefix);
+            });
         }
 
         function saveSettings() {
             const prefix = document.getElementById('queuePrefix').value;
-            const startNumber = parseInt(document.getElementById('startNumber').value);
+            const start = parseInt(document.getElementById('startNumber').value);
+            const statusMsg = document.getElementById('statusMsg');
             
-            queueSettings = { ...queueSettings, prefix, startNumber };
+            const settings = { prefix, start };
             
-            firebase.database().ref('queue/settings').set(queueSettings)
+            firebase.database().ref('settings/queueFormat').set(settings)
                 .then(() => {
-                    showStatus('Settings saved successfully');
+                    localStorage.setItem('queuePrefix', prefix);
+                    statusMsg.textContent = '✅ Settings saved successfully!';
+                    statusMsg.classList.remove('hidden');
+                    setTimeout(() => statusMsg.classList.add('hidden'), 3000);
                 })
-                .catch(error => showError('Failed to save settings: ' + error.message));
+                .catch((error) => {
+                    console.error('Error saving settings:', error);
+                    showError('Failed to save settings');
+                });
         }
 
         function loadAnalytics() {
-            firebase.database().ref('queue').once('value', (snapshot) => {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Load today's queue data
+            firebase.database().ref(`queues/${today}`).once('value', (snapshot) => {
                 const data = snapshot.val() || {};
-                const currentNum = parseInt((data.currentServing || 'A001').replace(/[A-Z]/g, ''));
-                const lastNum = data.lastNumber || 1;
+                const numbers = data.numbers || {};
+                const currentSuffix = data.currentNumberSuffix || 100;
+                const lastSuffix = data.lastSuffix || 100;
                 
-                const served = Math.max(0, currentNum - queueSettings.startNumber);
-                const inQueue = Math.max(0, lastNum - currentNum);
+                // Calculate served and in queue
+                const served = Math.max(0, currentSuffix - 100);
+                const inQueue = Math.max(0, lastSuffix - currentSuffix);
                 
                 document.getElementById('todayServed').textContent = served;
                 document.getElementById('inQueue').textContent = inQueue;
-                
-                // Show active numbers
-                const activeContainer = document.getElementById('activeNumbers');
-                if (inQueue > 0) {
-                    const activeNums = [];
-                    for (let i = currentNum + 1; i <= lastNum; i++) {
-                        activeNums.push(queueSettings.prefix + String(i).padStart(3, '0'));
-                    }
-                    activeContainer.innerHTML = activeNums.map(num => 
-                        `<span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded mr-2 mb-2">${num}</span>`
-                    ).join('');
-                } else {
-                    activeContainer.innerHTML = '<p class="text-center py-2">No active numbers</p>';
-                }
             });
         }
 
-        function showStatus(message) {
+        function resetQueue() {
+            if (!confirm('Are you sure you want to reset today\'s queue? This cannot be undone.')) {
+                return;
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
             const statusMsg = document.getElementById('statusMsg');
-            statusMsg.textContent = '✅ ' + message;
-            statusMsg.classList.remove('hidden');
-            setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+            
+            firebase.database().ref(`queues/${today}`).remove()
+                .then(() => {
+                    statusMsg.textContent = '✅ Queue reset successfully!';
+                    statusMsg.classList.remove('hidden');
+                    loadAnalytics(); // Refresh analytics
+                    setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+                })
+                .catch((error) => {
+                    console.error('Error resetting queue:', error);
+                    showError('Failed to reset queue');
+                });
         }
 
         function showError(message) {

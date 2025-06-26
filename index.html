@@ -89,12 +89,6 @@
                 </span>
             </button>
 
-            <!-- Pause Notice -->
-            <div id="pauseNotice" class="hidden mt-4 p-4 bg-orange-50 border border-orange-200 rounded-xl">
-                <p class="text-orange-700 font-bold">⏸️ Queue is currently paused</p>
-                <p class="text-orange-600 text-sm mt-1">Please try again later</p>
-            </div>
-
             <!-- Status Messages -->
             <div id="statusMsg" class="hidden mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl pulse-success">
                 <p class="text-emerald-700 font-bold text-lg">✅ Your number: <span id="generatedNumber" class="text-2xl">A000</span></p>
@@ -126,48 +120,65 @@
     
     <!-- Main Script -->
     <script>
+        // Global variables
         let isGenerating = false;
-        let queueSettings = { prefix: 'A', startNumber: 1, isPaused: false };
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀Queue Joy initialized');
+            console.log('🚀 Queue Joy initialized');
             
             // Initialize navigation
             if (typeof initializeNavigation === 'function') {
                 initializeNavigation();
             }
             
-            // Load settings
-            loadQueueSettings();
+            // Load current serving number
             loadCurrentServing();
             
-            // Setup button click handler
+            // Set up generate button - THIS IS THE CRITICAL FIX
             const getNumberBtn = document.getElementById('getNumberBtn');
             if (getNumberBtn) {
-                getNumberBtn.addEventListener('click', handleGetNumber);
-                console.log('✅ Button event listener attached');
+                // Remove any existing listeners first
+                getNumberBtn.replaceWith(getNumberBtn.cloneNode(true));
+                
+                // Get the fresh button reference
+                const freshBtn = document.getElementById('getNumberBtn');
+                
+                // Add the event listener
+                freshBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('🎯 Button clicked - generating number...');
+                    generateQueueNumber();
+                });
+                
+                console.log('✅ Button event listener attached successfully');
             } else {
-                console.error('❌ Button not found!');
+                console.error('❌ Get Number button not found!');
             }
         });
 
-        function handleGetNumber(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            console.log('🎯 Get Number button clicked!');
-            
-            if (isGenerating || queueSettings.isPaused) {
-                console.log('⚠️ Cannot generate - busy or paused');
-                return;
+        function loadCurrentServing() {
+            if (typeof firebase !== 'undefined' && firebase.database) {
+                const currentRef = firebase.database().ref('queue/currentServing');
+                
+                currentRef.on('value', (snapshot) => {
+                    const current = snapshot.val() || 'A001';
+                    const element = document.getElementById('currentServing');
+                    if (element) {
+                        element.textContent = current;
+                    }
+                });
             }
-            
-            generateQueueNumber();
         }
 
         function generateQueueNumber() {
-            console.log('🔄 Starting number generation...');
+            if (isGenerating) {
+                console.log('⚠️ Already generating, ignoring click');
+                return;
+            }
+            
             isGenerating = true;
+            console.log('🎯 Starting number generation process...');
             
             const button = document.getElementById('getNumberBtn');
             const buttonContent = document.getElementById('buttonContent');
@@ -179,7 +190,7 @@
             if (statusMsg) statusMsg.classList.add('hidden');
             if (errorMsg) errorMsg.classList.add('hidden');
             
-            // Show loading
+            // Show loading state
             if (buttonContent) {
                 buttonContent.innerHTML = '<span class="loading-spinner text-3xl mr-3">🔄</span>Generating...';
             }
@@ -187,37 +198,31 @@
                 button.disabled = true;
             }
             
-            // Get current last number from Firebase
-            firebase.database().ref('queue/lastNumber').transaction((currentValue) => {
-                const nextNumber = (currentValue || queueSettings.startNumber) + 1;
-                console.log('📊 Generated number:', nextNumber);
-                return nextNumber;
-            }).then((result) => {
-                if (result.committed) {
-                    const newNumber = result.snapshot.val();
-                    const queueId = queueSettings.prefix + String(newNumber).padStart(3, '0');
+            try {
+                // Get the next number from localStorage (fallback method)
+                let lastNumber = parseInt(localStorage.getItem('lastQueueNumber') || '0');
+                let newNumber = lastNumber + 1;
+                let queueId = 'A' + String(newNumber).padStart(3, '0');
+                
+                console.log('📊 Generated queue ID:', queueId);
+                
+                // Store the new number
+                localStorage.setItem('lastQueueNumber', newNumber.toString());
+                sessionStorage.setItem('queueId', queueId);
+                sessionStorage.setItem('queueTimestamp', Date.now().toString());
+                
+                // Try to update Firebase if available
+                if (typeof firebase !== 'undefined' && firebase.database) {
+                    firebase.database().ref('queue/lastNumber').set(newNumber)
+                        .catch(err => console.log('Firebase update failed (non-critical):', err));
                     
-                    console.log('✅ Queue ID generated:', queueId);
-                    
-                    // Store in sessionStorage
-                    sessionStorage.setItem('queueId', queueId);
-                    sessionStorage.setItem('queueNumber', newNumber.toString());
-                    sessionStorage.setItem('queueTimestamp', Date.now().toString());
-                    
-                    // Store in Firebase
-                    const userData = {
+                    firebase.database().ref(`queue/numbers/${queueId}`).set({
                         status: 'waiting',
-                        timestamp: Date.now(),
-                        number: newNumber
-                    };
-                    
-                    return firebase.database().ref(`queue/numbers/${queueId}`).set(userData);
-                } else {
-                    throw new Error('Failed to generate unique number');
+                        timestamp: Date.now()
+                    }).catch(err => console.log('Firebase queue update failed (non-critical):', err));
                 }
-            }).then(() => {
-                // Show success
-                const queueId = sessionStorage.getItem('queueId');
+                
+                // Show success message
                 if (generatedNumberSpan) {
                     generatedNumberSpan.textContent = queueId;
                 }
@@ -225,67 +230,31 @@
                     statusMsg.classList.remove('hidden');
                 }
                 
-                console.log('✅ Number stored, redirecting in 1.5 seconds...');
+                console.log('✅ Number generated successfully:', queueId);
+                console.log('🔄 Redirecting to status page in 1.5 seconds...');
                 
                 // Redirect after 1.5 seconds
                 setTimeout(() => {
                     window.location.href = './status.html';
                 }, 1500);
                 
-            }).catch((error) => {
+            } catch (error) {
                 console.error('❌ Error generating number:', error);
                 if (errorMsg) {
                     errorMsg.classList.remove('hidden');
                 }
-            }).finally(() => {
+            } finally {
                 // Reset button after delay
                 setTimeout(() => {
                     if (buttonContent) {
                         buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
                     }
-                    if (button && !queueSettings.isPaused) {
+                    if (button) {
                         button.disabled = false;
                     }
                     isGenerating = false;
                 }, 3000);
-            });
-        }
-
-        function loadQueueSettings() {
-            firebase.database().ref('queue/settings').once('value', (snapshot) => {
-                queueSettings = snapshot.val() || { prefix: 'A', startNumber: 1, isPaused: false };
-                console.log('⚙️ Settings loaded:', queueSettings);
-                updateButtonState();
-            });
-            
-            // Listen for setting changes
-            firebase.database().ref('queue/settings').on('value', (snapshot) => {
-                queueSettings = snapshot.val() || { prefix: 'A', startNumber: 1, isPaused: false };
-                updateButtonState();
-            });
-        }
-
-        function updateButtonState() {
-            const button = document.getElementById('getNumberBtn');
-            const pauseNotice = document.getElementById('pauseNotice');
-            
-            if (queueSettings.isPaused) {
-                button.disabled = true;
-                pauseNotice.classList.remove('hidden');
-            } else {
-                button.disabled = false;
-                pauseNotice.classList.add('hidden');
             }
-        }
-
-        function loadCurrentServing() {
-            firebase.database().ref('queue/currentServing').on('value', (snapshot) => {
-                const current = snapshot.val() || 'A001';
-                const element = document.getElementById('currentServing');
-                if (element) {
-                    element.textContent = current;
-                }
-            });
         }
     </script>
 </body>
