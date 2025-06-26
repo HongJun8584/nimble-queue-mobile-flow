@@ -88,52 +88,74 @@
             <div id="statusView" class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-800 mb-8 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Queue Status</h1>
                 
-                <!-- Now Serving -->
-                <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 mb-6 pulse-glow border border-emerald-200">
-                    <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Now Serving</p>
-                    <p id="nowServing" class="text-4xl font-bold text-emerald-600 mt-2 mb-2">A001</p>
-                    <p class="text-xs text-gray-500 flex items-center justify-center">
-                        <span class="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"></span>
-                        Live Updates
-                    </p>
-                </div>
-
-                <!-- Your Number -->
-                <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 mb-6 border border-purple-200">
-                    <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Your Number</p>
-                    <p id="yourNumber" class="text-5xl font-bold text-purple-600 mt-2 mb-2 number-highlight">A000</p>
-                    <p class="text-xs text-gray-500" id="queueTime">Generated just now</p>
-                </div>
-
-                <!-- Queue Info -->
-                <div class="grid grid-cols-2 gap-4 mb-8">
-                    <div class="bg-gray-50 rounded-2xl p-4 fade-in border border-gray-200">
-                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">People Ahead</p>
-                        <p id="peopleAhead" class="text-3xl font-bold text-gray-700 mt-2">0</p>
-                    </div>
-                    <div class="bg-gray-50 rounded-2xl p-4 fade-in border border-gray-200">
-                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Est. Wait</p>
-                        <p id="estimatedWait" class="text-3xl font-bold text-gray-700 mt-2">Soon</p>
+                <!-- Loading Animation -->
+                <div id="loadingStatus" class="mb-6">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                        <span class="ml-3 text-gray-600">Checking queue updates...</span>
                     </div>
                 </div>
 
-                <p class="text-sm text-gray-600 mb-4">Please wait... You are in queue.</p>
+                <!-- Queue Status Cards -->
+                <div id="queueStatusCards" class="hidden">
+                    <!-- Now Serving -->
+                    <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 mb-6 pulse-glow border border-emerald-200">
+                        <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Now Serving</p>
+                        <p id="nowServing" class="text-4xl font-bold text-emerald-600 mt-2 mb-2">A001</p>
+                        <p class="text-xs text-gray-500 flex items-center justify-center">
+                            <span class="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"></span>
+                            Live Updates
+                        </p>
+                    </div>
 
-                <!-- Action Buttons -->
-                <div class="space-y-4">
-                    <button id="playGameBtn" class="w-full py-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-lg">
-                        <span class="flex items-center justify-center">
-                            <span class="text-2xl mr-3">🎮</span>
-                            Play Game While Waiting
-                        </span>
-                    </button>
-                    
-                    <button id="backToHomeBtn" class="w-full py-3 border-2 border-gray-300 text-gray-600 rounded-2xl hover:bg-gray-50 hover:scale-105 transition-all duration-300 font-medium">
-                        <span class="flex items-center justify-center">
-                            <span class="text-xl mr-2">🏠</span>
-                            Back to Home
-                        </span>
-                    </button>
+                    <!-- Your Number -->
+                    <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 mb-6 border border-purple-200">
+                        <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Your Number</p>
+                        <p id="yourNumber" class="text-5xl font-bold text-purple-600 mt-2 mb-2 number-highlight">A000</p>
+                        <p class="text-xs text-gray-500" id="queueTime">Generated just now</p>
+                    </div>
+
+                    <!-- Position Indicator -->
+                    <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 mb-6 border border-blue-200">
+                        <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Your Position</p>
+                        <p id="queuePosition" class="text-4xl font-bold text-blue-600 mt-2 mb-2">-</p>
+                        <p id="positionText" class="text-sm text-gray-600">Calculating position...</p>
+                    </div>
+
+                    <!-- Queue Info -->
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div class="bg-gray-50 rounded-2xl p-4 fade-in border border-gray-200">
+                            <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">People Ahead</p>
+                            <p id="peopleAhead" class="text-3xl font-bold text-gray-700 mt-2">-</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-2xl p-4 fade-in border border-gray-200">
+                            <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Est. Wait</p>
+                            <p id="estimatedWait" class="text-3xl font-bold text-gray-700 mt-2">-</p>
+                        </div>
+                    </div>
+
+                    <!-- Status Message -->
+                    <div id="waitingMessage" class="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-4 mb-6 border border-yellow-200">
+                        <p class="text-yellow-700 font-bold text-lg">⏳ Please wait...</p>
+                        <p class="text-yellow-600 text-sm mt-1">You are in queue. We'll notify you when it's your turn.</p>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="space-y-4">
+                        <button id="playGameBtn" class="w-full py-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-lg">
+                            <span class="flex items-center justify-center">
+                                <span class="text-2xl mr-3">🎮</span>
+                                Play Game While Waiting
+                            </span>
+                        </button>
+                        
+                        <button id="backToHomeBtn" class="w-full py-3 border-2 border-gray-300 text-gray-600 rounded-2xl hover:bg-gray-50 hover:scale-105 transition-all duration-300 font-medium">
+                            <span class="flex items-center justify-center">
+                                <span class="text-xl mr-2">🏠</span>
+                                Back to Home
+                            </span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -211,6 +233,8 @@
     <!-- Main Script -->
     <script>
         let currentQueueId = null;
+        let currentQueueNumber = null;
+        let autoRedirectTimeout = null;
         let gameState = {
             cards: [],
             flippedCards: [],
@@ -224,116 +248,165 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📊 Status page loaded');
             
-            // Check if user has a queue number - CRITICAL FIX
-            currentQueueId = sessionStorage.getItem('queueId');
-            
-            if (!currentQueueId) {
-                console.warn('⚠️ No queue ID found in sessionStorage');
-                // Try localStorage as backup
-                const lastNumber = localStorage.getItem('lastQueueNumber');
-                if (lastNumber) {
-                    currentQueueId = 'A' + String(lastNumber).padStart(3, '0');
-                    sessionStorage.setItem('queueId', currentQueueId);
-                    console.log('🔄 Recovered queue ID from localStorage:', currentQueueId);
-                } else {
-                    console.log('❌ No queue number found, redirecting to home');
-                    alert('No queue number found. Please generate a number first.');
-                    window.location.href = './index.html';
-                    return;
-                }
-            }
-            
-            console.log('🎫 Using queue ID:', currentQueueId);
-            
-            // Initialize navigation
             if (typeof initializeNavigation === 'function') {
                 initializeNavigation();
             }
             
-            // Set up the page
             initializeStatusPage();
-            
-            // Start live updates
-            startLiveUpdates();
-            
-            // Set up button events
             setupButtonEvents();
         });
 
         function initializeStatusPage() {
-            console.log('🔧 Initializing status page with queue ID:', currentQueueId);
+            currentQueueId = sessionStorage.getItem('queueId');
+            currentQueueNumber = parseInt(sessionStorage.getItem('queueNumber'));
             
-            // Display user's number - CRITICAL FIX
+            if (!currentQueueId) {
+                console.warn('⚠️ No queue ID found, redirecting to home');
+                alert('No queue number found. Please generate a number first.');
+                window.location.href = './index.html';
+                return;
+            }
+            
+            console.log('🎫 Using queue ID:', currentQueueId, 'Number:', currentQueueNumber);
+            
+            // Display user's number
             const yourNumberElement = document.getElementById('yourNumber');
             if (yourNumberElement && currentQueueId) {
                 yourNumberElement.textContent = currentQueueId;
-                console.log('✅ Displayed queue number:', currentQueueId);
-            } else {
-                console.error('❌ Could not display queue number');
             }
             
-            // Show when the number was generated
+            // Show when generated
             const timestamp = sessionStorage.getItem('queueTimestamp');
             const queueTimeElement = document.getElementById('queueTime');
             if (timestamp && queueTimeElement) {
                 const date = new Date(parseInt(timestamp));
                 const timeString = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 queueTimeElement.textContent = `Generated at ${timeString}`;
-            } else if (queueTimeElement) {
-                queueTimeElement.textContent = 'Generated recently';
             }
+            
+            // Start monitoring
+            startLiveUpdates();
+            
+            // Hide loading and show content after a moment
+            setTimeout(() => {
+                document.getElementById('loadingStatus').classList.add('hidden');
+                document.getElementById('queueStatusCards').classList.remove('hidden');
+            }, 1000);
         }
 
         function startLiveUpdates() {
-            if (typeof firebase !== 'undefined' && firebase.database) {
-                const currentRef = firebase.database().ref('queue/currentServing');
+            firebase.database().ref('queue/currentServing').on('value', (snapshot) => {
+                const currentServing = snapshot.val() || 'A001';
+                console.log('📡 Live update - Now serving:', currentServing, 'Your number:', currentQueueId);
                 
-                currentRef.on('value', (snapshot) => {
-                    const currentServing = snapshot.val() || 'A001';
+                // Update now serving display
+                const nowServingElement = document.getElementById('nowServing');
+                if (nowServingElement) {
+                    nowServingElement.textContent = currentServing;
+                }
+                
+                // Calculate position and wait time
+                if (currentQueueId && currentQueueNumber) {
+                    const currentNum = parseInt(currentServing.replace(/[A-Z]/g, ''));
+                    const position = Math.max(0, currentQueueNumber - currentNum);
                     
-                    console.log('📡 Live update - Now serving:', currentServing, 'Your number:', currentQueueId);
+                    updatePositionDisplay(position);
                     
-                    // Update now serving
-                    const nowServingElement = document.getElementById('nowServing');
-                    if (nowServingElement) {
-                        nowServingElement.textContent = currentServing;
+                    // Check if it's their turn
+                    if (currentServing === currentQueueId || position <= 0) {
+                        showYourTurnAlert();
+                        startAutoRedirect();
+                    } else {
+                        hideYourTurnAlert();
                     }
-                    
-                    // Calculate people ahead
-                    if (currentQueueId) {
-                        const currentNum = parseInt(currentServing.substring(1));
-                        const yourNum = parseInt(currentQueueId.substring(1));
-                        const peopleAhead = Math.max(0, yourNum - currentNum);
-                        
-                        const peopleAheadElement = document.getElementById('peopleAhead');
-                        if (peopleAheadElement) {
-                            peopleAheadElement.textContent = peopleAhead;
-                        }
-                        
-                        // Calculate estimated wait (3 minutes per person)
-                        const estimatedMinutes = peopleAhead * 3;
-                        const waitText = estimatedMinutes > 0 ? estimatedMinutes + 'm' : 'Soon';
-                        const estimatedWaitElement = document.getElementById('estimatedWait');
-                        if (estimatedWaitElement) {
-                            estimatedWaitElement.textContent = waitText;
-                        }
-                        
-                        // Check if it's their turn
-                        if (currentNum >= yourNum) {
-                            showYourTurnAlert();
-                        } else {
-                            hideYourTurnAlert();
-                        }
-                    }
-                });
+                }
+            });
+        }
+
+        function updatePositionDisplay(position) {
+            const positionElement = document.getElementById('queuePosition');
+            const positionTextElement = document.getElementById('positionText');
+            const peopleAheadElement = document.getElementById('peopleAhead');
+            const estimatedWaitElement = document.getElementById('estimatedWait');
+            
+            if (position <= 0) {
+                if (positionElement) positionElement.textContent = 'Your Turn!';
+                if (positionTextElement) positionTextElement.textContent = 'Please proceed to the counter';
+                if (peopleAheadElement) peopleAheadElement.textContent = '0';
+                if (estimatedWaitElement) estimatedWaitElement.textContent = 'Now';
             } else {
-                console.log('⚠️ Firebase not available, using static data');
-                // Set default values when Firebase is not available
-                const peopleAheadElement = document.getElementById('peopleAhead');
-                const estimatedWaitElement = document.getElementById('estimatedWait');
-                if (peopleAheadElement) peopleAheadElement.textContent = '2';
-                if (estimatedWaitElement) estimatedWaitElement.textContent = '6m';
+                const ordinalPosition = getOrdinalPosition(position);
+                if (positionElement) positionElement.textContent = ordinalPosition;
+                if (positionTextElement) {
+                    positionTextElement.textContent = position === 1 ? 
+                        "You're up next!" : `${position - 1} people ahead of you`;
+                }
+                if (peopleAheadElement) peopleAheadElement.textContent = position - 1;
+                
+                // Estimate wait time (3 minutes per person)
+                const estimatedMinutes = (position - 1) * 3;
+                const waitText = estimatedMinutes > 0 ? estimatedMinutes + 'm' : 'Soon';
+                if (estimatedWaitElement) estimatedWaitElement.textContent = waitText;
             }
+        }
+
+        function getOrdinalPosition(num) {
+            const suffix = ['th', 'st', 'nd', 'rd'];
+            const v = num % 100;
+            return num + (suffix[(v - 20) % 10] || suffix[v] || suffix[0]);
+        }
+
+        function showYourTurnAlert() {
+            const alert = document.getElementById('yourTurnAlert');
+            if (alert && alert.classList.contains('hidden')) {
+                console.log('🎉 Showing your turn alert');
+                alert.classList.remove('hidden');
+                
+                // Try to play notification sound
+                try {
+                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuN2OvGdSMFLYPMx');
+                    audio.play().catch(e => console.log('Audio play failed:', e));
+                } catch (e) {
+                    console.log('Audio notification not supported');
+                }
+            }
+        }
+
+        function hideYourTurnAlert() {
+            const alert = document.getElementById('yourTurnAlert');
+            if (alert) {
+                alert.classList.add('hidden');
+            }
+            
+            if (autoRedirectTimeout) {
+                clearTimeout(autoRedirectTimeout);
+                autoRedirectTimeout = null;
+            }
+        }
+
+        function startAutoRedirect() {
+            // Auto-redirect after 10 seconds if user doesn't acknowledge
+            autoRedirectTimeout = setTimeout(() => {
+                acknowledgeCall();
+            }, 10000);
+        }
+
+        function acknowledgeCall() {
+            console.log('👍 User acknowledged the call or auto-redirect triggered');
+            
+            // Clear user's queue data
+            sessionStorage.removeItem('queueId');
+            sessionStorage.removeItem('queueNumber');
+            sessionStorage.removeItem('queueTimestamp');
+            
+            // Clear timeouts
+            if (autoRedirectTimeout) {
+                clearTimeout(autoRedirectTimeout);
+            }
+            
+            // Redirect to home with success message
+            sessionStorage.setItem('showSuccessMessage', 'true');
+            window.location.href = './index.html';
         }
 
         function setupButtonEvents() {
@@ -373,27 +446,6 @@
             if (statusView) statusView.classList.remove('hidden');
         }
 
-        function showYourTurnAlert() {
-            const alert = document.getElementById('yourTurnAlert');
-            if (alert && alert.classList.contains('hidden')) {
-                console.log('🎉 Showing your turn alert');
-                alert.classList.remove('hidden');
-            }
-        }
-
-        function hideYourTurnAlert() {
-            const alert = document.getElementById('yourTurnAlert');
-            if (alert) {
-                alert.classList.add('hidden');
-            }
-        }
-
-        function acknowledgeCall() {
-            console.log('👍 User acknowledged the call');
-            hideYourTurnAlert();
-        }
-
-        // Game Logic - keeping existing game functions intact
         function initializeGame() {
             console.log('🎮 Initializing new game');
             
@@ -515,6 +567,13 @@
                 }
             }, 1000);
         }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (autoRedirectTimeout) {
+                clearTimeout(autoRedirectTimeout);
+            }
+        });
     </script>
 </body>
 </html>
