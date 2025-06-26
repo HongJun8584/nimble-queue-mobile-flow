@@ -104,15 +104,6 @@
                 <p class="text-red-700 font-medium">❌ Failed to generate number. Please try again.</p>
             </div>
 
-            <!-- Auto-redirect Message -->
-            <div id="yourTurnMsg" class="hidden mt-4 p-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-2xl shadow-xl">
-                <h2 class="text-2xl font-bold mb-2">🎉 IT'S YOUR TURN!</h2>
-                <p class="text-lg mb-4">Please proceed to the counter</p>
-                <button onclick="clearTurnMessage()" class="bg-white text-green-600 px-6 py-2 rounded-xl font-bold hover:scale-105 transition-all">
-                    Got it! 👍
-                </button>
-            </div>
-
             <!-- Queue Info -->
             <div class="mt-8 space-y-3 text-sm text-gray-500 fade-in">
                 <p class="flex items-center justify-center"><span class="mr-3 text-lg">📱</span>Mobile-optimized experience</p>
@@ -137,24 +128,133 @@
     <script>
         let isGenerating = false;
         let queueSettings = { prefix: 'A', startNumber: 1, isPaused: false };
-        let userTurnCheckInterval = null;
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Queue Joy initialized');
+            console.log('🚀Queue Joy initialized');
             
+            // Initialize navigation
             if (typeof initializeNavigation === 'function') {
                 initializeNavigation();
             }
             
+            // Load settings
             loadQueueSettings();
             loadCurrentServing();
-            setupGenerateButton();
-            startUserTurnMonitoring();
+            
+            // Setup button click handler
+            const getNumberBtn = document.getElementById('getNumberBtn');
+            if (getNumberBtn) {
+                getNumberBtn.addEventListener('click', handleGetNumber);
+                console.log('✅ Button event listener attached');
+            } else {
+                console.error('❌ Button not found!');
+            }
         });
+
+        function handleGetNumber(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            console.log('🎯 Get Number button clicked!');
+            
+            if (isGenerating || queueSettings.isPaused) {
+                console.log('⚠️ Cannot generate - busy or paused');
+                return;
+            }
+            
+            generateQueueNumber();
+        }
+
+        function generateQueueNumber() {
+            console.log('🔄 Starting number generation...');
+            isGenerating = true;
+            
+            const button = document.getElementById('getNumberBtn');
+            const buttonContent = document.getElementById('buttonContent');
+            const statusMsg = document.getElementById('statusMsg');
+            const errorMsg = document.getElementById('errorMsg');
+            const generatedNumberSpan = document.getElementById('generatedNumber');
+            
+            // Reset UI
+            if (statusMsg) statusMsg.classList.add('hidden');
+            if (errorMsg) errorMsg.classList.add('hidden');
+            
+            // Show loading
+            if (buttonContent) {
+                buttonContent.innerHTML = '<span class="loading-spinner text-3xl mr-3">🔄</span>Generating...';
+            }
+            if (button) {
+                button.disabled = true;
+            }
+            
+            // Get current last number from Firebase
+            firebase.database().ref('queue/lastNumber').transaction((currentValue) => {
+                const nextNumber = (currentValue || queueSettings.startNumber) + 1;
+                console.log('📊 Generated number:', nextNumber);
+                return nextNumber;
+            }).then((result) => {
+                if (result.committed) {
+                    const newNumber = result.snapshot.val();
+                    const queueId = queueSettings.prefix + String(newNumber).padStart(3, '0');
+                    
+                    console.log('✅ Queue ID generated:', queueId);
+                    
+                    // Store in sessionStorage
+                    sessionStorage.setItem('queueId', queueId);
+                    sessionStorage.setItem('queueNumber', newNumber.toString());
+                    sessionStorage.setItem('queueTimestamp', Date.now().toString());
+                    
+                    // Store in Firebase
+                    const userData = {
+                        status: 'waiting',
+                        timestamp: Date.now(),
+                        number: newNumber
+                    };
+                    
+                    return firebase.database().ref(`queue/numbers/${queueId}`).set(userData);
+                } else {
+                    throw new Error('Failed to generate unique number');
+                }
+            }).then(() => {
+                // Show success
+                const queueId = sessionStorage.getItem('queueId');
+                if (generatedNumberSpan) {
+                    generatedNumberSpan.textContent = queueId;
+                }
+                if (statusMsg) {
+                    statusMsg.classList.remove('hidden');
+                }
+                
+                console.log('✅ Number stored, redirecting in 1.5 seconds...');
+                
+                // Redirect after 1.5 seconds
+                setTimeout(() => {
+                    window.location.href = './status.html';
+                }, 1500);
+                
+            }).catch((error) => {
+                console.error('❌ Error generating number:', error);
+                if (errorMsg) {
+                    errorMsg.classList.remove('hidden');
+                }
+            }).finally(() => {
+                // Reset button after delay
+                setTimeout(() => {
+                    if (buttonContent) {
+                        buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
+                    }
+                    if (button && !queueSettings.isPaused) {
+                        button.disabled = false;
+                    }
+                    isGenerating = false;
+                }, 3000);
+            });
+        }
 
         function loadQueueSettings() {
             firebase.database().ref('queue/settings').once('value', (snapshot) => {
                 queueSettings = snapshot.val() || { prefix: 'A', startNumber: 1, isPaused: false };
+                console.log('⚙️ Settings loaded:', queueSettings);
                 updateButtonState();
             });
             
@@ -187,158 +287,6 @@
                 }
             });
         }
-
-        function setupGenerateButton() {
-            const getNumberBtn = document.getElementById('getNumberBtn');
-            if (getNumberBtn) {
-                getNumberBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('🎯 Generate number button clicked');
-                    generateQueueNumber();
-                });
-            }
-        }
-
-        function generateQueueNumber() {
-            if (isGenerating || queueSettings.isPaused) {
-                console.log('⚠️ Cannot generate - busy or paused');
-                return;
-            }
-            
-            isGenerating = true;
-            console.log('🎯 Starting centralized number generation...');
-            
-            const button = document.getElementById('getNumberBtn');
-            const buttonContent = document.getElementById('buttonContent');
-            const statusMsg = document.getElementById('statusMsg');
-            const errorMsg = document.getElementById('errorMsg');
-            const generatedNumberSpan = document.getElementById('generatedNumber');
-            
-            // Reset UI
-            if (statusMsg) statusMsg.classList.add('hidden');
-            if (errorMsg) errorMsg.classList.add('hidden');
-            
-            // Show loading state
-            if (buttonContent) {
-                buttonContent.innerHTML = '<span class="loading-spinner text-3xl mr-3">🔄</span>Generating...';
-            }
-            if (button) {
-                button.disabled = true;
-            }
-            
-            // Use Firebase transaction to ensure unique numbers
-            firebase.database().ref('queue/lastNumber').transaction((currentValue) => {
-                return (currentValue || queueSettings.startNumber) + 1;
-            }).then((result) => {
-                if (result.committed) {
-                    const newNumber = result.snapshot.val();
-                    const queueId = queueSettings.prefix + String(newNumber).padStart(3, '0');
-                    
-                    // Store user's number and timestamp
-                    const userData = {
-                        status: 'waiting',
-                        timestamp: Date.now(),
-                        number: newNumber
-                    };
-                    
-                    // Save to Firebase and sessionStorage
-                    return firebase.database().ref(`queue/numbers/${queueId}`).set(userData)
-                        .then(() => {
-                            console.log('✅ Number generated and stored:', queueId);
-                            
-                            // Store in sessionStorage
-                            sessionStorage.setItem('queueId', queueId);
-                            sessionStorage.setItem('queueNumber', newNumber.toString());
-                            sessionStorage.setItem('queueTimestamp', Date.now().toString());
-                            
-                            // Show success
-                            if (generatedNumberSpan) {
-                                generatedNumberSpan.textContent = queueId;
-                            }
-                            if (statusMsg) {
-                                statusMsg.classList.remove('hidden');
-                            }
-                            
-                            // Redirect after 1.5 seconds
-                            setTimeout(() => {
-                                window.location.href = './status.html';
-                            }, 1500);
-                        });
-                } else {
-                    throw new Error('Failed to generate unique number');
-                }
-            }).catch((error) => {
-                console.error('❌ Error generating number:', error);
-                if (errorMsg) {
-                    errorMsg.classList.remove('hidden');
-                }
-            }).finally(() => {
-                // Reset button after delay
-                setTimeout(() => {
-                    if (buttonContent) {
-                        buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
-                    }
-                    if (button && !queueSettings.isPaused) {
-                        button.disabled = false;
-                    }
-                    isGenerating = false;
-                }, 3000);
-            });
-        }
-
-        function startUserTurnMonitoring() {
-            // Check if user has a queue number and monitor for their turn
-            const userQueueId = sessionStorage.getItem('queueId');
-            if (userQueueId) {
-                userTurnCheckInterval = setInterval(() => {
-                    firebase.database().ref('queue/currentServing').once('value', (snapshot) => {
-                        const currentServing = snapshot.val();
-                        if (currentServing === userQueueId) {
-                            showYourTurnMessage();
-                            clearInterval(userTurnCheckInterval);
-                        }
-                    });
-                }, 3000); // Check every 3 seconds
-            }
-        }
-
-        function showYourTurnMessage() {
-            const yourTurnMsg = document.getElementById('yourTurnMsg');
-            if (yourTurnMsg) {
-                yourTurnMsg.classList.remove('hidden');
-                
-                // Play notification sound if possible
-                try {
-                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuN2OvGdSMFLYPMx');
-                    audio.play().catch(e => console.log('Audio play failed:', e));
-                } catch (e) {
-                    console.log('Audio notification not supported');
-                }
-            }
-        }
-
-        function clearTurnMessage() {
-            // Clear the user's queue data
-            sessionStorage.removeItem('queueId');
-            sessionStorage.removeItem('queueNumber');
-            sessionStorage.removeItem('queueTimestamp');
-            
-            // Hide the message
-            const yourTurnMsg = document.getElementById('yourTurnMsg');
-            if (yourTurnMsg) {
-                yourTurnMsg.classList.add('hidden');
-            }
-            
-            console.log('🧹 User turn acknowledged and data cleared');
-        }
-
-        // Cleanup interval on page unload
-        window.addEventListener('beforeunload', () => {
-            if (userTurnCheckInterval) {
-                clearInterval(userTurnCheckInterval);
-            }
-        });
     </script>
 </body>
 </html>

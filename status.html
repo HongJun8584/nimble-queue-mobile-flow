@@ -92,7 +92,7 @@
                 <div id="loadingStatus" class="mb-6">
                     <div class="flex items-center justify-center mb-4">
                         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-                        <span class="ml-3 text-gray-600">Checking queue updates...</span>
+                        <span class="ml-3 text-gray-600">Loading your queue status...</span>
                     </div>
                 </div>
 
@@ -112,26 +112,14 @@
                     <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 mb-6 border border-purple-200">
                         <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Your Number</p>
                         <p id="yourNumber" class="text-5xl font-bold text-purple-600 mt-2 mb-2 number-highlight">A000</p>
-                        <p class="text-xs text-gray-500" id="queueTime">Generated just now</p>
+                        <p class="text-xs text-gray-500" id="queueTime">Just now</p>
                     </div>
 
                     <!-- Position Indicator -->
                     <div class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-6 mb-6 border border-blue-200">
                         <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Your Position</p>
                         <p id="queuePosition" class="text-4xl font-bold text-blue-600 mt-2 mb-2">-</p>
-                        <p id="positionText" class="text-sm text-gray-600">Calculating position...</p>
-                    </div>
-
-                    <!-- Queue Info -->
-                    <div class="grid grid-cols-2 gap-4 mb-8">
-                        <div class="bg-gray-50 rounded-2xl p-4 fade-in border border-gray-200">
-                            <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">People Ahead</p>
-                            <p id="peopleAhead" class="text-3xl font-bold text-gray-700 mt-2">-</p>
-                        </div>
-                        <div class="bg-gray-50 rounded-2xl p-4 fade-in border border-gray-200">
-                            <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Est. Wait</p>
-                            <p id="estimatedWait" class="text-3xl font-bold text-gray-700 mt-2">-</p>
-                        </div>
+                        <p id="positionText" class="text-sm text-gray-600">Calculating...</p>
                     </div>
 
                     <!-- Status Message -->
@@ -234,31 +222,21 @@
     <script>
         let currentQueueId = null;
         let currentQueueNumber = null;
-        let autoRedirectTimeout = null;
-        let gameState = {
-            cards: [],
-            flippedCards: [],
-            matches: 0,
-            moves: 0,
-            startTime: null,
-            gameActive: false
-        };
-        const cardEmojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📊 Status page loaded');
             
+            // Initialize navigation
             if (typeof initializeNavigation === 'function') {
                 initializeNavigation();
             }
             
-            initializeStatusPage();
-            setupButtonEvents();
-        });
-
-        function initializeStatusPage() {
+            // Get queue data from sessionStorage
             currentQueueId = sessionStorage.getItem('queueId');
             currentQueueNumber = parseInt(sessionStorage.getItem('queueNumber'));
+            
+            console.log('🎫 Queue ID from session:', currentQueueId);
+            console.log('🔢 Queue Number from session:', currentQueueNumber);
             
             if (!currentQueueId) {
                 console.warn('⚠️ No queue ID found, redirecting to home');
@@ -267,12 +245,11 @@
                 return;
             }
             
-            console.log('🎫 Using queue ID:', currentQueueId, 'Number:', currentQueueNumber);
-            
-            // Display user's number
+            // Display user's number immediately
             const yourNumberElement = document.getElementById('yourNumber');
             if (yourNumberElement && currentQueueId) {
                 yourNumberElement.textContent = currentQueueId;
+                console.log('✅ Displayed user number:', currentQueueId);
             }
             
             // Show when generated
@@ -284,28 +261,31 @@
                 queueTimeElement.textContent = `Generated at ${timeString}`;
             }
             
-            // Start monitoring
+            // Start monitoring queue
             startLiveUpdates();
             
-            // Hide loading and show content after a moment
+            // Hide loading and show content
             setTimeout(() => {
                 document.getElementById('loadingStatus').classList.add('hidden');
                 document.getElementById('queueStatusCards').classList.remove('hidden');
             }, 1000);
-        }
+            
+            // Setup button events
+            setupButtonEvents();
+        });
 
         function startLiveUpdates() {
             firebase.database().ref('queue/currentServing').on('value', (snapshot) => {
                 const currentServing = snapshot.val() || 'A001';
-                console.log('📡 Live update - Now serving:', currentServing, 'Your number:', currentQueueId);
+                console.log('📡 Live update - Now serving:', currentServing);
                 
-                // Update now serving display
+                // Update display
                 const nowServingElement = document.getElementById('nowServing');
                 if (nowServingElement) {
                     nowServingElement.textContent = currentServing;
                 }
                 
-                // Calculate position and wait time
+                // Calculate position
                 if (currentQueueId && currentQueueNumber) {
                     const currentNum = parseInt(currentServing.replace(/[A-Z]/g, ''));
                     const position = Math.max(0, currentQueueNumber - currentNum);
@@ -315,9 +295,6 @@
                     // Check if it's their turn
                     if (currentServing === currentQueueId || position <= 0) {
                         showYourTurnAlert();
-                        startAutoRedirect();
-                    } else {
-                        hideYourTurnAlert();
                     }
                 }
             });
@@ -326,34 +303,17 @@
         function updatePositionDisplay(position) {
             const positionElement = document.getElementById('queuePosition');
             const positionTextElement = document.getElementById('positionText');
-            const peopleAheadElement = document.getElementById('peopleAhead');
-            const estimatedWaitElement = document.getElementById('estimatedWait');
             
             if (position <= 0) {
                 if (positionElement) positionElement.textContent = 'Your Turn!';
                 if (positionTextElement) positionTextElement.textContent = 'Please proceed to the counter';
-                if (peopleAheadElement) peopleAheadElement.textContent = '0';
-                if (estimatedWaitElement) estimatedWaitElement.textContent = 'Now';
             } else {
-                const ordinalPosition = getOrdinalPosition(position);
-                if (positionElement) positionElement.textContent = ordinalPosition;
+                if (positionElement) positionElement.textContent = position;
                 if (positionTextElement) {
                     positionTextElement.textContent = position === 1 ? 
                         "You're up next!" : `${position - 1} people ahead of you`;
                 }
-                if (peopleAheadElement) peopleAheadElement.textContent = position - 1;
-                
-                // Estimate wait time (3 minutes per person)
-                const estimatedMinutes = (position - 1) * 3;
-                const waitText = estimatedMinutes > 0 ? estimatedMinutes + 'm' : 'Soon';
-                if (estimatedWaitElement) estimatedWaitElement.textContent = waitText;
             }
-        }
-
-        function getOrdinalPosition(num) {
-            const suffix = ['th', 'st', 'nd', 'rd'];
-            const v = num % 100;
-            return num + (suffix[(v - 20) % 10] || suffix[v] || suffix[0]);
         }
 
         function showYourTurnAlert() {
@@ -361,219 +321,38 @@
             if (alert && alert.classList.contains('hidden')) {
                 console.log('🎉 Showing your turn alert');
                 alert.classList.remove('hidden');
-                
-                // Try to play notification sound
-                try {
-                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuN2OvGdSMFLYPMx');
-                    audio.play().catch(e => console.log('Audio play failed:', e));
-                } catch (e) {
-                    console.log('Audio notification not supported');
-                }
             }
-        }
-
-        function hideYourTurnAlert() {
-            const alert = document.getElementById('yourTurnAlert');
-            if (alert) {
-                alert.classList.add('hidden');
-            }
-            
-            if (autoRedirectTimeout) {
-                clearTimeout(autoRedirectTimeout);
-                autoRedirectTimeout = null;
-            }
-        }
-
-        function startAutoRedirect() {
-            // Auto-redirect after 10 seconds if user doesn't acknowledge
-            autoRedirectTimeout = setTimeout(() => {
-                acknowledgeCall();
-            }, 10000);
         }
 
         function acknowledgeCall() {
-            console.log('👍 User acknowledged the call or auto-redirect triggered');
+            console.log('👍 User acknowledged the call');
             
-            // Clear user's queue data
+            // Clear session data
             sessionStorage.removeItem('queueId');
             sessionStorage.removeItem('queueNumber');
             sessionStorage.removeItem('queueTimestamp');
             
-            // Clear timeouts
-            if (autoRedirectTimeout) {
-                clearTimeout(autoRedirectTimeout);
-            }
-            
-            // Redirect to home with success message
-            sessionStorage.setItem('showSuccessMessage', 'true');
+            // Redirect to home
             window.location.href = './index.html';
         }
 
         function setupButtonEvents() {
             const playGameBtn = document.getElementById('playGameBtn');
             const backToHomeBtn = document.getElementById('backToHomeBtn');
-            const newGameBtn = document.getElementById('newGameBtn');
-            const backToStatusBtn = document.getElementById('backToStatusBtn');
             
             if (playGameBtn) {
-                playGameBtn.addEventListener('click', showGame);
+                playGameBtn.addEventListener('click', () => {
+                    console.log('🎮 Play game clicked');
+                    // Game functionality can be added here
+                });
             }
+            
             if (backToHomeBtn) {
                 backToHomeBtn.addEventListener('click', () => {
                     window.location.href = './index.html';
                 });
             }
-            if (newGameBtn) {
-                newGameBtn.addEventListener('click', initializeGame);
-            }
-            if (backToStatusBtn) {
-                backToStatusBtn.addEventListener('click', showStatus);
-            }
         }
-
-        function showGame() {
-            const statusView = document.getElementById('statusView');
-            const gameView = document.getElementById('gameView');
-            if (statusView) statusView.classList.add('hidden');
-            if (gameView) gameView.classList.remove('hidden');
-            initializeGame();
-        }
-
-        function showStatus() {
-            const gameView = document.getElementById('gameView');
-            const statusView = document.getElementById('statusView');
-            if (gameView) gameView.classList.add('hidden');
-            if (statusView) statusView.classList.remove('hidden');
-        }
-
-        function initializeGame() {
-            console.log('🎮 Initializing new game');
-            
-            gameState = {
-                cards: [],
-                flippedCards: [],
-                matches: 0,
-                moves: 0,
-                startTime: Date.now(),
-                gameActive: true
-            };
-            
-            const winMessage = document.getElementById('winMessage');
-            if (winMessage) winMessage.classList.add('hidden');
-            
-            const deck = [...cardEmojis, ...cardEmojis];
-            shuffleArray(deck);
-            
-            const gameBoard = document.getElementById('gameBoard');
-            if (gameBoard) {
-                gameBoard.innerHTML = '';
-                
-                deck.forEach((emoji, index) => {
-                    const card = document.createElement('div');
-                    card.className = 'card bg-gradient-to-r from-purple-400 to-indigo-400 rounded-xl flex items-center justify-center text-2xl cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300';
-                    card.dataset.emoji = emoji;
-                    card.dataset.index = index;
-                    card.innerHTML = '❓';
-                    card.addEventListener('click', flipCard);
-                    gameBoard.appendChild(card);
-                    gameState.cards.push(card);
-                });
-            }
-            
-            startTimer();
-            updateStats();
-        }
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
-
-        function flipCard(event) {
-            if (!gameState.gameActive) return;
-            
-            const card = event.target;
-            if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
-            if (gameState.flippedCards.length >= 2) return;
-            
-            card.innerHTML = card.dataset.emoji;
-            card.classList.add('flipped');
-            gameState.flippedCards.push(card);
-            
-            if (gameState.flippedCards.length === 2) {
-                gameState.moves++;
-                updateStats();
-                
-                setTimeout(() => {
-                    checkMatch();
-                }, 1000);
-            }
-        }
-
-        function checkMatch() {
-            const [card1, card2] = gameState.flippedCards;
-            
-            if (card1.dataset.emoji === card2.dataset.emoji) {
-                card1.classList.add('matched');
-                card2.classList.add('matched');
-                gameState.matches++;
-                
-                if (gameState.matches === cardEmojis.length) {
-                    gameWon();
-                }
-            } else {
-                card1.innerHTML = '❓';
-                card2.innerHTML = '❓';
-                card1.classList.remove('flipped');
-                card2.classList.remove('flipped');
-            }
-            
-            gameState.flippedCards = [];
-            updateStats();
-        }
-
-        function gameWon() {
-            gameState.gameActive = false;
-            const endTime = Date.now();
-            const timeElapsed = Math.floor((endTime - gameState.startTime) / 1000);
-            
-            const winMessage = document.getElementById('winMessage');
-            const finalStats = document.getElementById('finalStats');
-            if (winMessage) winMessage.classList.remove('hidden');
-            if (finalStats) {
-                finalStats.textContent = `Completed in ${timeElapsed}s with ${gameState.moves} moves!`;
-            }
-        }
-
-        function updateStats() {
-            const movesElement = document.getElementById('moves');
-            const matchesElement = document.getElementById('matches');
-            if (movesElement) movesElement.textContent = gameState.moves;
-            if (matchesElement) matchesElement.textContent = `${gameState.matches}/${cardEmojis.length}`;
-        }
-
-        function startTimer() {
-            setInterval(() => {
-                if (!gameState.gameActive) return;
-                
-                const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
-                const minutes = Math.floor(elapsed / 60);
-                const seconds = elapsed % 60;
-                const timerElement = document.getElementById('timer');
-                if (timerElement) {
-                    timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                }
-            }, 1000);
-        }
-
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            if (autoRedirectTimeout) {
-                clearTimeout(autoRedirectTimeout);
-            }
-        });
     </script>
 </body>
 </html>
