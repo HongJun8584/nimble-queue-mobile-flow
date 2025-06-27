@@ -198,6 +198,9 @@
         </div>
     </div>
 
+    <!-- Ad Display at Bottom -->
+    <div id="adBanner" class="fixed bottom-0 left-0 w-full bg-purple-700 text-white text-center py-3 px-4 z-50 text-base font-medium" style="display:none;"></div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -220,6 +223,10 @@
             gameActive: false
         };
         const cardEmojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
+
+        let adPollingInterval = null;
+        let servingPollingInterval = null;
+        let yourTurnTimeout = null;
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📊 Status page loaded');
@@ -258,6 +265,11 @@
             
             // Set up button events
             setupButtonEvents();
+
+            pollAdAndServing();
+            // Also load ad immediately on page load
+            const ad = localStorage.getItem('adContent');
+            if (ad) showAd(ad);
         });
 
         function initializeStatusPage() {
@@ -514,6 +526,95 @@
                     timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
                 }
             }, 1000);
+        }
+
+        function pollAdAndServing() {
+            // Poll ad content
+            function updateAd() {
+                if (typeof firebase !== 'undefined' && firebase.database) {
+                    firebase.database().ref('settings/adContent').once('value', (snapshot) => {
+                        const ad = snapshot.val() || localStorage.getItem('adContent') || '';
+                        showAd(ad);
+                    });
+                } else {
+                    showAd(localStorage.getItem('adContent') || '');
+                }
+            }
+            // Poll current serving
+            function checkServing() {
+                let myQueueId = sessionStorage.getItem('queueId');
+                if (!myQueueId) return;
+                if (typeof firebase !== 'undefined' && firebase.database) {
+                    firebase.database().ref('queue/currentServing').once('value', (snapshot) => {
+                        const current = snapshot.val() || localStorage.getItem('currentServing') || 'A001';
+                        handleServing(current, myQueueId);
+                    });
+                } else {
+                    const current = localStorage.getItem('currentServing') || 'A001';
+                    handleServing(current, myQueueId);
+                }
+            }
+            adPollingInterval = setInterval(updateAd, 3000);
+            servingPollingInterval = setInterval(checkServing, 3000);
+            updateAd();
+            checkServing();
+        }
+
+        function showAd(ad) {
+            const adBanner = document.getElementById('adBanner');
+            if (ad && ad.trim()) {
+                adBanner.textContent = ad;
+                adBanner.style.display = 'block';
+            } else {
+                adBanner.style.display = 'none';
+            }
+        }
+
+        function handleServing(currentServing, myQueueId) {
+            if (currentServing === myQueueId) {
+                triggerYourTurn();
+            }
+        }
+
+        function triggerYourTurn() {
+            const alert = document.getElementById('yourTurnAlert');
+            if (alert && alert.classList.contains('hidden')) {
+                alert.classList.remove('hidden');
+                // Ask for notification permission and show notification
+                if (window.Notification) {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            new Notification("It's your turn! Please proceed to the counter.");
+                        }
+                    });
+                }
+                // Vibrate (mobile only)
+                if (navigator.vibrate) {
+                    navigator.vibrate([500, 200, 500]);
+                }
+                // Flash screen background
+                let flash = true;
+                let flashInterval = setInterval(() => {
+                    document.body.style.backgroundColor = flash ? 'yellow' : '';
+                    flash = !flash;
+                }, 500);
+                // Auto-redirect after 30s
+                yourTurnTimeout = setTimeout(() => {
+                    clearInterval(flashInterval);
+                    document.body.style.backgroundColor = '';
+                    sessionStorage.removeItem('queueId');
+                    window.location.href = './index.html';
+                }, 30000);
+            }
+        }
+
+        function hideYourTurnAlert() {
+            const alert = document.getElementById('yourTurnAlert');
+            if (alert) {
+                alert.classList.add('hidden');
+                document.body.classList.remove('your-turn');
+                if (yourTurnTimeout) clearTimeout(yourTurnTimeout);
+            }
         }
     </script>
 </body>

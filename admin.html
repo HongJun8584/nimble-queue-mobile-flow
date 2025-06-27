@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -83,6 +82,11 @@
                                 <label class="block text-sm text-gray-600 mb-2">Start Number:</label>
                                 <input type="number" id="startNumber" value="100" class="w-full border border-gray-300 p-3 rounded-lg">
                             </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-2">Current Serving Number:</label>
+                                <input type="text" id="currentServingInput" placeholder="A001" class="w-full border border-gray-300 p-3 rounded-lg">
+                                <button id="setCurrentServingBtn" class="w-full mt-2 py-2 bg-blue-500 text-white font-bold rounded-xl shadow hover:scale-105 transition-all">Set Current Serving</button>
+                            </div>
                             <button id="saveSettingsBtn" class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
                                 💾 Save Settings
                             </button>
@@ -93,10 +97,19 @@
                     <div class="mb-6">
                         <h3 class="text-lg font-bold text-gray-800 mb-4">🔄 Reset Tools</h3>
                         <div class="space-y-3">
+                            <input type="text" id="resetToNumber" placeholder="A001 or custom" class="w-full border border-gray-300 p-3 rounded-lg">
                             <button id="resetQueueBtn" class="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
-                                🗑️ Reset Today's Queue
+                                🗑️ Reset Queue
                             </button>
                         </div>
+                    </div>
+
+                    <!-- Admin Ad Input -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">📢 Announcement / Promo</h3>
+                        <label for="adText" class="block text-sm text-gray-600 mb-2">Ad Message (bottom of status page)</label>
+                        <textarea id="adText" class="w-full border border-gray-300 p-3 rounded-lg" rows="3" placeholder="Enter announcement or promo message here..."></textarea>
+                        <button id="saveAdBtn" class="w-full mt-2 py-2 bg-purple-500 text-white font-bold rounded-xl shadow hover:scale-105 transition-all">Save Ad</button>
                     </div>
                 </div>
 
@@ -208,6 +221,12 @@
             
             // Reset tools
             document.getElementById('resetQueueBtn').addEventListener('click', resetQueue);
+            
+            // Set current serving
+            document.getElementById('setCurrentServingBtn').addEventListener('click', setCurrentServing);
+            
+            // Save ad
+            document.getElementById('saveAdBtn').addEventListener('click', saveAd);
         }
 
         function switchTab(tab) {
@@ -231,11 +250,24 @@
         }
 
         function loadSettings() {
+            // Load queue format
             firebase.database().ref('settings/queueFormat').once('value', (snapshot) => {
                 const settings = snapshot.val() || { prefix: 'A', start: 100 };
                 document.getElementById('queuePrefix').value = settings.prefix;
                 document.getElementById('startNumber').value = settings.start;
                 localStorage.setItem('queuePrefix', settings.prefix);
+            });
+            // Load current serving
+            firebase.database().ref('queue/currentServing').once('value', (snapshot) => {
+                const current = snapshot.val() || 'A001';
+                document.getElementById('currentServingInput').value = current;
+                localStorage.setItem('currentServing', current);
+            });
+            // Load ad
+            firebase.database().ref('settings/adContent').once('value', (snapshot) => {
+                const ad = snapshot.val() || '';
+                document.getElementById('adText').value = ad;
+                localStorage.setItem('adContent', ad);
             });
         }
 
@@ -279,24 +311,41 @@
         }
 
         function resetQueue() {
-            if (!confirm('Are you sure you want to reset today\'s queue? This cannot be undone.')) {
+            const resetVal = document.getElementById('resetToNumber').value.trim();
+            if (!resetVal.match(/^[A-Z]\d+$/)) {
+                showError('Invalid format. Use e.g. A001');
                 return;
             }
-            
-            const today = new Date().toISOString().split('T')[0];
-            const statusMsg = document.getElementById('statusMsg');
-            
-            firebase.database().ref(`queues/${today}`).remove()
+            firebase.database().ref('queue/currentServing').set(resetVal)
                 .then(() => {
-                    statusMsg.textContent = '✅ Queue reset successfully!';
-                    statusMsg.classList.remove('hidden');
-                    loadAnalytics(); // Refresh analytics
-                    setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+                    localStorage.setItem('currentServing', resetVal);
+                    showStatus('Queue reset to ' + resetVal);
                 })
-                .catch((error) => {
-                    console.error('Error resetting queue:', error);
-                    showError('Failed to reset queue');
-                });
+                .catch(() => showError('Failed to reset queue.'));
+        }
+
+        function setCurrentServing() {
+            const val = document.getElementById('currentServingInput').value.trim();
+            if (!val.match(/^[A-Z]\d+$/)) {
+                showError('Invalid format. Use e.g. A101');
+                return;
+            }
+            firebase.database().ref('queue/currentServing').set(val)
+                .then(() => {
+                    localStorage.setItem('currentServing', val);
+                    showStatus('Current serving updated!');
+                })
+                .catch(() => showError('Failed to update current serving.'));
+        }
+
+        function saveAd() {
+            const ad = document.getElementById('adText').value;
+            localStorage.setItem('adContent', ad);
+            firebase.database().ref('settings/adContent').set(ad)
+                .then(() => {
+                    showStatus('Ad saved!');
+                })
+                .catch(() => showError('Failed to save ad.'));
         }
 
         function showError(message) {
@@ -304,6 +353,13 @@
             errorMsg.textContent = '❌ ' + message;
             errorMsg.classList.remove('hidden');
             setTimeout(() => errorMsg.classList.add('hidden'), 3000);
+        }
+
+        function showStatus(msg) {
+            const statusMsg = document.getElementById('statusMsg');
+            statusMsg.textContent = '✅ ' + msg;
+            statusMsg.classList.remove('hidden');
+            setTimeout(() => statusMsg.classList.add('hidden'), 3000);
         }
     </script>
 </body>
