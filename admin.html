@@ -66,50 +66,21 @@
 
                 <!-- Settings Tab -->
                 <div id="settingsContent">
-                    <!-- Queue Settings -->
-                    <div class="mb-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">🎯 Queue Settings</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm text-gray-600 mb-2">Queue Prefix:</label>
-                                <select id="queuePrefix" class="w-full border border-gray-300 p-3 rounded-lg">
-                                    <option value="A">A (General)</option>
-                                    <option value="B">B (Priority)</option>
-                                    <option value="C">C (Special)</option>
+                    <!-- Unified Counter Management Section (View/Edit/Delete only, no queue control) -->
+                    <div class="mb-8" id="countersUnifiedSection">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">🏦 Counters</h3>
+                        <div id="countersTable" class="mb-4"></div>
+                        <button id="addCounterBtn" class="py-2 px-4 bg-blue-600 text-white font-bold rounded-xl shadow hover:scale-105 transition-all">➕ Add Counter</button>
+                        <div id="addCounterForm" class="hidden mt-4">
+                            <input id="newCounterName" type="text" placeholder="Counter Name (e.g. Counter 3)" class="border p-2 rounded mb-2 w-full" />
+                            <select id="newCounterPrefix" class="border p-2 rounded mb-2 w-full">
+                                <option value="">Select Prefix</option>
+                                <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option><option value="I">I</option><option value="J">J</option><option value="K">K</option><option value="L">L</option><option value="M">M</option><option value="N">N</option><option value="O">O</option><option value="P">P</option><option value="Q">Q</option><option value="R">R</option><option value="S">S</option><option value="T">T</option><option value="U">U</option><option value="V">V</option><option value="W">W</option><option value="X">X</option><option value="Y">Y</option><option value="Z">Z</option>
                                 </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm text-gray-600 mb-2">Start Number:</label>
-                                <input type="number" id="startNumber" value="100" class="w-full border border-gray-300 p-3 rounded-lg">
-                            </div>
-                            <div>
-                                <label class="block text-sm text-gray-600 mb-2">Current Serving Number:</label>
-                                <input type="text" id="currentServingInput" placeholder="A001" class="w-full border border-gray-300 p-3 rounded-lg">
-                                <button id="setCurrentServingBtn" class="w-full mt-2 py-2 bg-blue-500 text-white font-bold rounded-xl shadow hover:scale-105 transition-all">Set Current Serving</button>
-                            </div>
-                            <button id="saveSettingsBtn" class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
-                                💾 Save Settings
-                            </button>
+                            <input id="newCounterStart" type="number" placeholder="Start Number (default 1)" class="border p-2 rounded mb-2 w-full" />
+                            <button id="saveNewCounterBtn" class="py-2 px-4 bg-green-600 text-white font-bold rounded-xl shadow hover:scale-105 transition-all">Save</button>
+                            <button id="cancelNewCounterBtn" class="py-2 px-4 bg-gray-300 text-gray-700 font-bold rounded-xl ml-2">Cancel</button>
                         </div>
-                    </div>
-
-                    <!-- Reset Tools -->
-                    <div class="mb-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">🔄 Reset Tools</h3>
-                        <div class="space-y-3">
-                            <input type="text" id="resetToNumber" placeholder="A001 or custom" class="w-full border border-gray-300 p-3 rounded-lg">
-                            <button id="resetQueueBtn" class="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl shadow-lg hover:scale-105 transition-all duration-300">
-                                🗑️ Reset Queue
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Admin Ad Input -->
-                    <div class="mb-6">
-                        <h3 class="text-lg font-bold text-gray-800 mb-4">📢 Announcement / Promo</h3>
-                        <label for="adText" class="block text-sm text-gray-600 mb-2">Ad Message (bottom of status page)</label>
-                        <textarea id="adText" class="w-full border border-gray-300 p-3 rounded-lg" rows="3" placeholder="Enter announcement or promo message here..."></textarea>
-                        <button id="saveAdBtn" class="w-full mt-2 py-2 bg-purple-500 text-white font-bold rounded-xl shadow hover:scale-105 transition-all">Save Ad</button>
                     </div>
                 </div>
 
@@ -250,24 +221,118 @@
         }
 
         function loadSettings() {
-            // Load queue format
-            firebase.database().ref('settings/queueFormat').once('value', (snapshot) => {
-                const settings = snapshot.val() || { prefix: 'A', start: 100 };
-                document.getElementById('queuePrefix').value = settings.prefix;
-                document.getElementById('startNumber').value = settings.start;
-                localStorage.setItem('queuePrefix', settings.prefix);
+            console.log('⚙️ Loading admin settings');
+            
+            // Load counters for management
+            firebase.database().ref('settings/counters').on('value', (snapshot) => {
+                const counters = snapshot.val() || [];
+                renderCountersTable(counters);
             });
-            // Load current serving
-            firebase.database().ref('queue/currentServing').once('value', (snapshot) => {
-                const current = snapshot.val() || 'A001';
-                document.getElementById('currentServingInput').value = current;
-                localStorage.setItem('currentServing', current);
+            
+            // Load average service time
+            firebase.database().ref('settings/averageServiceTime').on('value', (snapshot) => {
+                const avgTime = snapshot.val() || 60;
+                const avgTimeInput = document.getElementById('avgServiceTime');
+                if (avgTimeInput) avgTimeInput.value = avgTime;
             });
-            // Load ad
-            firebase.database().ref('settings/adContent').once('value', (snapshot) => {
-                const ad = snapshot.val() || '';
-                document.getElementById('adText').value = ad;
-                localStorage.setItem('adContent', ad);
+            
+            // Load ad content
+            firebase.database().ref('settings/adContent').on('value', (snapshot) => {
+                const adContent = snapshot.val() || '';
+                const adInput = document.getElementById('adContent');
+                if (adInput) adInput.value = adContent;
+            });
+        }
+
+        function loadAnalytics() {
+            console.log('📊 Loading admin analytics');
+            
+            // Listen to all queue data for real-time analytics
+            firebase.database().ref('queues').on('value', (snapshot) => {
+                const queues = snapshot.val() || {};
+                let totalServed = 0;
+                let totalInQueue = 0;
+                
+                // Calculate totals across all prefixes
+                Object.keys(queues).forEach(prefix => {
+                    const queueData = queues[prefix];
+                    const issued = queueData.issuedNumbers || [];
+                    const currentServing = parseInt(queueData.currentServing) || 0;
+                    
+                    totalServed += currentServing;
+                    totalInQueue += Math.max(0, issued.length - currentServing);
+                });
+                
+                // Update analytics display
+                const todayServedElement = document.getElementById('todayServed');
+                const inQueueElement = document.getElementById('inQueue');
+                
+                if (todayServedElement) todayServedElement.textContent = totalServed;
+                if (inQueueElement) inQueueElement.textContent = totalInQueue;
+                
+                console.log('📊 Analytics updated:', { totalServed, totalInQueue });
+            });
+        }
+
+        function renderCountersTable(counters) {
+            const table = document.getElementById('countersTable');
+            if (!table) return;
+            
+            if (!counters.length) {
+                table.innerHTML = '<p class="text-gray-500">No counters found.</p>';
+                return;
+            }
+            
+            let html = `<div class='grid grid-cols-4 gap-2 font-bold mb-2'><div>Name</div><div>Prefix</div><div>Current</div><div>Delete</div></div>`;
+            
+            counters.forEach((counter, idx) => {
+                html += `<div class='grid grid-cols-4 gap-2 items-center bg-white rounded-lg shadow p-2 mb-2'>
+                    <input class='border p-1 rounded' value='${counter.name}' data-idx='${idx}' data-type='name' />
+                    <select class='border p-1 rounded' data-idx='${idx}' data-type='prefix'>${[...Array(26)].map((_,i)=>`<option value='${String.fromCharCode(65+i)}' ${counter.prefix===String.fromCharCode(65+i)?'selected':''}>${String.fromCharCode(65+i)}</option>`).join('')}</select>
+                    <span class='text-center'>${counter.prefix}${String(counter.current || counter.start || 1).padStart(3, '0')}</span>
+                    <button class='deleteBtn py-1 px-2 bg-red-500 text-white rounded' data-idx='${idx}'>🗑️</button>
+                </div>`;
+            });
+            
+            table.innerHTML = html;
+            
+            // Attach events for admin counter management (read-only for queue control)
+            table.querySelectorAll('input,select').forEach(el => {
+                el.onchange = function() {
+                    const idx = this.dataset.idx;
+                    const type = this.dataset.type;
+                    let val = this.value;
+                    
+                    if (type === 'prefix') {
+                        // Prevent duplicate prefix
+                        if (counters.some((c,i)=>i!=idx&&c.prefix===val)) {
+                            alert('Prefix already in use!');
+                            this.value = counters[idx].prefix;
+                            return;
+                        }
+                    }
+                    
+                    counters[idx][type] = type==='start'||type==='current'?parseInt(val):val;
+                    firebase.database().ref('settings/counters').set(counters).then(() => {
+                        showStatus('Counter settings updated');
+                    }).catch((error) => {
+                        showError('Failed to update counter settings');
+                        console.error('❌ Update error:', error);
+                    });
+                };
+            });
+            
+            table.querySelectorAll('.deleteBtn').forEach(btn => btn.onclick = function() {
+                const idx = this.dataset.idx;
+                if (confirm('Delete this counter?')) {
+                    counters.splice(idx, 1);
+                    firebase.database().ref('settings/counters').set(counters).then(() => {
+                        showStatus('Counter deleted');
+                    }).catch((error) => {
+                        showError('Failed to delete counter');
+                        console.error('❌ Delete error:', error);
+                    });
+                }
             });
         }
 
@@ -275,39 +340,16 @@
             const prefix = document.getElementById('queuePrefix').value;
             const start = parseInt(document.getElementById('startNumber').value);
             const statusMsg = document.getElementById('statusMsg');
-            
             const settings = { prefix, start };
-            
             firebase.database().ref('settings/queueFormat').set(settings)
                 .then(() => {
                     localStorage.setItem('queuePrefix', prefix);
-                    statusMsg.textContent = '✅ Settings saved successfully!';
-                    statusMsg.classList.remove('hidden');
-                    setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+                    showToastAndRedirect('✅ Settings saved successfully!');
                 })
                 .catch((error) => {
                     console.error('Error saving settings:', error);
                     showError('Failed to save settings');
                 });
-        }
-
-        function loadAnalytics() {
-            const today = new Date().toISOString().split('T')[0];
-            
-            // Load today's queue data
-            firebase.database().ref(`queues/${today}`).once('value', (snapshot) => {
-                const data = snapshot.val() || {};
-                const numbers = data.numbers || {};
-                const currentSuffix = data.currentNumberSuffix || 100;
-                const lastSuffix = data.lastSuffix || 100;
-                
-                // Calculate served and in queue
-                const served = Math.max(0, currentSuffix - 100);
-                const inQueue = Math.max(0, lastSuffix - currentSuffix);
-                
-                document.getElementById('todayServed').textContent = served;
-                document.getElementById('inQueue').textContent = inQueue;
-            });
         }
 
         function resetQueue() {
@@ -319,7 +361,7 @@
             firebase.database().ref('queue/currentServing').set(resetVal)
                 .then(() => {
                     localStorage.setItem('currentServing', resetVal);
-                    showStatus('Queue reset to ' + resetVal);
+                    showToastAndRedirect('✅ Queue reset to ' + resetVal);
                 })
                 .catch(() => showError('Failed to reset queue.'));
         }
@@ -343,7 +385,7 @@
             localStorage.setItem('adContent', ad);
             firebase.database().ref('settings/adContent').set(ad)
                 .then(() => {
-                    showStatus('Ad saved!');
+                    showToastAndRedirect('✅ Ad saved!');
                 })
                 .catch(() => showError('Failed to save ad.'));
         }
@@ -361,6 +403,64 @@
             statusMsg.classList.remove('hidden');
             setTimeout(() => statusMsg.classList.add('hidden'), 3000);
         }
+
+        function showToastAndRedirect(msg) {
+            const statusMsg = document.getElementById('statusMsg');
+            statusMsg.textContent = msg;
+            statusMsg.classList.remove('hidden');
+            setTimeout(() => {
+                statusMsg.classList.add('hidden');
+                window.location.href = './index.html';
+            }, 2000);
+        }
+
+        let counters = [];
+        function loadCounters() {
+            firebase.database().ref('settings/counters').on('value', (snapshot) => {
+                counters = snapshot.val() || [];
+                if (!counters.length) {
+                    // Auto-create default counter if none exist
+                    counters = [{ name: 'Counter 1', prefix: 'A', start: 1, current: 1 }];
+                    firebase.database().ref('settings/counters').set(counters);
+                }
+                renderCountersTable(counters);
+            });
+        }
+        document.getElementById('addCounterBtn').onclick = () => document.getElementById('addCounterForm').classList.remove('hidden');
+        document.getElementById('cancelNewCounterBtn').onclick = () => document.getElementById('addCounterForm').classList.add('hidden');
+        document.getElementById('saveNewCounterBtn').onclick = () => {
+            const name = document.getElementById('newCounterName').value.trim();
+            const prefix = document.getElementById('newCounterPrefix').value.trim().toUpperCase();
+            const start = parseInt(document.getElementById('newCounterStart').value) || 1;
+            
+            if (!name || !prefix.match(/^[A-Z]$/)) {
+                showError('Please enter a valid name and prefix (A-Z).');
+                return;
+            }
+            
+            if (counters.some(c => c.prefix === prefix)) {
+                showError('Prefix already in use!');
+                return;
+            }
+            
+            counters.push({ name, prefix, start, current: start });
+            firebase.database().ref('settings/counters').set(counters).then(() => {
+                showStatus('Counter added successfully');
+                document.getElementById('addCounterForm').classList.add('hidden');
+                // Clear form
+                document.getElementById('newCounterName').value = '';
+                document.getElementById('newCounterPrefix').value = '';
+                document.getElementById('newCounterStart').value = '';
+            }).catch((error) => {
+                showError('Failed to add counter');
+                console.error('❌ Add error:', error);
+            });
+        };
+
+        // Initialize counters on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCounters();
+        });
     </script>
 </body>
 </html>

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -71,6 +70,29 @@
                 </div>
                 <h1 class="text-3xl font-bold text-gray-800">Counter Panel</h1>
                 <p class="text-gray-600 mt-2">Manage the queue efficiently</p>
+            </div>
+
+            <!-- Unified Counter Management Section -->
+            <div class="mb-8" id="countersUnifiedSection">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">🏦 Counters & Queue Settings</h3>
+                <div id="countersTable" class="mb-4"></div>
+                <button id="addCounterBtn" class="py-2 px-4 bg-blue-600 text-white font-bold rounded-xl shadow hover:scale-105 transition-all">➕ Add Counter</button>
+                <div id="addCounterForm" class="hidden mt-4">
+                    <input id="newCounterName" type="text" placeholder="Counter Name (e.g. Counter 3)" class="border p-2 rounded mb-2 w-full" />
+                    <select id="newCounterPrefix" class="border p-2 rounded mb-2 w-full">
+                        <option value="">Select Prefix</option>
+                        <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option><option value="H">H</option><option value="I">I</option><option value="J">J</option><option value="K">K</option><option value="L">L</option><option value="M">M</option><option value="N">N</option><option value="O">O</option><option value="P">P</option><option value="Q">Q</option><option value="R">R</option><option value="S">S</option><option value="T">T</option><option value="U">U</option><option value="V">V</option><option value="W">W</option><option value="X">X</option><option value="Y">Y</option><option value="Z">Z</option>
+                    </select>
+                    <input id="newCounterStart" type="number" placeholder="Start Number (default 1)" class="border p-2 rounded mb-2 w-full" />
+                    <button id="saveNewCounterBtn" class="py-2 px-4 bg-green-600 text-white font-bold rounded-xl shadow hover:scale-105 transition-all">Save</button>
+                    <button id="cancelNewCounterBtn" class="py-2 px-4 bg-gray-300 text-gray-700 font-bold rounded-xl ml-2">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Counter Selection -->
+            <div class="mb-6" id="counterSelectSection">
+                <label class="block text-sm text-gray-600 mb-2">Select Counter:</label>
+                <select id="counterSelect" class="w-full border border-gray-300 p-3 rounded-lg"></select>
             </div>
 
             <!-- Current Status Dashboard -->
@@ -228,82 +250,240 @@
         }
 
         function loadCounterData() {
-            const today = new Date().toISOString().split('T')[0];
+            if (!counters[selectedCounterIdx]) {
+                console.log('⚠️ No counter selected, waiting for counters to load...');
+                return;
+            }
             
-            // Load current and last numbers with live updates
-            firebase.database().ref(`queues/${today}`).on('value', (snapshot) => {
-                const data = snapshot.val() || {};
-                const prefix = 'A';
+            const prefix = counters[selectedCounterIdx].prefix;
+            console.log('📊 Loading counter data for prefix:', prefix);
+            
+            // Listen to real-time updates for this counter
+            firebase.database().ref(`queues/${prefix}/issuedNumbers`).on('value', (snapshot) => {
+                const issued = snapshot.val() || [];
+                const lastIssued = issued.length;
                 
-                const currentSuffix = data.currentNumberSuffix || 103;
-                const lastSuffix = data.lastSuffix || 108;
-                
-                document.getElementById('nowServing').textContent = prefix + currentSuffix;
-                document.getElementById('lastNumber').textContent = prefix + lastSuffix;
-                
-                // Calculate people in queue
-                const peopleInQueue = Math.max(0, lastSuffix - currentSuffix);
-                document.getElementById('peopleInQueue').textContent = peopleInQueue;
-                
-                // Calculate served today (from demo analytics)
-                const numbers = data.numbers || {};
-                const served = Object.values(numbers).filter(n => n.status === 'served').length;
-                document.getElementById('servedToday').textContent = served + 3; // Add some demo served
+                firebase.database().ref(`queues/${prefix}/currentServing`).once('value', (snapshot2) => {
+                    const currentServing = parseInt(snapshot2.val()) || 1;
+                    
+                    // Update display
+                    document.getElementById('nowServing').textContent = prefix + String(currentServing).padStart(3, '0');
+                    document.getElementById('lastNumber').textContent = prefix + String(lastIssued).padStart(3, '0');
+                    
+                    // Calculate people in queue
+                    const peopleInQueue = Math.max(0, lastIssued - currentServing);
+                    document.getElementById('peopleInQueue').textContent = peopleInQueue;
+                    
+                    console.log('📊 Counter data updated:', { currentServing, lastIssued, peopleInQueue });
+                });
+            });
+            
+            // Listen to average service time for wait calculation
+            firebase.database().ref('settings/averageServiceTime').on('value', (snapshot) => {
+                const avgTime = parseInt(snapshot.val()) || 60;
+                document.getElementById('avgWait').textContent = `${avgTime}s`;
             });
         }
 
-        function callNextNumber() {
-            const btn = document.getElementById('callNextBtn');
-            const statusMsg = document.getElementById('statusMsg');
-            const errorMsg = document.getElementById('errorMsg');
-            
-            // Show loading
-            btn.innerHTML = '<span class="flex items-center justify-center"><span class="text-2xl mr-3 animate-spin">🔄</span>Calling...</span>';
-            btn.disabled = true;
-            
-            const today = new Date().toISOString().split('T')[0];
-            
-            // Increment current number
-            firebase.database().ref(`queues/${today}/currentNumberSuffix`).transaction((currentSuffix) => {
-                return (currentSuffix || 103) + 1;
-            })
-            .then((result) => {
-                if (result.committed) {
-                    const newNumber = result.snapshot.val();
-                    const queueId = 'A' + newNumber;
-                    
-                    console.log('📢 Called number:', queueId);
-                    
-                    statusMsg.textContent = `📢 Called ${queueId}`;
-                    statusMsg.classList.remove('hidden');
-                    errorMsg.classList.add('hidden');
-                    
-                    // Record analytics
-                    const analyticsData = {
-                        calledTime: Date.now(),
-                        waitTimeMinutes: Math.floor(Math.random() * 10) + 3 // Demo wait time
-                    };
-                    firebase.database().ref(`analytics/${today}/${queueId}`).set(analyticsData);
-                } else {
-                    throw new Error('Transaction failed');
+        let counters = [];
+        let selectedCounterIdx = 0;
+        let todayStr = new Date().toISOString().split('T')[0];
+        let lastDay = localStorage.getItem('lastCounterDay');
+        let issuedListener = null;
+        let servingListener = null;
+        function setupCounterListeners(prefix) {
+            if (issuedListener) issuedListener.off();
+            if (servingListener) servingListener.off();
+            issuedListener = firebase.database().ref('queues/' + prefix + '/issuedNumbers');
+            servingListener = firebase.database().ref('queues/' + prefix + '/currentServing');
+            issuedListener.on('value', () => {});
+            servingListener.on('value', () => {});
+        }
+        function loadCounters() {
+            firebase.database().ref('settings/counters').on('value', (snapshot) => {
+                counters = snapshot.val() || [];
+                if (!counters.length) {
+                    counters = [{ name: 'Counter 1', prefix: 'A', start: 1, current: 1 }];
+                    firebase.database().ref('settings/counters').set(counters);
                 }
-            })
-            .catch((error) => {
-                console.error('❌ Error calling next number:', error);
-                errorMsg.textContent = '❌ Failed to call next number';
-                errorMsg.classList.remove('hidden');
-                statusMsg.classList.add('hidden');
-            })
-            .finally(() => {
-                // Reset button
-                btn.innerHTML = '<span class="flex items-center justify-center"><span class="text-2xl mr-3">📢</span>Call Next Number</span>';
-                btn.disabled = false;
+                renderCountersTable();
+                if (selectedCounterIdx >= counters.length) selectedCounterIdx = 0;
+                const savedIdx = localStorage.getItem('selectedCounterIdx');
+                if (savedIdx && counters[savedIdx]) selectedCounterIdx = parseInt(savedIdx);
+                firebase.database().ref('system/lastActiveDay').once('value', (snap) => {
+                    const firebaseDay = snap.val();
+                    if (firebaseDay !== todayStr) {
+                        setTimeout(promptResetOrContinue, 500);
+                        firebase.database().ref('system/lastActiveDay').set(todayStr);
+                        localStorage.setItem('lastCounterDay', todayStr);
+                    }
+                });
+                setupCounterListeners(counters[selectedCounterIdx].prefix);
+            });
+        }
+        function renderCountersTable() {
+            const table = document.getElementById('countersTable');
+            if (!table) return;
+            table.innerHTML = '';
+            if (!counters.length) {
+                table.innerHTML = '<p class="text-gray-500">No counters found.</p>';
+                return;
+            }
+            // Table header
+            let html = `<div class='grid grid-cols-7 gap-2 font-bold mb-2'><div>Select</div><div>Name</div><div>Prefix</div><div>Start</div><div>Current</div><div>Set/Reset</div><div>Delete</div></div>`;
+            counters.forEach((counter, idx) => {
+                html += `<div class='grid grid-cols-7 gap-2 items-center bg-white rounded-lg shadow p-2 mb-2'>
+                    <input type='radio' name='counterSelect' ${idx===selectedCounterIdx?'checked':''} data-idx='${idx}' />
+                    <input class='border p-1 rounded' value='${counter.name}' data-idx='${idx}' data-type='name' />
+                    <select class='border p-1 rounded' data-idx='${idx}' data-type='prefix'>${[...Array(26)].map((_,i)=>`<option value='${String.fromCharCode(65+i)}' ${counter.prefix===String.fromCharCode(65+i)?'selected':''}>${String.fromCharCode(65+i)}</option>`).join('')}</select>
+                    <input class='border p-1 rounded' type='number' value='${counter.start||1}' data-idx='${idx}' data-type='start' />
+                    <input class='border p-1 rounded' type='number' value='${counter.current||counter.start||1}' data-idx='${idx}' data-type='current' />
+                    <button class='setBtn py-1 px-2 bg-blue-500 text-white rounded' data-idx='${idx}'>Set</button>
+                    <button class='deleteBtn py-1 px-2 bg-gray-400 text-white rounded' data-idx='${idx}'>🗑️</button>
+                </div>`;
+            });
+            table.innerHTML = html;
+            // Attach events
+            table.querySelectorAll('input[type=radio][name=counterSelect]').forEach(el => {
+                el.onchange = function() {
+                    selectedCounterIdx = parseInt(this.dataset.idx);
+                    localStorage.setItem('selectedCounterIdx', selectedCounterIdx);
+                    console.log('🎯 Selected counter:', counters[selectedCounterIdx]);
+                    loadCounterData(); // Reload data for new counter
+                };
+            });
+            table.querySelectorAll('input,select').forEach(el => {
+                if (el.type==='radio') return;
+                el.onchange = function() {
+                    const idx = this.dataset.idx;
+                    const type = this.dataset.type;
+                    let val = this.value;
+                    if (type === 'prefix') {
+                        // Prevent duplicate prefix
+                        if (counters.some((c,i)=>i!=idx&&c.prefix===val)) {
+                            alert('Prefix already in use!');
+                            this.value = counters[idx].prefix;
+                            return;
+                        }
+                    }
+                    counters[idx][type] = type==='start'||type==='current'?parseInt(val):val;
+                    firebase.database().ref('settings/counters').set(counters).then(() => {
+                        console.log('✅ Counter settings updated');
+                        if (idx === selectedCounterIdx) {
+                            loadCounterData(); // Reload data if current counter changed
+                        }
+                    });
+                };
+            });
+            table.querySelectorAll('.setBtn').forEach(btn => btn.onclick = function() {
+                const idx = this.dataset.idx;
+                counters[idx].current = parseInt(table.querySelector(`input[data-idx='${idx}'][data-type='current']`).value)||counters[idx].start||1;
+                // Update all counter settings in Firebase
+                firebase.database().ref('settings/counters').set(counters).then(() => {
+                    // Update queue in Firebase for prefix
+                    const prefix = counters[idx].prefix;
+                    const updates = {};
+                    updates[`queues/${prefix}/currentServing`] = counters[idx].current;
+                    updates[`queue/currentServing`] = prefix + String(counters[idx].current).padStart(3, '0');
+                    
+                    return firebase.database().ref().update(updates);
+                }).then(() => {
+                    showStatus('Counter settings updated and applied.');
+                    if (idx === selectedCounterIdx) {
+                        loadCounterData(); // Reload data if current counter changed
+                    }
+                }).catch((error) => {
+                    showError('Failed to update counter settings');
+                    console.error('❌ Set error:', error);
+                });
+                // Also update issuedNumbers if needed
+                firebase.database().ref('queues/' + prefix + '/issuedNumbers').once('value', snap => {
+                    let issued = snap.val();
+                    if (!issued || issued.length === 0) {
+                        issued = Array.from({length: 15}, (_, i) => i + 1);
+                        firebase.database().ref('queues/' + prefix + '/issuedNumbers').set(issued);
+                    }
+                });
+            });
+            table.querySelectorAll('.deleteBtn').forEach(btn => btn.onclick = function() {
+                const idx = this.dataset.idx;
+                if (confirm('Delete this counter?')) {
+                    counters.splice(idx, 1);
+                    firebase.database().ref('settings/counters').set(counters).then(() => {
+                        console.log('✅ Counter deleted');
+                        if (selectedCounterIdx >= counters.length) {
+                            selectedCounterIdx = Math.max(0, counters.length - 1);
+                        }
+                        renderCountersTable(); // Re-render to update selection
+                    });
+                }
+            });
+        }
+        document.getElementById('addCounterBtn').onclick = () => document.getElementById('addCounterForm').classList.remove('hidden');
+        document.getElementById('cancelNewCounterBtn').onclick = () => document.getElementById('addCounterForm').classList.add('hidden');
+        document.getElementById('saveNewCounterBtn').onclick = () => {
+            const name = document.getElementById('newCounterName').value.trim();
+            const prefix = document.getElementById('newCounterPrefix').value.trim().toUpperCase();
+            const start = parseInt(document.getElementById('newCounterStart').value)||1;
+            if (!name || !prefix.match(/^[A-Z]$/)) {
+                alert('Please enter a valid name and prefix (A-Z).');
+                return;
+            }
+            if (counters.some(c=>c.prefix===prefix)) {
+                alert('Prefix already in use!');
+                return;
+            }
+            counters.push({ name, prefix, start, current: start });
+            firebase.database().ref('settings/counters').set(counters);
+            document.getElementById('addCounterForm').classList.add('hidden');
+        };
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCounters();
+        });
+
+        function callNextNumber() {
+            if (!counters[selectedCounterIdx]) {
+                showError('Please select a counter first.');
+                return;
+            }
+            
+            const prefix = counters[selectedCounterIdx].prefix;
+            console.log('📢 Calling next number for prefix:', prefix);
+            
+            // Get current issued numbers and serving number
+            firebase.database().ref(`queues/${prefix}/issuedNumbers`).once('value', (snapshot) => {
+                const issued = snapshot.val() || [];
+                const lastIssued = issued.length;
                 
-                // Hide messages after delay
-                setTimeout(() => {
-                    statusMsg.classList.add('hidden');
-                    errorMsg.classList.add('hidden');
-                }, 3000);
+                firebase.database().ref(`queues/${prefix}/currentServing`).once('value', (snapshot2) => {
+                    const currentServing = parseInt(snapshot2.val()) || 0;
+                    const nextNumber = currentServing + 1;
+                    
+                    console.log('📊 Queue state:', { lastIssued, currentServing, nextNumber });
+                    
+                    // Validate that the next number has been issued
+                    if (nextNumber > lastIssued) {
+                        showError('Invalid – number not yet issued.');
+                        return;
+                    }
+                    
+                    // Update both the prefix-specific and unified serving numbers with timestamp - CRITICAL FIX
+                    const currentTime = new Date().toISOString();
+                    const updates = {};
+                    updates[`queues/${prefix}/currentServing`] = nextNumber;
+                    updates[`queues/${prefix}/lastCalledAt`] = currentTime;
+                    updates[`queue/currentServing`] = prefix + String(nextNumber).padStart(3, '0');
+                    updates[`queue/lastCalledAt`] = currentTime;
+                    updates[`queue/lastCalledBy`] = counters[selectedCounterIdx].name;
+                    
+                    firebase.database().ref().update(updates).then(() => {
+                        showStatus('Serving updated successfully');
+                        console.log('✅ Updated serving to:', nextNumber, 'at:', currentTime);
+                    }).catch((error) => {
+                        showError('Failed to update serving number');
+                        console.error('❌ Update error:', error);
+                    });
+                });
             });
         }
 
@@ -327,42 +507,129 @@
         }
 
         function skipNumber() {
-            callNextNumber(); // Skip is essentially calling the next number
-        }
-
-        function jumpToNumber() {
-            const input = document.getElementById('jumpNumber');
-            const jumpNumber = input.value.toUpperCase().trim();
-            const statusMsg = document.getElementById('statusMsg');
-            const errorMsg = document.getElementById('errorMsg');
-            
-            if (!jumpNumber.match(/^[A-Z]\d+$/)) {
-                errorMsg.textContent = '❌ Invalid format. Use format like A110';
-                errorMsg.classList.remove('hidden');
+            if (!counters[selectedCounterIdx]) {
+                showError('Please select a counter first.');
                 return;
             }
             
-            const suffix = parseInt(jumpNumber.substring(1));
-            const today = new Date().toISOString().split('T')[0];
+            const prefix = counters[selectedCounterIdx].prefix;
+            console.log('⏭️ Skipping number for prefix:', prefix);
             
-            firebase.database().ref(`queues/${today}/currentNumberSuffix`).set(suffix)
-                .then(() => {
-                    statusMsg.textContent = `✅ Jumped to ${jumpNumber}`;
-                    statusMsg.classList.remove('hidden');
-                    errorMsg.classList.add('hidden');
-                    input.value = '';
-                })
-                .catch((error) => {
-                    console.error('❌ Error jumping to number:', error);
-                    errorMsg.textContent = '❌ Failed to jump to number';
-                    errorMsg.classList.remove('hidden');
-                });
-            
-            setTimeout(() => {
-                statusMsg.classList.add('hidden');
-                errorMsg.classList.add('hidden');
-            }, 3000);
+            // Skip is essentially calling the next number
+            callNextNumber();
         }
+
+        function jumpToNumber() {
+            if (!counters[selectedCounterIdx]) {
+                showError('Please select a counter first.');
+                return;
+            }
+            
+            const input = document.getElementById('jumpNumber');
+            const jumpValue = input.value.trim();
+            
+            if (!jumpValue) {
+                showError('Please enter a number to jump to.');
+                return;
+            }
+            
+            const prefix = counters[selectedCounterIdx].prefix;
+            let jumpNum;
+            
+            // Handle both "A123" and "123" formats
+            if (jumpValue.startsWith(prefix)) {
+                jumpNum = parseInt(jumpValue.substring(1));
+            } else {
+                jumpNum = parseInt(jumpValue);
+            }
+            
+            if (isNaN(jumpNum) || jumpNum < 1) {
+                showError('Invalid number format.');
+                return;
+            }
+            
+            console.log('🎯 Jumping to number:', jumpNum, 'for prefix:', prefix);
+            
+            // Validate that the number has been issued
+            firebase.database().ref(`queues/${prefix}/issuedNumbers`).once('value', (snapshot) => {
+                const issued = snapshot.val() || [];
+                const lastIssued = issued.length;
+                
+                if (jumpNum > lastIssued) {
+                    showError('Invalid number – not issued yet.');
+                    return;
+                }
+                
+                // Update both the prefix-specific and unified serving numbers with timestamp - CRITICAL FIX
+                const currentTime = new Date().toISOString();
+                const updates = {};
+                updates[`queues/${prefix}/currentServing`] = jumpNum;
+                updates[`queues/${prefix}/lastCalledAt`] = currentTime;
+                updates[`queue/currentServing`] = prefix + String(jumpNum).padStart(3, '0');
+                updates[`queue/lastCalledAt`] = currentTime;
+                updates[`queue/lastCalledBy`] = counters[selectedCounterIdx].name;
+                
+                firebase.database().ref().update(updates).then(() => {
+                    showStatus(`Jumped to ${prefix}${String(jumpNum).padStart(3, '0')}`);
+                    input.value = '';
+                    console.log('✅ Jumped to:', jumpNum, 'at:', currentTime);
+                }).catch((error) => {
+                    showError('Failed to jump to number');
+                    console.error('❌ Jump error:', error);
+                });
+            });
+        }
+
+        function showError(msg) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.textContent = '❌ ' + msg;
+            errorMsg.classList.remove('hidden');
+            setTimeout(() => errorMsg.classList.add('hidden'), 3000);
+        }
+
+        function showStatus(msg) {
+            const statusMsg = document.getElementById('statusMsg');
+            statusMsg.textContent = msg;
+            statusMsg.classList.remove('hidden');
+            setTimeout(() => statusMsg.classList.add('hidden'), 3000);
+        }
+
+        function promptResetOrContinue() {
+            if (!counters.length) return;
+            const c = counters[selectedCounterIdx];
+            if (confirm(`New day detected. Reset ${c.name} (${c.prefix}) to ${c.prefix}${String(c.start||1).padStart(3,'0')}?\nPress Cancel to continue from yesterday.`)) {
+                c.current = c.start||1;
+                firebase.database().ref('settings/counters').set(counters);
+                firebase.database().ref(`queues/${c.prefix}/currentServing`).set(c.current);
+            }
+        }
+
+        function setCounterSettings(idx) {
+            const name = document.getElementById('counterName' + idx).value;
+            const prefix = document.getElementById('counterPrefix' + idx).value;
+            const start = parseInt(document.getElementById('counterStart' + idx).value) || 1;
+            const current = parseInt(document.getElementById('counterCurrent' + idx).value) || start;
+            // Update counter settings in Firebase
+            firebase.database().ref('settings/counters/' + idx).set({ name, prefix, start, current });
+            // Update queue data for prefix
+            firebase.database().ref('queues/' + prefix + '/issuedNumbers').once('value', snap => {
+                let issued = snap.val();
+                if (!issued || issued.length === 0) {
+                    issued = Array.from({length: 15}, (_, i) => i + 1);
+                    firebase.database().ref('queues/' + prefix + '/issuedNumbers').set(issued);
+                }
+            });
+            firebase.database().ref('queues/' + prefix + '/currentServing').set(current);
+            showStatus('Counter settings updated and applied.');
+        }
+        // Attach to Set button
+        function attachSetButtons() {
+            const setBtns = document.querySelectorAll('[id^=setCounterBtn]');
+            setBtns.forEach((btn, idx) => {
+                btn.onclick = () => setCounterSettings(idx);
+            });
+        }
+        document.addEventListener('DOMContentLoaded', attachSetButtons);
     </script>
     
     <style>

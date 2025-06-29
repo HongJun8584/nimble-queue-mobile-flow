@@ -1,4 +1,3 @@
-
 // Firebase Configuration for Queue Joy
 const firebaseConfig = {
   apiKey: "demo-api-key",
@@ -16,12 +15,19 @@ const database = firebase.database();
 
 console.log('🔥 Firebase initialized for Queue Joy');
 
+// Connection monitoring (optional)
+database.ref('.info/connected').on('value', (snapshot) => {
+  if (snapshot.val() === true) {
+    console.log('✅ Connected to Firebase Realtime Database');
+  } else {
+    console.log('❌ Disconnected from Firebase Realtime Database');
+  }
+});
+
+// Demo data initializer (for testing only, run-once)
 function initializeDemoData() {
-  // Initialize queue state
   database.ref('queue').once('value', (snapshot) => {
     if (!snapshot.exists()) {
-      console.log('🎯 Initializing demo queue data...');
-      
       const demoQueue = {
         currentServing: 'A001',
         lastNumber: 3,
@@ -31,24 +37,10 @@ function initializeDemoData() {
           'A003': { status: 'waiting', timestamp: Date.now() - 600000 }
         }
       };
-      
-      database.ref('queue').set(demoQueue)
-        .then(() => console.log('✅ Demo queue data initialized'))
-        .catch(error => console.error('❌ Error initializing demo data:', error));
+      database.ref('queue').set(demoQueue);
     }
   });
 }
-
-// Connection monitoring
-database.ref('.info/connected').on('value', (snapshot) => {
-  if (snapshot.val() === true) {
-    console.log('✅ Connected to Firebase Realtime Database');
-  } else {
-    console.log('❌ Disconnected from Firebase Realtime Database');
-  }
-});
-
-// Initialize demo data when script loads
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(initializeDemoData, 1000);
 });

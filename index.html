@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -134,23 +133,15 @@
             // Load current serving number
             loadCurrentServing();
             
-            // Set up generate button - THIS IS THE CRITICAL FIX
+            // Set up generate button
             const getNumberBtn = document.getElementById('getNumberBtn');
             if (getNumberBtn) {
-                // Remove any existing listeners first
-                getNumberBtn.replaceWith(getNumberBtn.cloneNode(true));
-                
-                // Get the fresh button reference
-                const freshBtn = document.getElementById('getNumberBtn');
-                
-                // Add the event listener
-                freshBtn.addEventListener('click', function(e) {
+                getNumberBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     console.log('🎯 Button clicked - generating number...');
                     generateQueueNumber();
                 });
-                
                 console.log('✅ Button event listener attached successfully');
             } else {
                 console.error('❌ Get Number button not found!');
@@ -167,6 +158,8 @@
                     if (element) {
                         element.textContent = current;
                     }
+                }, (error) => {
+                    console.error('❌ Error loading current serving:', error);
                 });
             }
         }
@@ -199,59 +192,56 @@
             }
             
             try {
-                // Get the next number from localStorage (fallback method)
-                let lastNumber = parseInt(localStorage.getItem('lastQueueNumber') || '0');
-                let newNumber = lastNumber + 1;
-                let queueId = 'A' + String(newNumber).padStart(3, '0');
-                
-                console.log('📊 Generated queue ID:', queueId);
-                
-                // Store the new number
-                localStorage.setItem('lastQueueNumber', newNumber.toString());
-                sessionStorage.setItem('queueId', queueId);
-                sessionStorage.setItem('queueTimestamp', Date.now().toString());
-                
-                // Try to update Firebase if available
-                if (typeof firebase !== 'undefined' && firebase.database) {
-                    firebase.database().ref('queue/lastNumber').set(newNumber)
-                        .catch(err => console.log('Firebase update failed (non-critical):', err));
+                // Check Firebase availability
+                if (typeof firebase === 'undefined' || !firebase.database) {
+                    throw new Error('Firebase not initialized');
+                }
+
+                // Get the last number from Firebase
+                const lastNumberRef = firebase.database().ref('queue/lastNumber');
+                lastNumberRef.transaction((currentValue) => {
+                    let lastNumber = currentValue || 0;
+                    let newNumber = lastNumber + 1;
+                    let queueId = 'A' + String(newNumber).padStart(3, '0');
                     
+                    // Update Firebase
                     firebase.database().ref(`queue/numbers/${queueId}`).set({
                         status: 'waiting',
                         timestamp: Date.now()
-                    }).catch(err => console.log('Firebase queue update failed (non-critical):', err));
-                }
-                
-                // Show success message
-                if (generatedNumberSpan) {
-                    generatedNumberSpan.textContent = queueId;
-                }
-                if (statusMsg) {
-                    statusMsg.classList.remove('hidden');
-                }
-                
-                console.log('✅ Number generated successfully:', queueId);
-                console.log('🔄 Redirecting to status page in 1.5 seconds...');
-                
-                // Redirect after 1.5 seconds
-                setTimeout(() => {
-                    window.location.href = './status.html';
-                }, 1500);
+                    }).catch(err => console.error('Firebase queue update failed:', err));
+                    
+                    lastNumberRef.set(newNumber).catch(err => console.error('Firebase last number update failed:', err));
+                    
+                    // Store in session and localStorage
+                    sessionStorage.setItem('queueId', queueId);
+                    sessionStorage.setItem('myQueueNumber', queueId);
+                    sessionStorage.setItem('prefix', queueId.charAt(0));
+                    sessionStorage.setItem('queueTimestamp', Date.now().toString());
+                    localStorage.setItem('lastQueueNumber', queueId);
+                    
+                    // Show success
+                    if (generatedNumberSpan) generatedNumberSpan.textContent = queueId;
+                    if (statusMsg) statusMsg.classList.remove('hidden');
+                    
+                    console.log('✅ Number generated successfully:', queueId);
+                    setTimeout(() => {
+                        window.location.href = './status.html';
+                    }, 1500);
+                    
+                    return newNumber;
+                }, (error, committed, snapshot) => {
+                    if (error) {
+                        throw error;
+                    }
+                });
                 
             } catch (error) {
                 console.error('❌ Error generating number:', error);
-                if (errorMsg) {
-                    errorMsg.classList.remove('hidden');
-                }
+                if (errorMsg) errorMsg.classList.remove('hidden');
             } finally {
-                // Reset button after delay
                 setTimeout(() => {
-                    if (buttonContent) {
-                        buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
-                    }
-                    if (button) {
-                        button.disabled = false;
-                    }
+                    if (buttonContent) buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
+                    if (button) button.disabled = false;
                     isGenerating = false;
                 }, 3000);
             }
