@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,7 +20,7 @@
     <script src="js/firebase-config.js"></script>
     
     <style>
-        /* Reset and Base Styles */
+        /* CSS Reset and Base Styles */
         * {
             margin: 0;
             padding: 0;
@@ -28,49 +29,208 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #333;
-            line-height: 1.6;
         }
 
-        /* Container and Layout */
+        /* Container Layout */
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 1rem;
         }
 
-        /* Header Section */
+        /* Hamburger Menu - Top Left */
+        .hamburger-menu {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1000;
+        }
+
+        .hamburger-btn {
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            min-height: 48px;
+            min-width: 48px;
+        }
+
+        .hamburger-btn:hover {
+            background: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .hamburger-icon {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .hamburger-line {
+            width: 24px;
+            height: 3px;
+            background: #333;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        /* Navigation Panel */
+        .nav-panel {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+            transition: left 0.3s ease;
+            z-index: 999;
+            padding: 2rem 1rem;
+        }
+
+        .nav-panel.open {
+            left: 0;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item:hover {
+            background: #f0f0f0;
+            transform: translateX(5px);
+        }
+
+        /* PIN Modal */
+        .pin-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(40, 40, 60, 0.97);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.3s ease;
+        }
+
+        .pin-modal.hidden {
+            display: none;
+        }
+
+        .pin-dialog {
+            background: white;
+            padding: 2.5rem 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            max-width: 95vw;
+            width: 350px;
+            text-align: center;
+        }
+
+        .pin-input {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.2rem;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 0.75rem;
+            margin: 1rem 0;
+            outline: none;
+            min-height: 48px;
+        }
+
+        .pin-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .pin-submit {
+            width: 100%;
+            padding: 0.9rem 0;
+            font-size: 1.1rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 48px;
+        }
+
+        .pin-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .pin-error {
+            color: #e53e3e;
+            margin: 1rem 0;
+            font-weight: bold;
+            display: none;
+        }
+
+        /* Main Counter Panel */
+        .counter-panel {
+            display: none;
+            margin-top: 4rem;
+        }
+
+        .counter-panel.active {
+            display: block;
+        }
+
+        /* Header */
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 2rem;
             color: white;
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 0.5rem;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
         }
 
         /* Warning Banner */
         .warning-banner {
             background: linear-gradient(45deg, #ff6b6b, #ee5a52);
             color: white;
-            padding: 15px 20px;
+            padding: 1rem 1.5rem;
             border-radius: 10px;
-            margin-bottom: 25px;
+            margin-bottom: 1.5rem;
             text-align: center;
             font-weight: bold;
             box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
             display: none;
             animation: pulse 2s infinite;
+        }
+
+        .warning-banner.show {
+            display: block;
         }
 
         @keyframes pulse {
@@ -82,22 +242,23 @@
         /* Counter Selection */
         .counter-selection {
             background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
+            padding: 1.5rem;
             border-radius: 15px;
-            margin-bottom: 25px;
+            margin-bottom: 1.5rem;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
             backdrop-filter: blur(10px);
         }
 
         .counter-select {
             width: 100%;
-            padding: 15px;
+            padding: 1rem;
             border: 2px solid #ddd;
             border-radius: 10px;
             font-size: 1.1rem;
             background: white;
             cursor: pointer;
             transition: all 0.3s ease;
+            min-height: 48px;
         }
 
         .counter-select:focus {
@@ -106,45 +267,40 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        /* Main Content Grid */
-        .main-content {
-            display: grid;
-            gap: 25px;
-            grid-template-columns: 1fr;
+        /* Panel Layout - Mobile First */
+        .panel-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
         }
 
-        @media (min-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        /* Queue Display Panel */
+        /* Queue Panel */
         .queue-panel {
             background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
+            padding: 1.5rem;
             border-radius: 15px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
             backdrop-filter: blur(10px);
         }
 
-        .queue-panel h2 {
+        .panel-title {
             color: #333;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
             border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
+            padding-bottom: 0.5rem;
         }
 
         .queue-status {
-            display: grid;
-            gap: 15px;
-            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .status-item {
             background: #f8f9fa;
-            padding: 15px;
+            padding: 1rem;
             border-radius: 10px;
             border-left: 4px solid #667eea;
         }
@@ -152,32 +308,38 @@
         .status-label {
             font-weight: bold;
             color: #555;
-            margin-bottom: 5px;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
         }
 
         .status-value {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             color: #333;
             font-weight: bold;
         }
 
         /* Control Buttons */
         .control-buttons {
-            display: grid;
-            gap: 15px;
-            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
         .btn {
-            padding: 15px 25px;
+            padding: 1rem 1.5rem;
             border: none;
             border-radius: 10px;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .btn-primary {
@@ -185,19 +347,9 @@
             color: white;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
-
         .btn-secondary {
             background: linear-gradient(45deg, #f093fb, #f5576c);
             color: white;
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(240, 147, 251, 0.3);
         }
 
         .btn-danger {
@@ -205,9 +357,9 @@
             color: white;
         }
 
-        .btn-danger:hover {
+        .btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
 
         .btn:disabled {
@@ -219,27 +371,19 @@
         /* Settings Panel */
         .settings-panel {
             background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
+            padding: 1.5rem;
             border-radius: 15px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
             backdrop-filter: blur(10px);
         }
 
-        .settings-panel h2 {
-            color: #333;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-
         .setting-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
         }
 
         .setting-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 0.5rem;
             font-weight: bold;
             color: #555;
         }
@@ -247,12 +391,13 @@
         .setting-group select,
         .setting-group input {
             width: 100%;
-            padding: 12px;
+            padding: 0.75rem;
             border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
             background: white;
             transition: all 0.3s ease;
+            min-height: 48px;
         }
 
         .setting-group select:focus,
@@ -266,9 +411,8 @@
         .volume-control {
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-top: 20px;
-            padding: 15px;
+            gap: 1rem;
+            padding: 1rem;
             background: #f8f9fa;
             border-radius: 10px;
         }
@@ -291,20 +435,24 @@
             cursor: pointer;
         }
 
-        /* Recent Served List */
-        .recent-served {
+        /* P5.js Canvas */
+        .visual-panel {
             background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
+            padding: 1.5rem;
             border-radius: 15px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
             backdrop-filter: blur(10px);
-            margin-top: 25px;
+            margin-top: 1.5rem;
         }
 
-        .recent-served h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
+        /* Recent Served */
+        .recent-served {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin-top: 1.5rem;
         }
 
         .served-list {
@@ -316,54 +464,65 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px;
-            margin-bottom: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
             background: #f8f9fa;
             border-radius: 8px;
             border-left: 3px solid #28a745;
         }
 
-        .served-number {
+        /* Success Toast */
+        .success-toast {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            background: #38a169;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 24px rgba(56,161,105,0.18);
             font-weight: bold;
-            color: #333;
+            font-size: 1.1rem;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            display: none;
         }
 
-        .served-time {
-            color: #666;
-            font-size: 0.9rem;
+        .success-toast.show {
+            display: block;
+            opacity: 1;
         }
 
-        /* P5.js Canvas Container */
-        #p5-canvas {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            backdrop-filter: blur(10px);
-            margin-top: 25px;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-
-            .header h1 {
-                font-size: 2rem;
-            }
-
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-
-            .btn {
-                padding: 12px 20px;
-                font-size: 1rem;
+        /* Media Queries for Desktop */
+        @media (min-width: 768px) {
+            .panel-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 2rem;
             }
 
             .control-buttons {
-                grid-template-columns: 1fr;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+
+            .queue-status {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                padding: 2rem;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
             }
         }
 
@@ -373,161 +532,191 @@
             pointer-events: none;
         }
 
-        /* Success/Error Messages */
-        .message {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-weight: bold;
+        /* Animation Classes */
+        .call-animation {
+            animation: callPulse 0.5s ease-in-out;
         }
 
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        /* Animation for new calls */
-        @keyframes callAnimation {
+        @keyframes callPulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
 
-        .call-animation {
-            animation: callAnimation 0.5s ease-in-out;
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus Styles */
+        *:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
         }
     </style>
 </head>
 <body>
+    <!-- Hamburger Menu -->
+    <div class="hamburger-menu">
+        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open navigation menu">
+            <div class="hamburger-icon">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </div>
+        </button>
+    </div>
+
+    <!-- Navigation Panel -->
+    <nav class="nav-panel" id="navPanel">
+        <h3 style="margin-bottom: 1.5rem; color: #333;">Navigation</h3>
+        <a href="./index.html" class="nav-item">🏠 Home</a>
+        <a href="./status.html" class="nav-item">📊 Status</a>
+        <a href="./admin.html" class="nav-item">⚙️ Admin</a>
+        <a href="#" class="nav-item" id="counterNavItem">🎯 Counter</a>
+    </nav>
+
     <!-- PIN Modal -->
-    <div id="pinModal" style="position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(40,40,60,0.97);display:flex;align-items:center;justify-content:center;transition:opacity 0.3s;">
-        <div style="background:white;padding:2.5rem 2rem 2rem 2rem;border-radius:1.5rem;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:350px;text-align:center;">
-            <h2 style="font-size:1.5rem;font-weight:bold;color:#333;margin-bottom:1rem;">🔐 Staff Login</h2>
-            <p style="color:#666;margin-bottom:1.5rem;">Enter PIN to access counter panel</p>
-            <input id="pinInput" type="password" maxlength="4" placeholder="0000" style="width:100%;padding:1rem;font-size:1.2rem;text-align:center;border:2px solid #ddd;border-radius:0.75rem;margin-bottom:1rem;outline:none;" autofocus />
-            <div id="pinError" style="color:#e53e3e;font-size:1rem;margin-bottom:1rem;display:none;">Incorrect PIN. Please try again.</div>
-            <button id="pinSubmit" style="width:100%;padding:0.9rem 0;font-size:1.1rem;font-weight:bold;background:linear-gradient(45deg,#667eea,#764ba2);color:white;border:none;border-radius:0.75rem;box-shadow:0 2px 8px rgba(102,126,234,0.12);cursor:pointer;transition:background 0.2s;">Enter</button>
+    <div class="pin-modal" id="pinModal">
+        <div class="pin-dialog">
+            <h2 style="font-size: 1.5rem; font-weight: bold; color: #333; margin-bottom: 1rem;">🔐 Staff Login</h2>
+            <p style="color: #666; margin-bottom: 1.5rem;">Enter PIN to access counter panel</p>
+            <input id="pinInput" type="password" maxlength="4" placeholder="0000" class="pin-input" autofocus>
+            <div id="pinError" class="pin-error">Incorrect PIN. Please try again.</div>
+            <button id="pinSubmit" class="pin-submit">Enter</button>
         </div>
     </div>
-    <!-- Notification Toast -->
-    <div id="successToast" style="display:none;position:fixed;top:30px;left:50%;transform:translateX(-50%);z-index:9999;background:#38a169;color:white;padding:1rem 2rem;border-radius:1rem;box-shadow:0 4px 24px rgba(56,161,105,0.18);font-weight:bold;font-size:1.1rem;opacity:0;transition:opacity 0.4s,top 0.4s;">
-        ✅ Successful Edited
+
+    <!-- Success Toast -->
+    <div id="successToast" class="success-toast">
+        ✅ Settings Updated Successfully
     </div>
+
+    <!-- Main Container -->
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <h1>🎯 Multi-Counter Queue System</h1>
-            <p>Staff Control Panel - Manage Your Counter Efficiently</p>
-        </div>
+        <!-- Counter Panel -->
+        <div class="counter-panel" id="counterPanel">
+            <!-- Header -->
+            <div class="header">
+                <h1>🎯 Multi-Counter Queue System</h1>
+                <p>Staff Control Panel - Manage Your Counter Efficiently</p>
+            </div>
 
-        <!-- Warning Banner -->
-        <div class="warning-banner" id="warningBanner">
-            ⚠️ Do not edit counter settings while customers are in queue
-        </div>
+            <!-- Warning Banner -->
+            <div class="warning-banner" id="warningBanner">
+                ⚠️ Do not edit counter settings while customers are in queue
+            </div>
 
-        <!-- Counter Selection -->
-        <div class="counter-selection">
-            <label for="counterSelect" style="display: block; margin-bottom: 10px; font-weight: bold; color: #333;">
-                Select Your Counter:
-            </label>
-            <select id="counterSelect" class="counter-select">
-                <option value="">-- Choose Counter --</option>
-                <option value="A">Counter A</option>
-                <option value="B">Counter B</option>
-                <option value="C">Counter C</option>
-            </select>
-        </div>
+            <!-- Counter Selection -->
+            <div class="counter-selection">
+                <label for="counterSelect" style="display: block; margin-bottom: 0.5rem; font-weight: bold; color: #333;">
+                    Select Your Counter:
+                </label>
+                <select id="counterSelect" class="counter-select">
+                    <option value="">-- Choose Counter --</option>
+                    <option value="A">Counter A</option>
+                    <option value="B">Counter B</option>
+                    <option value="C">Counter C</option>
+                </select>
+            </div>
 
-        <!-- Main Content Grid -->
-        <div class="main-content">
-            <!-- Queue Display Panel -->
-            <div class="queue-panel">
-                <h2>📊 Queue Status</h2>
-                
-                <div class="queue-status">
-                    <div class="status-item">
-                        <div class="status-label">Last Issued:</div>
-                        <div class="status-value" id="lastIssued">--</div>
-                    </div>
+            <!-- Main Panel Grid -->
+            <div class="panel-grid">
+                <!-- Queue Display Panel -->
+                <div class="queue-panel">
+                    <h2 class="panel-title">📊 Queue Status</h2>
                     
-                    <div class="status-item">
-                        <div class="status-label">Now Serving:</div>
-                        <div class="status-value" id="nowServing">--</div>
+                    <div class="queue-status">
+                        <div class="status-item">
+                            <div class="status-label">Last Issued:</div>
+                            <div class="status-value" id="lastIssued">--</div>
+                        </div>
+                        
+                        <div class="status-item">
+                            <div class="status-label">Now Serving:</div>
+                            <div class="status-value" id="nowServing">--</div>
+                        </div>
+                        
+                        <div class="status-item">
+                            <div class="status-label">Queue Length:</div>
+                            <div class="status-value" id="queueLength">0</div>
+                        </div>
+
+                        <div class="status-item">
+                            <div class="status-label">Counter Status:</div>
+                            <div class="status-value" id="counterStatus">Ready</div>
+                        </div>
                     </div>
+
+                    <div class="control-buttons">
+                        <button class="btn btn-primary" id="callNextBtn" disabled>
+                            📢 Call Next Number
+                        </button>
+                        <button class="btn btn-secondary" id="callAgainBtn" disabled>
+                            🔄 Call Again
+                        </button>
+                        <button class="btn btn-primary" id="markServedBtn" disabled>
+                            ✅ Mark as Served
+                        </button>
+                        <button class="btn btn-danger" id="resetQueueBtn" disabled>
+                            🔄 Reset Queue
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Settings Panel -->
+                <div class="settings-panel">
+                    <h2 class="panel-title">⚙️ Counter Settings</h2>
                     
-                    <div class="status-item">
-                        <div class="status-label">Queue Length:</div>
-                        <div class="status-value" id="queueLength">0</div>
+                    <div class="setting-group">
+                        <label for="prefixSelect">Counter Prefix:</label>
+                        <select id="prefixSelect" disabled>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="sequenceType">Number Sequence:</label>
+                        <select id="sequenceType" disabled>
+                            <option value="sequential">Sequential (1, 2, 3...)</option>
+                            <option value="odd">Odd Numbers (1, 3, 5...)</option>
+                            <option value="even">Even Numbers (2, 4, 6...)</option>
+                        </select>
+                    </div>
+
+                    <div class="volume-control">
+                        <label for="volumeSlider">🔊 Volume:</label>
+                        <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.7" class="volume-slider">
+                        <span id="volumeValue">70%</span>
                     </div>
                 </div>
-
-                <div class="control-buttons">
-                    <button class="btn btn-primary" id="callNextBtn" disabled>
-                        📢 Call Next Number
-                    </button>
-                    <button class="btn btn-secondary" id="callAgainBtn" disabled>
-                        🔄 Call Again
-                    </button>
-                    <button class="btn btn-primary" id="markServedBtn" disabled>
-                        ✅ Mark as Served
-                    </button>
-                    <button class="btn btn-danger" id="resetQueueBtn" disabled>
-                        🔄 Reset Queue
-                    </button>
-                </div>
             </div>
 
-            <!-- Settings Panel -->
-            <div class="settings-panel">
-                <h2>⚙️ Counter Settings</h2>
-                
-                <div class="setting-group">
-                    <label for="prefixSelect">Counter Prefix:</label>
-                    <select id="prefixSelect" disabled>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                    </select>
-                </div>
+            <!-- Visual Panel -->
+            <div class="visual-panel">
+                <h3 class="panel-title">🎨 Visual Queue Display</h3>
+                <div id="p5-container"></div>
+            </div>
 
-                <div class="setting-group">
-                    <label for="sequenceType">Number Sequence:</label>
-                    <select id="sequenceType" disabled>
-                        <option value="sequential">Sequential (1, 2, 3...)</option>
-                        <option value="odd">Odd Numbers (1, 3, 5...)</option>
-                        <option value="even">Even Numbers (2, 4, 6...)</option>
-                    </select>
-                </div>
-
-                <div class="volume-control">
-                    <label for="volumeSlider">🔊 Volume:</label>
-                    <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.7" class="volume-slider">
-                    <span id="volumeValue">70%</span>
+            <!-- Recent Served List -->
+            <div class="recent-served">
+                <h3 class="panel-title">📋 Recently Served</h3>
+                <div class="served-list" id="servedList">
+                    <div style="text-align: center; color: #666; padding: 1.5rem;">
+                        No customers served yet
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Recent Served List -->
-        <div class="recent-served">
-            <h3>📋 Recently Served</h3>
-            <div class="served-list" id="servedList">
-                <div style="text-align: center; color: #666; padding: 20px;">
-                    No customers served yet
-                </div>
-            </div>
-        </div>
-
-        <!-- P5.js Canvas for Visual Effects -->
-        <div id="p5-canvas">
-            <h3>🎨 Visual Queue Display</h3>
-            <div id="p5-container"></div>
         </div>
     </div>
 
@@ -540,216 +729,386 @@
         let volumeLevel = 0.7;
         let isQueueActive = false;
         let recentServed = [];
+        let p5Instance = null;
+        let firebaseListeners = [];
 
-        // Initialize Howler.js audio
-        function initializeAudio() {
-            // Create a simple beep sound using Web Audio API
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            
-            callSound = new Howl({
-                src: ['data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'],
-                volume: volumeLevel,
-                onload: function() {
-                    console.log('🔊 Audio loaded successfully');
-                },
-                onloaderror: function() {
-                    console.log('❌ Audio loading failed, using fallback');
-                    createFallbackSound();
+        // Initialize system when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 Counter system initializing...');
+            initializeAuth();
+            initializeNavigation();
+            initializeAudio();
+            initializeFirebase();
+            initializeP5();
+            setupEventListeners();
+        });
+
+        // Authentication System
+        function initializeAuth() {
+            const pinModal = document.getElementById('pinModal');
+            const pinInput = document.getElementById('pinInput');
+            const pinSubmit = document.getElementById('pinSubmit');
+            const pinError = document.getElementById('pinError');
+            const counterPanel = document.getElementById('counterPanel');
+
+            // Check if already authenticated
+            if (sessionStorage.getItem('counterAuth') === 'true') {
+                showCounterPanel();
+                return;
+            }
+
+            // Show PIN modal
+            pinModal.classList.remove('hidden');
+
+            // Handle PIN submission
+            pinSubmit.addEventListener('click', handlePinSubmit);
+            pinInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handlePinSubmit();
+            });
+
+            function handlePinSubmit() {
+                const pin = pinInput.value.trim();
+                if (pin === '0108') {
+                    sessionStorage.setItem('counterAuth', 'true');
+                    pinModal.style.opacity = '0';
+                    setTimeout(() => {
+                        pinModal.classList.add('hidden');
+                        showCounterPanel();
+                    }, 300);
+                } else {
+                    pinError.style.display = 'block';
+                    pinInput.value = '';
+                    pinInput.focus();
+                    // Shake animation
+                    pinInput.style.animation = 'shake 0.5s ease-in-out';
+                    setTimeout(() => {
+                        pinInput.style.animation = '';
+                    }, 500);
+                }
+            }
+
+            function showCounterPanel() {
+                counterPanel.classList.add('active');
+                console.log('✅ Counter panel activated');
+            }
+        }
+
+        // Navigation System
+        function initializeNavigation() {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const navPanel = document.getElementById('navPanel');
+            const counterNavItem = document.getElementById('counterNavItem');
+
+            hamburgerBtn.addEventListener('click', function() {
+                navPanel.classList.toggle('open');
+            });
+
+            // Close nav when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!navPanel.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+                    navPanel.classList.remove('open');
+                }
+            });
+
+            // Handle counter nav item
+            counterNavItem.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (sessionStorage.getItem('counterAuth') === 'true') {
+                    navPanel.classList.remove('open');
+                    document.getElementById('counterPanel').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    // Show PIN modal if not authenticated
+                    document.getElementById('pinModal').classList.remove('hidden');
                 }
             });
         }
 
-        // Fallback sound creation
-        function createFallbackSound() {
+        // Audio System with Howler.js
+        function initializeAudio() {
             try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-                oscillator.type = 'sine';
-                
-                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-                gainNode.gain.linearRampToValueAtTime(volumeLevel, audioContext.currentTime + 0.01);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-                
-                oscillator.start(audioContext.currentTime);
-                oscillator.stop(audioContext.currentTime + 0.5);
-                
-                callSound = { play: () => createFallbackSound() };
+                // Initialize Howler.js sound
+                callSound = new Howl({
+                    src: ['data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'],
+                    volume: volumeLevel,
+                    onload: function() {
+                        console.log('🔊 Audio system ready');
+                    },
+                    onloaderror: function() {
+                        console.warn('⚠️ Audio loading failed, using fallback');
+                        createFallbackSound();
+                    }
+                });
             } catch (error) {
-                console.log('❌ Fallback audio creation failed');
-                callSound = { play: () => console.log('🔊 Audio not available') };
+                console.warn('⚠️ Howler.js failed, using fallback');
+                createFallbackSound();
+            }
+
+            // Volume control
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumeValue = document.getElementById('volumeValue');
+
+            volumeSlider.addEventListener('input', function() {
+                volumeLevel = this.value;
+                volumeValue.textContent = Math.round(volumeLevel * 100) + '%';
+                if (callSound && callSound.volume) {
+                    callSound.volume(volumeLevel);
+                }
+            });
+        }
+
+        // Fallback Audio System
+        function createFallbackSound() {
+            callSound = {
+                play: function() {
+                    try {
+                        // Use Web Audio API for fallback
+                        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        const oscillator = audioCtx.createOscillator();
+                        const gainNode = audioCtx.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioCtx.destination);
+                        
+                        oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+                        oscillator.type = 'sine';
+                        
+                        gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+                        gainNode.gain.linearRampToValueAtTime(volumeLevel, audioCtx.currentTime + 0.01);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                        
+                        oscillator.start(audioCtx.currentTime);
+                        oscillator.stop(audioCtx.currentTime + 0.5);
+                    } catch (error) {
+                        console.warn('⚠️ Audio not available');
+                    }
+                },
+                volume: function(vol) {
+                    volumeLevel = vol;
+                }
+            };
+        }
+
+        // Firebase System
+        function initializeFirebase() {
+            if (typeof firebase === 'undefined' || !firebase.database) {
+                console.error('❌ Firebase not available');
+                showError('Firebase connection failed. Please refresh the page.');
+                return;
+            }
+
+            try {
+                const database = firebase.database();
+                
+                // Initialize counter data structure
+                initializeCounterData();
+                
+                // Listen for counter data changes
+                const countersRef = database.ref('counters');
+                countersRef.on('value', (snapshot) => {
+                    queueData = snapshot.val() || {};
+                    updateUI();
+                    checkQueueStatus();
+                }, (error) => {
+                    console.error('❌ Firebase read error:', error);
+                    showError('Failed to load queue data');
+                });
+
+                firebaseListeners.push({ ref: countersRef, type: 'value' });
+
+                console.log('✅ Firebase initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ Firebase initialization error:', error);
+                showError('Firebase connection failed');
             }
         }
 
-        // Initialize P5.js for visual effects
+        // Initialize counter data structure in Firebase
+        function initializeCounterData() {
+            const database = firebase.database();
+            const counters = ['A', 'B', 'C'];
+            
+            counters.forEach(counter => {
+                const counterRef = database.ref(`counters/${counter}`);
+                counterRef.once('value', (snapshot) => {
+                    if (!snapshot.exists()) {
+                        const defaultData = {
+                            prefix: counter,
+                            sequenceType: 'sequential',
+                            lastIssued: `${counter}000`,
+                            nowServing: null,
+                            queueLength: 0,
+                            isCalling: false,
+                            settings: {
+                                prefix: counter,
+                                sequenceType: 'sequential'
+                            },
+                            servedNumbers: [],
+                            totalServed: 0
+                        };
+                        counterRef.set(defaultData);
+                    }
+                });
+            });
+        }
+
+        // P5.js Visual System
         function initializeP5() {
-            new p5(function(p) {
+            p5Instance = new p5(function(p) {
                 p.setup = function() {
-                    const canvas = p.createCanvas(400, 200);
+                    const canvas = p.createCanvas(400, 250);
                     canvas.parent('p5-container');
-                    p.background(240);
+                    p.background(245);
                 };
 
                 p.draw = function() {
-                    p.background(240);
+                    p.background(245);
                     
-                    // Draw queue visualization
                     if (currentCounter && queueData[currentCounter]) {
                         const counter = queueData[currentCounter];
-                        
-                        // Draw counter status
-                        p.fill(50);
-                        p.textSize(16);
-                        p.textAlign(p.CENTER);
-                        p.text(`Counter ${currentCounter}`, p.width/2, 30);
-                        
-                        // Draw current number
-                        p.fill(0, 150, 0);
-                        p.textSize(24);
-                        p.text(counter.nowServing || '--', p.width/2, 70);
-                        
-                        // Draw queue length
-                        p.fill(100);
-                        p.textSize(14);
-                        p.text(`Queue: ${counter.queueLength || 0}`, p.width/2, 100);
-                        
-                        // Animate when calling
-                        if (counter.isCalling) {
-                            p.fill(255, 0, 0, 100);
-                            p.ellipse(p.width/2, 70, 100, 50);
-                        }
+                        drawCounterStatus(p, counter);
                     } else {
-                        p.fill(100);
-                        p.textSize(16);
-                        p.textAlign(p.CENTER);
-                        p.text('Select a counter to view status', p.width/2, p.height/2);
-                    }
-                };
-            });
-        }
-
-        // Firebase Database Operations
-        function initializeFirebase() {
-            // Listen for counter data changes
-            database.ref('counters').on('value', (snapshot) => {
-                queueData = snapshot.val() || {};
-                updateUI();
-                checkQueueStatus();
-            });
-
-            // Listen for global queue status
-            database.ref('queueStatus').on('value', (snapshot) => {
-                const status = snapshot.val() || {};
-                isQueueActive = status.isActive || false;
-                updateWarningBanner();
-            });
-        }
-
-        // Initialize counter data if not exists
-        function initializeCounterData() {
-            const counters = ['A', 'B', 'C'];
-            const defaultData = {};
-            
-            counters.forEach(counter => {
-                defaultData[counter] = {
-                    prefix: counter,
-                    sequenceType: 'sequential',
-                    lastIssued: `${counter}000`,
-                    nowServing: null,
-                    queueLength: 0,
-                    isCalling: false,
-                    settings: {
-                        prefix: counter,
-                        sequenceType: 'sequential'
+                        drawWaitingMessage(p);
                     }
                 };
             });
 
-            database.ref('counters').once('value', (snapshot) => {
-                if (!snapshot.exists()) {
-                    database.ref('counters').set(defaultData);
+            function drawCounterStatus(p, counter) {
+                // Draw counter header
+                p.fill(50);
+                p.textSize(20);
+                p.textAlign(p.CENTER);
+                p.text(`Counter ${currentCounter}`, p.width/2, 40);
+                
+                // Draw current serving number
+                p.fill(0, 150, 0);
+                p.textSize(32);
+                p.text(counter.nowServing || '--', p.width/2, 90);
+                
+                // Draw queue length
+                p.fill(100);
+                p.textSize(16);
+                p.text(`Queue: ${counter.queueLength || 0}`, p.width/2, 130);
+                
+                // Draw last issued
+                p.text(`Last: ${counter.lastIssued || '--'}`, p.width/2, 155);
+                
+                // Animation when calling
+                if (counter.isCalling) {
+                    p.fill(255, 0, 0, 100);
+                    p.ellipse(p.width/2, 90, 120, 60);
+                    
+                    // Pulsing effect
+                    const pulse = p.sin(p.millis() * 0.01) * 20 + 30;
+                    p.fill(255, 100, 100, pulse);
+                    p.ellipse(p.width/2, 90, 140, 80);
                 }
-            });
-        }
+                
+                // Draw status indicators
+                drawStatusIndicators(p, counter);
+            }
 
-        // UI Update Functions
-        function updateUI() {
-            if (!currentCounter || !queueData[currentCounter]) return;
+            function drawStatusIndicators(p, counter) {
+                // Queue status indicator
+                const queueColor = counter.queueLength > 0 ? [255, 165, 0] : [0, 255, 0];
+                p.fill(queueColor[0], queueColor[1], queueColor[2]);
+                p.ellipse(50, 200, 20, 20);
+                
+                p.fill(50);
+                p.textSize(12);
+                p.textAlign(p.LEFT);
+                p.text(counter.queueLength > 0 ? 'Active' : 'Empty', 75, 205);
+                
+                // Service status
+                const serviceColor = counter.nowServing ? [0, 255, 0] : [200, 200, 200];
+                p.fill(serviceColor[0], serviceColor[1], serviceColor[2]);
+                p.ellipse(200, 200, 20, 20);
+                p.text(counter.nowServing ? 'Serving' : 'Ready', 225, 205);
+            }
 
-            const counter = queueData[currentCounter];
-            
-            // Update status display
-            document.getElementById('lastIssued').textContent = counter.lastIssued || '--';
-            document.getElementById('nowServing').textContent = counter.nowServing || '--';
-            document.getElementById('queueLength').textContent = counter.queueLength || 0;
-            
-            // Update settings
-            document.getElementById('prefixSelect').value = counter.settings?.prefix || currentCounter;
-            document.getElementById('sequenceType').value = counter.settings?.sequenceType || 'sequential';
-            
-            // Update button states
-            const hasQueue = counter.queueLength > 0;
-            document.getElementById('callNextBtn').disabled = !hasQueue;
-            document.getElementById('callAgainBtn').disabled = !counter.nowServing;
-            document.getElementById('markServedBtn').disabled = !counter.nowServing;
-            document.getElementById('resetQueueBtn').disabled = !hasQueue;
-        }
-
-        function updateWarningBanner() {
-            const banner = document.getElementById('warningBanner');
-            if (isQueueActive) {
-                banner.style.display = 'block';
-                // Disable settings when queue is active
-                document.getElementById('prefixSelect').disabled = true;
-                document.getElementById('sequenceType').disabled = true;
-            } else {
-                banner.style.display = 'none';
-                // Enable settings when queue is inactive
-                if (currentCounter) {
-                    document.getElementById('prefixSelect').disabled = false;
-                    document.getElementById('sequenceType').disabled = false;
-                }
+            function drawWaitingMessage(p) {
+                p.fill(100);
+                p.textSize(18);
+                p.textAlign(p.CENTER);
+                p.text('Select a counter to view status', p.width/2, p.height/2);
             }
         }
 
-        // Queue Management Functions
+        // Event Listeners Setup
+        function setupEventListeners() {
+            // Counter selection
+            const counterSelect = document.getElementById('counterSelect');
+            counterSelect.addEventListener('change', function() {
+                currentCounter = this.value;
+                if (currentCounter) {
+                    enableCounterControls();
+                    updateUI();
+                    loadCounterSettings();
+                } else {
+                    disableCounterControls();
+                }
+            });
+
+            // Control buttons
+            document.getElementById('callNextBtn').addEventListener('click', callNextNumber);
+            document.getElementById('callAgainBtn').addEventListener('click', callAgain);
+            document.getElementById('markServedBtn').addEventListener('click', markAsServed);
+            document.getElementById('resetQueueBtn').addEventListener('click', resetQueue);
+
+            // Settings
+            document.getElementById('prefixSelect').addEventListener('change', saveCounterSettings);
+            document.getElementById('sequenceType').addEventListener('change', saveCounterSettings);
+
+            console.log('✅ Event listeners initialized');
+        }
+
+        // Counter Control Functions
         function callNextNumber() {
             if (!currentCounter || !queueData[currentCounter]) return;
 
             const counter = queueData[currentCounter];
-            if (counter.queueLength <= 0) return;
+            if (counter.queueLength <= 0) {
+                showError('No customers in queue');
+                return;
+            }
 
-            // Get next number based on sequence type
-            const nextNumber = getNextNumber(counter);
-            
-            // Update counter data
-            const updates = {};
-            updates[`counters/${currentCounter}/nowServing`] = nextNumber;
-            updates[`counters/${currentCounter}/isCalling`] = true;
-            
-            database.ref().update(updates).then(() => {
-                // Play sound
-                if (callSound) {
-                    callSound.volume(volumeLevel);
-                    callSound.play();
-                }
+            try {
+                const database = firebase.database();
+                const nextNumber = getNextNumber(counter);
                 
-                // Show call animation
-                document.getElementById('nowServing').classList.add('call-animation');
-                setTimeout(() => {
-                    document.getElementById('nowServing').classList.remove('call-animation');
-                }, 500);
+                // Update Firebase
+                const updates = {};
+                updates[`counters/${currentCounter}/nowServing`] = nextNumber;
+                updates[`counters/${currentCounter}/isCalling`] = true;
+                updates[`counters/${currentCounter}/lastCallTime`] = Date.now();
                 
-                // Stop calling animation after 3 seconds
-                setTimeout(() => {
-                    database.ref(`counters/${currentCounter}/isCalling`).set(false);
-                }, 3000);
-            });
+                database.ref().update(updates).then(() => {
+                    // Play sound
+                    playCallSound(nextNumber);
+                    
+                    // Show call animation
+                    const servingElement = document.getElementById('nowServing');
+                    servingElement.classList.add('call-animation');
+                    setTimeout(() => {
+                        servingElement.classList.remove('call-animation');
+                    }, 500);
+                    
+                    // Stop calling animation after 3 seconds
+                    setTimeout(() => {
+                        database.ref(`counters/${currentCounter}/isCalling`).set(false);
+                    }, 3000);
+                    
+                    console.log(`📢 Called number: ${nextNumber}`);
+                    
+                }).catch(error => {
+                    console.error('❌ Error calling next:', error);
+                    showError('Failed to call next number');
+                });
+                
+            } catch (error) {
+                console.error('❌ Call next error:', error);
+                showError('Error calling next number');
+            }
         }
 
         function getNextNumber(counter) {
@@ -777,112 +1136,331 @@
             return `${prefix}${nextNum.toString().padStart(3, '0')}`;
         }
 
-        function markAsServed() {
-            if (!currentCounter || !queueData[currentCounter]) return;
-
-            const counter = queueData[currentCounter];
-            if (!counter.nowServing) return;
-
-            // Add to recent served
-            const servedItem = {
-                number: counter.nowServing,
-                timestamp: new Date().toLocaleTimeString(),
-                counter: currentCounter
-            };
-            
-            recentServed.unshift(servedItem);
-            if (recentServed.length > 10) {
-                recentServed.pop();
+        function playCallSound(number) {
+            if (callSound) {
+                callSound.play();
             }
             
-            updateServedList();
-            
-            // Update counter data
-            const updates = {};
-            updates[`counters/${currentCounter}/nowServing`] = null;
-            updates[`counters/${currentCounter}/queueLength`] = Math.max(0, counter.queueLength - 1);
-            
-            database.ref().update(updates);
+            // Additional audio announcement using Speech Synthesis
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(`Number ${number}, please proceed to Counter ${currentCounter}`);
+                utterance.volume = volumeLevel;
+                utterance.rate = 0.9;
+                speechSynthesis.speak(utterance);
+            }
         }
 
         function callAgain() {
             if (!currentCounter || !queueData[currentCounter]) return;
 
             const counter = queueData[currentCounter];
-            if (!counter.nowServing) return;
+            if (!counter.nowServing) {
+                showError('No number currently being served');
+                return;
+            }
 
             // Play sound again
-            if (callSound) {
-                callSound.volume(volumeLevel);
-                callSound.play();
-            }
+            playCallSound(counter.nowServing);
+            
+            // Visual feedback
+            const servingElement = document.getElementById('nowServing');
+            servingElement.classList.add('call-animation');
+            setTimeout(() => {
+                servingElement.classList.remove('call-animation');
+            }, 500);
+
+            console.log(`🔄 Called again: ${counter.nowServing}`);
         }
 
-        // PIN Modal Logic
-        function showPinModal() {
-            const modal = document.getElementById('pinModal');
-            const input = document.getElementById('pinInput');
-            const error = document.getElementById('pinError');
-            const submit = document.getElementById('pinSubmit');
-            modal.style.display = 'flex';
-            input.value = '';
-            error.style.display = 'none';
-            input.focus();
-            submit.onclick = function() {
-                if (input.value === '0108') {
-                    sessionStorage.setItem('counterAuth', 'true');
-                    modal.style.opacity = '0';
-                    setTimeout(()=>{modal.style.display='none';},300);
-                } else {
-                    error.style.display = 'block';
-                    input.value = '';
-                    input.focus();
-                }
-            };
-            input.onkeypress = function(e) {
-                if (e.key === 'Enter') submit.click();
-            };
-        }
-
-        // On load, check sessionStorage
-        window.addEventListener('DOMContentLoaded', function() {
-            if (sessionStorage.getItem('counterAuth') !== 'true') {
-                showPinModal();
-            } else {
-                document.getElementById('pinModal').style.display = 'none';
-            }
-        });
-
-        // Show Success Toast
-        function showSuccessToast() {
-            const toast = document.getElementById('successToast');
-            toast.style.display = 'block';
-            setTimeout(()=>{
-                toast.style.opacity = '1';
-                toast.style.top = '60px';
-            },10);
-            setTimeout(()=>{
-                toast.style.opacity = '0';
-                toast.style.top = '30px';
-                setTimeout(()=>{toast.style.display='none';},400);
-            }, 2000);
-        }
-
-        // Settings Change Logic
-        document.getElementById('prefixSelect').addEventListener('change', function() {
-            saveCounterSettings();
-        });
-        document.getElementById('sequenceType').addEventListener('change', function() {
-            saveCounterSettings();
-        });
-        function saveCounterSettings() {
+        function markAsServed() {
             if (!currentCounter || !queueData[currentCounter]) return;
+
+            const counter = queueData[currentCounter];
+            if (!counter.nowServing) {
+                showError('No number currently being served');
+                return;
+            }
+
+            try {
+                const database = firebase.database();
+                const servedNumber = counter.nowServing;
+                
+                // Add to recent served
+                const servedItem = {
+                    number: servedNumber,
+                    timestamp: new Date().toLocaleTimeString(),
+                    counter: currentCounter,
+                    date: new Date().toDateString()
+                };
+                
+                // Update Firebase
+                const updates = {};
+                updates[`counters/${currentCounter}/nowServing`] = null;
+                updates[`counters/${currentCounter}/queueLength`] = Math.max(0, counter.queueLength - 1);
+                updates[`counters/${currentCounter}/totalServed`] = (counter.totalServed || 0) + 1;
+                updates[`counters/${currentCounter}/lastServedTime`] = Date.now();
+                
+                // Add to served numbers array
+                const servedNumbers = counter.servedNumbers || [];
+                servedNumbers.unshift(servedItem);
+                if (servedNumbers.length > 20) {
+                    servedNumbers.pop(); // Keep only last 20
+                }
+                updates[`counters/${currentCounter}/servedNumbers`] = servedNumbers;
+                
+                database.ref().update(updates).then(() => {
+                    console.log(`✅ Marked as served: ${servedNumber}`);
+                    updateServedList();
+                    showSuccess('Customer marked as served');
+                }).catch(error => {
+                    console.error('❌ Error marking served:', error);
+                    showError('Failed to mark as served');
+                });
+                
+            } catch (error) {
+                console.error('❌ Mark served error:', error);
+                showError('Error marking as served');
+            }
+        }
+
+        function resetQueue() {
+            if (!currentCounter) return;
+
+            if (!confirm(`Are you sure you want to reset Queue ${currentCounter}? This will clear all queue data.`)) {
+                return;
+            }
+
+            try {
+                const database = firebase.database();
+                const resetData = {
+                    prefix: currentCounter,
+                    sequenceType: queueData[currentCounter]?.settings?.sequenceType || 'sequential',
+                    lastIssued: `${currentCounter}000`,
+                    nowServing: null,
+                    queueLength: 0,
+                    isCalling: false,
+                    settings: {
+                        prefix: currentCounter,
+                        sequenceType: queueData[currentCounter]?.settings?.sequenceType || 'sequential'
+                    },
+                    servedNumbers: [],
+                    totalServed: 0,
+                    resetTime: Date.now()
+                };
+                
+                database.ref(`counters/${currentCounter}`).set(resetData).then(() => {
+                    console.log(`🔄 Reset counter: ${currentCounter}`);
+                    showSuccess('Queue reset successfully');
+                }).catch(error => {
+                    console.error('❌ Error resetting queue:', error);
+                    showError('Failed to reset queue');
+                });
+                
+            } catch (error) {
+                console.error('❌ Reset queue error:', error);
+                showError('Error resetting queue');
+            }
+        }
+
+        // Settings Functions
+        function loadCounterSettings() {
+            if (!currentCounter || !queueData[currentCounter]) return;
+
+            const counter = queueData[currentCounter];
+            const settings = counter.settings || {};
+            
+            document.getElementById('prefixSelect').value = settings.prefix || currentCounter;
+            document.getElementById('sequenceType').value = settings.sequenceType || 'sequential';
+        }
+
+        function saveCounterSettings() {
+            if (!currentCounter) return;
+
             const prefix = document.getElementById('prefixSelect').value;
             const sequenceType = document.getElementById('sequenceType').value;
-            database.ref(`counters/${currentCounter}/settings`).set({prefix, sequenceType}).then(()=>{
-                showSuccessToast();
-            });
+            
+            try {
+                const database = firebase.database();
+                const updates = {};
+                updates[`counters/${currentCounter}/settings/prefix`] = prefix;
+                updates[`counters/${currentCounter}/settings/sequenceType`] = sequenceType;
+                updates[`counters/${currentCounter}/prefix`] = prefix;
+                updates[`counters/${currentCounter}/sequenceType`] = sequenceType;
+                
+                database.ref().update(updates).then(() => {
+                    console.log('⚙️ Settings saved');
+                    showSuccess('Settings updated successfully');
+                }).catch(error => {
+                    console.error('❌ Error saving settings:', error);
+                    showError('Failed to save settings');
+                });
+                
+            } catch (error) {
+                console.error('❌ Save settings error:', error);
+                showError('Error saving settings');
+            }
         }
+
+        // UI Update Functions
+        function updateUI() {
+            if (!currentCounter || !queueData[currentCounter]) return;
+
+            const counter = queueData[currentCounter];
+            
+            // Update status display
+            document.getElementById('lastIssued').textContent = counter.lastIssued || '--';
+            document.getElementById('nowServing').textContent = counter.nowServing || '--';
+            document.getElementById('queueLength').textContent = counter.queueLength || 0;
+            document.getElementById('counterStatus').textContent = getCounterStatus(counter);
+            
+            // Update button states
+            updateButtonStates(counter);
+            
+            // Update served list
+            updateServedList();
+        }
+
+        function getCounterStatus(counter) {
+            if (counter.isCalling) return 'Calling';
+            if (counter.nowServing) return 'Serving';
+            if (counter.queueLength > 0) return 'Ready';
+            return 'Idle';
+        }
+
+        function updateButtonStates(counter) {
+            const hasQueue = counter.queueLength > 0;
+            const isServing = !!counter.nowServing;
+            
+            document.getElementById('callNextBtn').disabled = !hasQueue;
+            document.getElementById('callAgainBtn').disabled = !isServing;
+            document.getElementById('markServedBtn').disabled = !isServing;
+            document.getElementById('resetQueueBtn').disabled = !hasQueue && !isServing;
+        }
+
+        function checkQueueStatus() {
+            // Check if any counter has active queue
+            let hasActiveQueue = false;
+            Object.values(queueData).forEach(counter => {
+                if (counter.queueLength > 0) {
+                    hasActiveQueue = true;
+                }
+            });
+            
+            // Show/hide warning banner
+            const warningBanner = document.getElementById('warningBanner');
+            const prefixSelect = document.getElementById('prefixSelect');
+            const sequenceType = document.getElementById('sequenceType');
+            
+            if (hasActiveQueue) {
+                warningBanner.classList.add('show');
+                if (currentCounter && queueData[currentCounter]?.queueLength > 0) {
+                    prefixSelect.disabled = true;
+                    sequenceType.disabled = true;
+                }
+            } else {
+                warningBanner.classList.remove('show');
+                if (currentCounter) {
+                    prefixSelect.disabled = false;
+                    sequenceType.disabled = false;
+                }
+            }
+        }
+
+        function updateServedList() {
+            const servedList = document.getElementById('servedList');
+            
+            if (!currentCounter || !queueData[currentCounter]) {
+                servedList.innerHTML = '<div style="text-align: center; color: #666; padding: 1.5rem;">No customers served yet</div>';
+                return;
+            }
+            
+            const counter = queueData[currentCounter];
+            const servedNumbers = counter.servedNumbers || [];
+            
+            if (servedNumbers.length === 0) {
+                servedList.innerHTML = '<div style="text-align: center; color: #666; padding: 1.5rem;">No customers served yet</div>';
+                return;
+            }
+            
+            const html = servedNumbers.slice(0, 10).map(item => `
+                <div class="served-item">
+                    <div>
+                        <div class="served-number" style="font-weight: bold; color: #333;">${item.number}</div>
+                        <div style="font-size: 0.8rem; color: #666;">Counter ${item.counter}</div>
+                    </div>
+                    <div class="served-time" style="color: #666; font-size: 0.9rem;">${item.timestamp}</div>
+                </div>
+            `).join('');
+            
+            servedList.innerHTML = html;
+        }
+
+        function enableCounterControls() {
+            const controls = ['callNextBtn', 'callAgainBtn', 'markServedBtn', 'resetQueueBtn'];
+            controls.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.disabled = false;
+            });
+            
+            document.getElementById('prefixSelect').disabled = false;
+            document.getElementById('sequenceType').disabled = false;
+        }
+
+        function disableCounterControls() {
+            const controls = ['callNextBtn', 'callAgainBtn', 'markServedBtn', 'resetQueueBtn'];
+            controls.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.disabled = true;
+            });
+            
+            document.getElementById('prefixSelect').disabled = true;
+            document.getElementById('sequenceType').disabled = true;
+        }
+
+        // Utility Functions
+        function showSuccess(message) {
+            const toast = document.getElementById('successToast');
+            toast.textContent = '✅ ' + message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function showError(message) {
+            console.error('❌ Error:', message);
+            alert('Error: ' + message);
+        }
+
+        // Cleanup function
+        window.addEventListener('beforeunload', function() {
+            // Clean up Firebase listeners
+            firebaseListeners.forEach(listener => {
+                if (listener.ref && listener.ref.off) {
+                    listener.ref.off(listener.type);
+                }
+            });
+            
+            // Stop p5.js
+            if (p5Instance) {
+                p5Instance.remove();
+            }
+        });
+
+        // Add CSS animation for shake effect
+        const shakeStyle = document.createElement('style');
+        shakeStyle.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(shakeStyle);
+
+        console.log('✅ Counter system fully initialized');
     </script>
 </body>
-</html>   
+</html>
+```
