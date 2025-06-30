@@ -61,7 +61,7 @@
 
     <!-- Main Content -->
     <div class="min-h-screen flex flex-col justify-center items-center px-6 py-12">
-        <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-10 max-w-md w-full text-center slide-up">
+        <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-10 max-w-4xl w-full text-center slide-up">
             <!-- Logo/Mascot -->
             <div class="mb-8 fade-in">
                 <div class="w-32 h-32 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full mx-auto flex items-center justify-center text-6xl mascot-bounce shadow-xl">
@@ -71,18 +71,32 @@
                 <p class="text-gray-600 mt-3 text-lg font-medium">Skip the line, enjoy the wait!</p>
             </div>
 
-            <!-- Current Queue Status -->
-            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 mb-8 glow-pulse border border-emerald-200">
-                <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Now Serving</p>
-                <div id="currentServingDisplay" class="text-2xl font-bold text-emerald-600 mt-2 mb-2">
-                    <span id="currentServing_A">A: --</span> | 
-                    <span id="currentServing_B">B: --</span> | 
-                    <span id="currentServing_C">C: --</span>
+            <!-- Counter Status Display - 6 Boxes -->
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                <div id="counterA" class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4 border border-emerald-200">
+                    <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Counter A</p>
+                    <div class="text-xl font-bold text-emerald-600 mt-2" id="serving_A">--</div>
                 </div>
-                <p class="text-xs text-gray-500 flex items-center justify-center">
-                    <span class="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"></span>
-                    Live Updates
-                </p>
+                <div id="counterB" class="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-4 border border-blue-200">
+                    <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Counter B</p>
+                    <div class="text-xl font-bold text-blue-600 mt-2" id="serving_B">--</div>
+                </div>
+                <div id="counterC" class="bg-gradient-to-r from-purple-50 to-violet-50 rounded-2xl p-4 border border-purple-200">
+                    <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Counter C</p>
+                    <div class="text-xl font-bold text-purple-600 mt-2" id="serving_C">--</div>
+                </div>
+                <div id="counterD" class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-4 border border-orange-200">
+                    <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Counter D</p>
+                    <div class="text-xl font-bold text-orange-600 mt-2" id="serving_D">--</div>
+                </div>
+                <div id="counterE" class="bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl p-4 border border-pink-200">
+                    <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Counter E</p>
+                    <div class="text-xl font-bold text-pink-600 mt-2" id="serving_E">--</div>
+                </div>
+                <div id="counterF" class="bg-gradient-to-r from-gray-50 to-slate-50 rounded-2xl p-4 border border-gray-200">
+                    <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Counter F</p>
+                    <div class="text-xl font-bold text-gray-600 mt-2" id="serving_F">--</div>
+                </div>
             </div>
 
             <!-- Get Number Button -->
@@ -101,14 +115,6 @@
             <div id="errorMsg" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
                 <p class="text-red-700 font-medium">❌ <span id="errorText">Failed to generate number. Please try again.</span></p>
             </div>
-
-            <!-- Queue Info -->
-            <div class="mt-8 space-y-3 text-sm text-gray-500 fade-in">
-                <p class="flex items-center justify-center"><span class="mr-3 text-lg">📱</span>Mobile-optimized experience</p>
-                <p class="flex items-center justify-center"><span class="mr-3 text-lg">🎮</span>Play games while waiting</p>
-                <p class="flex items-center justify-center"><span class="mr-3 text-lg">📊</span>Real-time queue updates</p>
-                <p class="flex items-center justify-center"><span class="mr-3 text-lg">⚡</span>Round-robin fair distribution</p>
-            </div>
         </div>
     </div>
 
@@ -126,6 +132,7 @@
     <script>
         let isGenerating = false;
         let hasGeneratedToday = false;
+        let activeCounters = ['A', 'B', 'C']; // Default active counters
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Queue Joy initialized');
@@ -138,7 +145,8 @@
             // Check if user already has a number today
             checkExistingSession();
             
-            // Load current serving numbers for all counters
+            // Load active counters and current serving numbers
+            loadActiveCounters();
             loadCurrentServing();
             
             // Set up generate button
@@ -179,18 +187,50 @@
             }
         }
 
+        // Load active counters and show/hide counter boxes accordingly
+        function loadActiveCounters() {
+            if (typeof firebase !== 'undefined' && firebase.database) {
+                const activeCountersRef = firebase.database().ref('settings/activeCounters');
+                
+                activeCountersRef.on('value', (snapshot) => {
+                    activeCounters = snapshot.val() || ['A', 'B', 'C'];
+                    updateCounterDisplay();
+                }, (error) => {
+                    console.error('❌ Error loading active counters:', error);
+                    activeCounters = ['A', 'B', 'C']; // Fallback
+                    updateCounterDisplay();
+                });
+            }
+        }
+
+        // Update counter box visibility based on active counters
+        function updateCounterDisplay() {
+            const allCounters = ['A', 'B', 'C', 'D', 'E', 'F'];
+            
+            allCounters.forEach(counter => {
+                const counterElement = document.getElementById(`counter${counter}`);
+                if (counterElement) {
+                    if (activeCounters.includes(counter)) {
+                        counterElement.style.display = 'block';
+                    } else {
+                        counterElement.style.display = 'none';
+                    }
+                }
+            });
+        }
+
         function loadCurrentServing() {
             if (typeof firebase !== 'undefined' && firebase.database) {
-                const counters = ['A', 'B', 'C'];
+                const allCounters = ['A', 'B', 'C', 'D', 'E', 'F'];
                 
-                counters.forEach(counter => {
+                allCounters.forEach(counter => {
                     const currentRef = firebase.database().ref(`queue/currentServing_${counter}`);
                     
                     currentRef.on('value', (snapshot) => {
                         const current = snapshot.val() || '--';
-                        const element = document.getElementById(`currentServing_${counter}`);
+                        const element = document.getElementById(`serving_${counter}`);
                         if (element) {
-                            element.textContent = `${counter}: ${current}`;
+                            element.textContent = current;
                         }
                     }, (error) => {
                         console.error(`❌ Error loading current serving for ${counter}:`, error);
@@ -225,7 +265,7 @@
                 button.disabled = true;
             }
             
-            // Use the round-robin generation function
+            // Use the enhanced round-robin generation function
             if (window.generateRoundRobinNumber) {
                 window.generateRoundRobinNumber()
                     .then((result) => {

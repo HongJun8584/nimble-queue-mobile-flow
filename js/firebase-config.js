@@ -25,12 +25,19 @@ database.ref('.info/connected').on('value', (snapshot) => {
   }
 });
 
-// Initialize queue structure for multi-counter system
+// Initialize queue structure for 6-counter system
 function initializeQueueStructure() {
-  const counters = ['A', 'B', 'C'];
+  const allCounters = ['A', 'B', 'C', 'D', 'E', 'F'];
   
-  // Initialize counter settings
-  counters.forEach(counter => {
+  // Initialize active counters list (default: A, B, C)
+  database.ref('settings/activeCounters').once('value', (snapshot) => {
+    if (!snapshot.exists()) {
+      database.ref('settings/activeCounters').set(['A', 'B', 'C']);
+    }
+  });
+  
+  // Initialize all possible counter settings
+  allCounters.forEach(counter => {
     database.ref(`queue/lastNumber_${counter}`).once('value', (snapshot) => {
       if (!snapshot.exists()) {
         database.ref(`queue/lastNumber_${counter}`).set(0);
@@ -47,7 +54,8 @@ function initializeQueueStructure() {
       if (!snapshot.exists()) {
         database.ref(`settings/counter_${counter}`).set({
           prefix: counter,
-          sequenceType: 'sequential'
+          sequenceType: 'sequential',
+          active: ['A', 'B', 'C'].includes(counter)
         });
       }
     });
@@ -68,48 +76,92 @@ function initializeQueueStructure() {
   });
 }
 
-// Round-robin number generation logic
+// Enhanced round-robin number generation for 6 counters
 window.generateRoundRobinNumber = function() {
   return new Promise((resolve, reject) => {
-    const counters = ['A', 'B', 'C'];
-    
-    database.ref('queue/globalCounter').transaction((currentGlobal) => {
-      const globalNum = (currentGlobal || 0) + 1;
-      const counterIndex = (globalNum - 1) % 3;
-      const selectedCounter = counters[counterIndex];
+    // First get active counters
+    database.ref('settings/activeCounters').once('value', (activeSnapshot) => {
+      const activeCounters = activeSnapshot.val() || ['A', 'B', 'C'];
       
-      return globalNum;
-    }).then((result) => {
-      if (result.committed) {
-        const globalNum = result.snapshot.val();
-        const counterIndex = (globalNum - 1) % 3;
-        const selectedCounter = counters[counterIndex];
-        const counterNumber = Math.ceil(globalNum / 3);
-        
-        // Update the specific counter's last number
-        return database.ref(`queue/lastNumber_${selectedCounter}`).transaction((currentCounterNum) => {
-          return counterNumber;
-        }).then(() => {
-          const queueId = `${selectedCounter}${counterNumber.toString().padStart(3, '0')}`;
+      if (activeCounters.length === 0) {
+        reject(new Error('No active counters available'));
+        return;
+      }
+      
+      // Use transaction to safely increment global counter
+      database.ref('queue/globalCounter').transaction((currentGlobal) => {
+        return (currentGlobal || 0) + 1;
+      }).then((result) => {
+        if (result.committed) {
+          const globalNum = result.snapshot.val();
+          const counterIndex = (globalNum - 1) % activeCounters.length;
+          const selectedCounter = activeCounters[counterIndex];
           
-          // Save ticket in Firebase
-          return database.ref(`queue/numbers/${queueId}`).set({
-            status: 'waiting',
-            timestamp: Date.now(),
-            counter: selectedCounter
-          }).then(() => {
-            resolve({
-              queueId: queueId,
-              counter: selectedCounter,
-              number: counterNumber
+          // Get counter settings to determine sequence type
+          return database.ref(`settings/counter_${selectedCounter}`).once('value', (settingsSnapshot) => {
+            const settings = settingsSnapshot.val() || { sequenceType: 'sequential' };
+            
+            // Calculate next number for this counter based on sequence type
+            return database.ref(`queue/lastNumber_${selectedCounter}`).transaction((currentCounterNum) => {
+              const lastNum = currentCounterNum || 0;
+              let nextNum;
+              
+              switch (settings.sequenceType) {
+                case 'odd':
+                  nextNum = lastNum + (lastNum % 2 === 0 ? 1 : 2);
+                  break;
+                case 'even':
+                  nextNum = lastNum + (lastNum % 2 === 0 ? 2 : 1);
+                  break;
+                default: // sequential
+                  nextNum = lastNum + 1;
+                  break;
+              }
+              
+              return nextNum;
+            }).then((counterResult) => {
+              if (counterResult.committed) {
+                const counterNumber = counterResult.snapshot.val();
+                const queueId = `${selectedCounter}${counterNumber.toString().padStart(3, '0')}`;
+                
+                // Save ticket in Firebase
+                return database.ref(`queue/numbers/${queueId}`).set({
+                  status: 'waiting',
+                  timestamp: Date.now(),
+                  counter: selectedCounter,
+                  number: counterNumber
+                }).then(() => {
+                  resolve({
+                    queueId: queueId,
+                    counter: selectedCounter,
+                    number: counterNumber
+                  });
+                });
+              } else {
+                reject(new Error('Counter transaction failed'));
+              }
             });
           });
-        });
-      } else {
-        reject(new Error('Transaction failed'));
-      }
-    }).catch(reject);
+        } else {
+          reject(new Error('Global counter transaction failed'));
+        }
+      }).catch(reject);
+    });
   });
+};
+
+// Function to get active counters
+window.getActiveCounters = function() {
+  return new Promise((resolve) => {
+    database.ref('settings/activeCounters').once('value', (snapshot) => {
+      resolve(snapshot.val() || ['A', 'B', 'C']);
+    });
+  });
+};
+
+// Function to update active counters
+window.updateActiveCounters = function(counters) {
+  return database.ref('settings/activeCounters').set(counters);
 };
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -224,11 +224,16 @@
         function checkIfMyTurn(currentServing) {
             if (currentServing === myQueueNumber && !isMyTurn) {
                 isMyTurn = true;
-                showYourTurnNotification();
+                playYourTurnNotification();
+                
+                // Auto-redirect to your_turn.html after 3 seconds
+                setTimeout(() => {
+                    window.location.href = './your_turn.html';
+                }, 3000);
             }
         }
 
-        function showYourTurnNotification() {
+        function playYourTurnNotification() {
             // Play notification sound
             if (notificationSound) {
                 notificationSound.play();
@@ -243,17 +248,13 @@
             statusText.className = 'font-bold text-green-700';
             statusMessage.classList.remove('hidden');
             
-            // Speech notification
+            // Speech notification with counter info
             if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(`Number ${myQueueNumber}, it's your turn! Please proceed to Counter ${myPrefix}.`);
+                const utterance = new SpeechSynthesisUtterance(`Number ${myQueueNumber}, please proceed to Counter ${myPrefix}.`);
                 utterance.volume = 0.8;
+                utterance.rate = 0.9;
                 speechSynthesis.speak(utterance);
             }
-            
-            // Auto-redirect after 3 seconds
-            setTimeout(() => {
-                window.location.href = './your_turn.html';
-            }, 3000);
         }
 
         function calculateQueuePosition(allNumbers) {
@@ -339,7 +340,7 @@
             document.querySelector('.space-y-4').style.display = 'none';
         }
 
-        // Navigation functions
+        // Initialize navigation
         function initializeNavigation() {
             const menuToggle = document.getElementById('menuToggle');
             const menuPanel = document.getElementById('menuPanel');

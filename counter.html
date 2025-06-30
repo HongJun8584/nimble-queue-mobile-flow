@@ -90,14 +90,33 @@
             ⚠️ Do not edit counter settings while customers are in queue
         </div>
 
+        <!-- Counter Management -->
+        <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 mb-6 slide-up">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Manage Counters</h2>
+            <div class="flex flex-wrap gap-2 mb-4">
+                <div id="counterTags" class="flex flex-wrap gap-2">
+                    <!-- Counter tags will be populated here -->
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <select id="addCounterSelect" class="flex-1 p-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none">
+                    <option value="">Add Counter...</option>
+                    <option value="A">Counter A</option>
+                    <option value="B">Counter B</option>
+                    <option value="C">Counter C</option>
+                    <option value="D">Counter D</option>
+                    <option value="E">Counter E</option>
+                    <option value="F">Counter F</option>
+                </select>
+                <button id="addCounterBtn" class="px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors">Add</button>
+            </div>
+        </div>
+
         <!-- Counter Selection -->
         <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 mb-6 slide-up">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Select Counter</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Select Active Counter</h2>
             <select id="counterSelect" class="w-full p-4 border-2 border-gray-300 rounded-xl text-lg focus:border-purple-500 focus:outline-none">
                 <option value="">-- Choose Counter --</option>
-                <option value="A">Counter A</option>
-                <option value="B">Counter B</option>
-                <option value="C">Counter C</option>
             </select>
         </div>
 
@@ -147,6 +166,9 @@
                             <option value="A">A</option>
                             <option value="B">B</option>
                             <option value="C">C</option>
+                            <option value="D">D</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
                         </select>
                     </div>
                     
@@ -170,6 +192,7 @@
         let currentCounter = null;
         let callSound = null;
         let firebaseListeners = [];
+        let activeCounters = [];
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎯 Counter system initializing...');
@@ -179,7 +202,7 @@
             setupEventListeners();
         });
 
-        // Authentication
+        // Authentication system
         function initializeAuth() {
             const pinModal = document.getElementById('pinModal');
             const pinInput = document.getElementById('pinInput');
@@ -219,7 +242,7 @@
             }
         }
 
-        // Navigation
+        // Navigation system
         function initializeNavigation() {
             const hamburgerBtn = document.getElementById('hamburgerBtn');
             const navPanel = document.getElementById('navPanel');
@@ -235,7 +258,7 @@
             });
         }
 
-        // Audio System
+        // Audio system with fallback
         function initializeAudio() {
             try {
                 callSound = new Howl({
@@ -267,7 +290,7 @@
             };
         }
 
-        // Firebase System
+        // Firebase initialization and real-time listeners
         function initializeFirebase() {
             if (typeof firebase === 'undefined' || !firebase.database) {
                 console.error('❌ Firebase not available');
@@ -276,7 +299,10 @@
 
             const database = firebase.database();
             
-            // Listen for all counters data
+            // Load active counters
+            loadActiveCounters();
+            
+            // Listen for queue data changes
             const countersRef = database.ref('queue');
             countersRef.on('value', (snapshot) => {
                 const queueData = snapshot.val() || {};
@@ -289,8 +315,75 @@
             firebaseListeners.push({ ref: countersRef, type: 'value' });
         }
 
-        // Event Listeners
+        // Load and manage active counters
+        function loadActiveCounters() {
+            const database = firebase.database();
+            const activeCountersRef = database.ref('settings/activeCounters');
+            
+            activeCountersRef.on('value', (snapshot) => {
+                activeCounters = snapshot.val() || ['A', 'B', 'C'];
+                updateCounterTags();
+                updateCounterSelect();
+            });
+        }
+
+        function updateCounterTags() {
+            const counterTags = document.getElementById('counterTags');
+            counterTags.innerHTML = '';
+            
+            activeCounters.forEach(counter => {
+                const tag = document.createElement('div');
+                tag.className = 'bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2';
+                tag.innerHTML = `
+                    Counter ${counter}
+                    <button onclick="removeCounter('${counter}')" class="text-red-500 hover:text-red-700">×</button>
+                `;
+                counterTags.appendChild(tag);
+            });
+        }
+
+        function updateCounterSelect() {
+            const counterSelect = document.getElementById('counterSelect');
+            const addCounterSelect = document.getElementById('addCounterSelect');
+            
+            // Update main counter select
+            counterSelect.innerHTML = '<option value="">-- Choose Counter --</option>';
+            activeCounters.forEach(counter => {
+                const option = document.createElement('option');
+                option.value = counter;
+                option.textContent = `Counter ${counter}`;
+                counterSelect.appendChild(option);
+            });
+            
+            // Update add counter select (show only inactive counters)
+            const allCounters = ['A', 'B', 'C', 'D', 'E', 'F'];
+            addCounterSelect.innerHTML = '<option value="">Add Counter...</option>';
+            allCounters.forEach(counter => {
+                if (!activeCounters.includes(counter)) {
+                    const option = document.createElement('option');
+                    option.value = counter;
+                    option.textContent = `Counter ${counter}`;
+                    addCounterSelect.appendChild(option);
+                }
+            });
+        }
+
+        // Counter management functions
+        window.removeCounter = function(counter) {
+            if (activeCounters.length <= 1) {
+                alert('Cannot remove the last active counter');
+                return;
+            }
+            
+            if (confirm(`Remove Counter ${counter}? This will disable it from the system.`)) {
+                const newCounters = activeCounters.filter(c => c !== counter);
+                firebase.database().ref('settings/activeCounters').set(newCounters);
+            }
+        };
+
+        // Event listeners setup
         function setupEventListeners() {
+            // Counter selection
             const counterSelect = document.getElementById('counterSelect');
             counterSelect.addEventListener('change', function() {
                 currentCounter = this.value;
@@ -302,13 +395,27 @@
                 }
             });
 
+            // Add counter functionality
+            const addCounterBtn = document.getElementById('addCounterBtn');
+            const addCounterSelect = document.getElementById('addCounterSelect');
+            
+            addCounterBtn.addEventListener('click', function() {
+                const newCounter = addCounterSelect.value;
+                if (newCounter && activeCounters.length < 6) {
+                    const updatedCounters = [...activeCounters, newCounter].sort();
+                    firebase.database().ref('settings/activeCounters').set(updatedCounters);
+                    addCounterSelect.value = '';
+                }
+            });
+
+            // Control buttons
             document.getElementById('callNextBtn').addEventListener('click', callNextNumber);
             document.getElementById('resetQueueBtn').addEventListener('click', resetQueue);
             document.getElementById('prefixSelect').addEventListener('change', saveCounterSettings);
             document.getElementById('sequenceType').addEventListener('change', saveCounterSettings);
         }
 
-        // Counter Operations
+        // Counter operations
         function callNextNumber() {
             if (!currentCounter) return;
 
@@ -332,7 +439,7 @@
 
                 const [nextNumberId, nextNumberData] = waitingNumbers[0];
                 
-                // Update Firebase
+                // Update Firebase atomically
                 const updates = {};
                 updates[`queue/currentServing_${currentCounter}`] = nextNumberId;
                 updates[`queue/numbers/${nextNumberId}/status`] = 'serving';
@@ -401,7 +508,7 @@
             });
         }
 
-        // Settings Functions
+        // Settings functions
         function loadCounterSettings() {
             if (!currentCounter) return;
 
@@ -432,7 +539,7 @@
             });
         }
 
-        // UI Updates
+        // UI update functions
         function updateUI(queueData) {
             if (!currentCounter) return;
 
@@ -488,7 +595,7 @@
             document.getElementById('sequenceType').disabled = true;
         }
 
-        // Cleanup
+        // Cleanup on page unload
         window.addEventListener('beforeunload', function() {
             firebaseListeners.forEach(listener => {
                 if (listener.ref && listener.ref.off) {
