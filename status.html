@@ -1,26 +1,26 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Queue Joy - Your Status</title>
+    <title>Queue Status - Queue Joy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Howler.js for notifications -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .pulse-glow { animation: pulse-glow 2s infinite; }
-        .your-turn { 
-            animation: bounce 1s infinite;
-            background: linear-gradient(45deg, #10b981, #34d399);
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         .slide-up { animation: slideUp 0.6s ease-out; }
         .fade-in { animation: fadeIn 0.8s ease-out; }
-        .number-highlight { animation: number-highlight 2s infinite; }
+        .pulse-glow { animation: pulse-glow 2s infinite; }
+        .bounce-gentle { animation: bounce-gentle 2s infinite; }
         
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.6); }
-        }
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -29,177 +29,96 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
-        @keyframes number-highlight {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
         }
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
-        
-        /* Game Styles */
-        .card { 
-            transition: transform 0.3s, box-shadow 0.3s;
-            aspect-ratio: 1;
-        }
-        .card:hover { 
-            transform: scale(0.95); 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        .card.flipped { transform: rotateY(180deg); }
-        .card.matched { opacity: 0.6; transform: scale(0.9); }
     </style>
 </head>
 <body class="gradient-bg min-h-screen">
     <!-- Hamburger Menu -->
-    <div id="hamburgerMenu" class="fixed top-6 right-6 z-50">
+    <div class="fixed top-6 right-6 z-50">
         <button id="menuToggle" class="bg-white/90 backdrop-blur-sm p-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110">
             <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
         </button>
         
-        <div id="menuPanel" class="absolute top-20 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 w-52 hidden transform transition-all duration-300">
-            <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">🏠 Home</a>
-            <a href="./status.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105 bg-purple-50">📊 Status</a>
-            <a href="./admin.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">⚙️ Admin</a>
-            <a href="./counter.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">🎯 Counter</a>
+        <div id="menuPanel" class="absolute top-20 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 w-52 hidden">
+            <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🏠 Home</a>
+            <a href="./status.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 bg-purple-50">📊 Status</a>
+            <a href="./game.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🎮 Play Game</a>
+            <a href="./admin.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">⚙️ Admin</a>
         </div>
     </div>
 
-    <!-- Main Content -->
+    <!-- Main Container -->
     <div class="min-h-screen flex flex-col justify-center items-center px-6 py-12">
         <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-10 max-w-md w-full text-center slide-up">
-            <!-- Your Turn Notification -->
-            <div id="yourTurnAlert" class="hidden your-turn text-white p-6 rounded-2xl mb-8 shadow-xl">
-                <h2 class="text-2xl font-bold flex items-center justify-center">
-                    <span class="text-3xl mr-3">🎉</span>
-                    IT'S YOUR TURN!
-                </h2>
-                <p class="mt-2 text-lg">Please proceed to the counter</p>
-                <div class="mt-4">
-                    <button onclick="acknowledgeCall()" class="bg-white text-green-600 px-6 py-2 rounded-xl font-bold hover:scale-105 transition-all">
-                        Got it! 👍
-                    </button>
+            
+            <!-- Header -->
+            <div class="mb-8 fade-in">
+                <div class="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto flex items-center justify-center text-4xl mb-4 bounce-gentle">
+                    🎫
                 </div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Queue Status</h1>
+                <p class="text-gray-600">Real-time updates</p>
             </div>
 
-            <!-- Current Status -->
-            <div id="statusView" class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-8 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Queue Status</h1>
+            <!-- Your Number Card -->
+            <div id="yourNumberCard" class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 mb-6 pulse-glow border border-blue-200">
+                <p class="text-sm text-gray-600 font-medium uppercase tracking-wide mb-2">Your Number</p>
+                <p id="yourNumber" class="text-4xl font-bold text-blue-600 mb-2">Loading...</p>
+                <p id="counterInfo" class="text-sm text-gray-500"></p>
+            </div>
+
+            <!-- Status Info -->
+            <div class="space-y-4 mb-8">
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 font-medium">Now Serving</span>
+                        <span id="nowServing" class="text-lg font-bold text-green-600">--</span>
+                    </div>
+                </div>
                 
-                <!-- Now Serving -->
-                <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 mb-6 pulse-glow border border-emerald-200">
-                    <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Now Serving</p>
-                    <p id="nowServing" class="text-4xl font-bold text-emerald-600 mt-2 mb-2">A001</p>
-                    <p class="text-xs text-gray-500 flex items-center justify-center">
-                        <span class="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"></span>
-                        Live Updates
-                    </p>
-                </div>
-
-                <!-- Your Number -->
-                <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 mb-6 border border-purple-200">
-                    <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Your Number</p>
-                    <p id="yourNumber" class="text-5xl font-bold text-purple-600 mt-2 mb-2 number-highlight">A000</p>
-                    <p class="text-xs text-gray-500" id="queueTime">Generated just now</p>
-                </div>
-
-                <!-- Queue Info -->
-                <div class="grid grid-cols-2 gap-4 mb-8">
-                    <div class="bg-gray-50 rounded-2xl p-4 fade-in border border-gray-200">
-                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">People Ahead</p>
-                        <p id="peopleAhead" class="text-3xl font-bold text-gray-700 mt-2">0</p>
-                    </div>
-                    <div class="bg-gray-50 rounded-2xl p-4 fade-in border border-gray-200">
-                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wide">Est. Wait</p>
-                        <p id="estimatedWait" class="text-3xl font-bold text-gray-700 mt-2">Soon</p>
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 font-medium">People Ahead</span>
+                        <span id="peopleAhead" class="text-lg font-bold text-orange-600">--</span>
                     </div>
                 </div>
-
-                <p class="text-sm text-gray-600 mb-4">Please wait... You are in queue.</p>
-
-                <!-- Action Buttons -->
-                <div class="space-y-4">
-                    <button id="playGameBtn" class="w-full py-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-lg">
-                        <span class="flex items-center justify-center">
-                            <span class="text-2xl mr-3">🎮</span>
-                            Play Game While Waiting
-                        </span>
-                    </button>
-                    
-                    <button id="backToHomeBtn" class="w-full py-3 border-2 border-gray-300 text-gray-600 rounded-2xl hover:bg-gray-50 hover:scale-105 transition-all duration-300 font-medium">
-                        <span class="flex items-center justify-center">
-                            <span class="text-xl mr-2">🏠</span>
-                            Back to Home
-                        </span>
-                    </button>
+                
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600 font-medium">Estimated Wait</span>
+                        <span id="estimatedWait" class="text-lg font-bold text-purple-600">--</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Game Section (Hidden by default) -->
-            <div id="gameView" class="hidden">
-                <div class="mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">🧠 Memory Match</h2>
-                    <p class="text-gray-600 mt-2 font-medium">Find matching pairs!</p>
-                    
-                    <!-- Game Stats -->
-                    <div class="grid grid-cols-3 gap-3 my-4 text-center">
-                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3">
-                            <p class="text-xs text-gray-500 font-medium">Moves</p>
-                            <p id="moves" class="text-xl font-bold text-blue-600">0</p>
-                        </div>
-                        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-3">
-                            <p class="text-xs text-gray-500 font-medium">Matches</p>
-                            <p id="matches" class="text-xl font-bold text-emerald-600">0/8</p>
-                        </div>
-                        <div class="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-3">
-                            <p class="text-xs text-gray-500 font-medium">Time</p>
-                            <p id="timer" class="text-xl font-bold text-orange-600">0:00</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Game Board -->
-                <div id="gameBoard" class="grid grid-cols-4 gap-2 mb-6">
-                    <!-- Cards will be generated here -->
-                </div>
-
-                <!-- Game Buttons -->
-                <div class="space-y-3">
-                    <button id="newGameBtn" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
-                        <span class="flex items-center justify-center">
-                            <span class="text-xl mr-3">🔄</span>
-                            New Game
-                        </span>
-                    </button>
-                    
-                    <button id="backToStatusBtn" class="w-full py-3 border-2 border-gray-300 text-gray-600 rounded-2xl hover:bg-gray-50 hover:scale-105 transition-all duration-300 font-medium">
-                        <span class="flex items-center justify-center">
-                            <span class="text-xl mr-2">📊</span>
-                            Back to Status
-                        </span>
-                    </button>
-                </div>
-
-                <!-- Win Message -->
-                <div id="winMessage" class="hidden mt-6 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-6 text-center border-2 border-yellow-200">
-                    <p class="text-2xl font-bold text-orange-600 mb-2">🎉 Congratulations!</p>
-                    <p class="text-gray-600 font-medium">You completed the game!</p>
-                    <p id="finalStats" class="text-sm text-gray-500 mt-2"></p>
-                </div>
+            <!-- Status Message -->
+            <div id="statusMessage" class="p-4 rounded-xl mb-6 hidden">
+                <p id="statusText" class="font-medium"></p>
             </div>
 
-            <!-- Live Status Indicator -->
-            <div class="mt-8 flex items-center justify-center">
-                <div class="w-3 h-3 bg-emerald-400 rounded-full mr-3 animate-pulse"></div>
-                <span class="text-sm text-gray-500 font-medium">Live updates active</span>
+            <!-- Action Buttons -->
+            <div class="space-y-3">
+                <a href="./game.html" class="block w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                    🎮 Play Game While Waiting
+                </a>
+                <a href="./index.html" class="block w-full py-3 bg-gray-200 text-gray-700 font-medium rounded-xl hover:bg-gray-300 transition-all duration-300">
+                    🏠 Back to Home
+                </a>
             </div>
+
+            <!-- Last Updated -->
+            <p id="lastUpdated" class="text-xs text-gray-400 mt-4">Last updated: --</p>
         </div>
     </div>
-
-    <!-- Ad Display at Bottom -->
-    <div id="adBanner" class="fixed bottom-0 left-0 w-full bg-purple-700 text-white text-center py-3 px-4 z-50 text-base font-medium" style="display:none;"></div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -211,271 +130,240 @@
     <!-- Navigation Script -->
     <script src="./js/navigation.js"></script>
     
-    <!-- Main Script -->
     <script>
-        const db = firebase.database();
-        const prefix = sessionStorage.getItem("prefix"); // example: "A"
-        const userNumber = sessionStorage.getItem("myQueueNumber"); // example: "A019"
-        const issuedRef = db.ref(`issuedNumbers/${prefix}`);
-        const nowServingRef = db.ref(`nowServing/${prefix}`);
-
-        let currentQueueId = null;
-        let hasShownAlert = false; // Flag to prevent repeated alerts
-        let gameState = {
-            cards: [],
-            flippedCards: [],
-            matches: 0,
-            moves: 0,
-            startTime: null,
-            gameActive: false
-        };
-        const cardEmojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
-        let adPollingInterval = null;
-        let averageServiceTime = 60;
-        let issuedList = [];
-        let nowServing = null;
-
-        function recalcQueueStatus(issuedList, nowServing) {
-            const myIndex = issuedList.indexOf(sessionStorage.getItem('myQueueNumber'));
-            const servingIndex = issuedList.indexOf(nowServing);
-            // If queue data is missing
-            if (!issuedList.length) {
-                document.getElementById('peopleAhead').innerText = '-';
-                document.getElementById('estimatedWait').innerText = 'No queue data';
-                return;
-            }
-            // If user number or nowServing is not found
-            if (myIndex === -1) {
-                document.getElementById('peopleAhead').innerText = 'Invalid';
-                document.getElementById('estimatedWait').innerText = 'Not found';
-                return;
-            }
-            if (servingIndex === -1) {
-                document.getElementById('peopleAhead').innerText = '-';
-                document.getElementById('estimatedWait').innerText = 'Pending';
-                return;
-            }
-            let peopleAhead = myIndex - servingIndex;
-            if (peopleAhead < 0 || isNaN(peopleAhead)) peopleAhead = 0;
-            document.getElementById('peopleAhead').innerText = peopleAhead === 0 ? "You're next!" : peopleAhead;
-            const totalWaitSeconds = peopleAhead * averageServiceTime;
-            let waitText = '';
-            if (peopleAhead === 0) {
-                waitText = 'Now';
-            } else if (totalWaitSeconds < 60) {
-                waitText = '<1 min';
-            } else {
-                waitText = `${Math.ceil(totalWaitSeconds / 60)} min`;
-            }
-            document.getElementById('estimatedWait').innerText = waitText;
-            if (peopleAhead === 0 && myIndex !== -1 && !hasShownAlert) {
-                showYourTurnAlert();
-                hasShownAlert = true;
-            }
-        }
-
-        issuedRef.on('value', snap => {
-            issuedList = Object.values(snap.val() || {});
-            if (nowServing !== null) recalcQueueStatus(issuedList, nowServing);
-        });
-
-        nowServingRef.on('value', snap => {
-            const val = snap.val();
-            nowServing = (typeof val === 'object' && val.value) ? val.value : val || `${prefix}001`;
-            document.getElementById("nowServing").textContent = nowServing;
-            if (issuedList.length) recalcQueueStatus(issuedList, nowServing);
-        });
+        let myQueueNumber = null;
+        let myPrefix = null;
+        let notificationSound = null;
+        let isMyTurn = false;
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('📊 Status page loaded');
-            // Recover queueId, myQueueNumber, prefix from sessionStorage or localStorage
-            let currentQueueId = sessionStorage.getItem('queueId');
-            let userNumber = sessionStorage.getItem('myQueueNumber');
-            let prefix = sessionStorage.getItem('prefix');
-            if (!currentQueueId) {
-                const backupQueueId = localStorage.getItem('lastQueueNumber');
-                if (backupQueueId) {
-                    currentQueueId = backupQueueId;
-                    userNumber = backupQueueId;
-                    prefix = backupQueueId.charAt(0);
-                    sessionStorage.setItem('queueId', backupQueueId);
-                    sessionStorage.setItem('myQueueNumber', backupQueueId);
-                    sessionStorage.setItem('prefix', prefix);
-                }
+            console.log('📊 Status page initialized');
+            
+            // Initialize navigation
+            if (typeof initializeNavigation === 'function') {
+                initializeNavigation();
             }
-            if (!currentQueueId) {
-                alert('No queue number found. Please generate a number first.');
-                window.location.href = './index.html';
-                return;
-            }
-            document.getElementById('yourNumber').textContent = currentQueueId;
-            const timestamp = sessionStorage.getItem('queueTimestamp');
-            const queueTimeElement = document.getElementById('queueTime');
-            if (timestamp && queueTimeElement) {
-                const date = new Date(parseInt(timestamp));
-                queueTimeElement.textContent = `Generated at ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-            } else if (queueTimeElement) {
-                queueTimeElement.textContent = 'Generated recently';
-            }
-            if (typeof initializeNavigation === 'function') initializeNavigation();
-            setupButtonEvents();
-            pollAdAndServing();
-            const ad = localStorage.getItem('adContent');
-            if (ad) showAd(ad);
-
-            // Firebase listeners for robust queue status
-            const db = firebase.database();
-            const numbersRef = db.ref('queue/numbers');
-            const nowServingRef = db.ref('queue/nowServing');
-            let issuedList = [];
-            let nowServing = null;
-            numbersRef.on('value', snap => {
-                const numbersObj = snap.val() || {};
-                issuedList = Object.keys(numbersObj).sort();
-                if (nowServing !== null) recalcQueueStatus(issuedList, nowServing);
-            });
-            nowServingRef.on('value', snap => {
-                nowServing = snap.val();
-                if (issuedList.length) recalcQueueStatus(issuedList, nowServing);
-            });
+            
+            // Initialize notification sound
+            initializeNotificationSound();
+            
+            // Load user's queue number
+            loadUserQueueNumber();
+            
+            // Start real-time monitoring
+            startRealTimeMonitoring();
         });
 
-        function setupButtonEvents() {
-            document.getElementById('playGameBtn')?.addEventListener('click', showGame);
-            document.getElementById('backToHomeBtn')?.addEventListener('click', () => window.location.href = './index.html');
-            document.getElementById('newGameBtn')?.addEventListener('click', initializeGame);
-            document.getElementById('backToStatusBtn')?.addEventListener('click', showStatus);
-        }
-
-        function showGame() {
-            document.getElementById('statusView')?.classList.add('hidden');
-            document.getElementById('gameView')?.classList.remove('hidden');
-            initializeGame();
-        }
-
-        function showStatus() {
-            document.getElementById('gameView')?.classList.add('hidden');
-            document.getElementById('statusView')?.classList.remove('hidden');
-        }
-
-        function showYourTurnAlert() {
-            const alert = document.getElementById('yourTurnAlert');
-            if (alert?.classList.contains('hidden')) {
-                console.log('🎉 Showing your turn alert');
-                alert.classList.remove('hidden');
+        function initializeNotificationSound() {
+            try {
+                notificationSound = new Howl({
+                    src: ['data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'],
+                    volume: 0.8
+                });
+            } catch (error) {
+                console.warn('⚠️ Notification sound failed to load');
             }
         }
 
-        function hideYourTurnAlert() {
-            document.getElementById('yourTurnAlert')?.classList.add('hidden');
+        function loadUserQueueNumber() {
+            myQueueNumber = sessionStorage.getItem('queueId') || sessionStorage.getItem('myQueueNumber');
+            myPrefix = sessionStorage.getItem('prefix');
+            
+            if (!myQueueNumber) {
+                showError('No queue number found. Please get a number first.');
+                return;
+            }
+            
+            // Extract prefix if not stored separately
+            if (!myPrefix && myQueueNumber) {
+                myPrefix = myQueueNumber.charAt(0);
+                sessionStorage.setItem('prefix', myPrefix);
+            }
+            
+            document.getElementById('yourNumber').textContent = myQueueNumber;
+            document.getElementById('counterInfo').textContent = `Counter ${myPrefix}`;
+            
+            console.log(`📋 Loaded queue number: ${myQueueNumber} (Counter ${myPrefix})`);
         }
 
-        function acknowledgeCall() {
-            console.log('👍 User acknowledged the call');
-            hideYourTurnAlert();
+        function startRealTimeMonitoring() {
+            if (!firebase.database || !myQueueNumber || !myPrefix) {
+                console.error('❌ Cannot start monitoring - missing requirements');
+                return;
+            }
+
+            const database = firebase.database();
+            
+            // Monitor current serving for my counter
+            const currentServingRef = database.ref(`queue/currentServing_${myPrefix}`);
+            currentServingRef.on('value', (snapshot) => {
+                const currentServing = snapshot.val();
+                updateCurrentServing(currentServing);
+                checkIfMyTurn(currentServing);
+            });
+            
+            // Monitor all queue numbers to calculate position
+            const numbersRef = database.ref('queue/numbers');
+            numbersRef.on('value', (snapshot) => {
+                const numbers = snapshot.val() || {};
+                calculateQueuePosition(numbers);
+                updateLastUpdated();
+            });
         }
 
-        function initializeGame() {
-            console.log('🎮 Initializing new game');
-            gameState = { cards: [], flippedCards: [], matches: 0, moves: 0, startTime: Date.now(), gameActive: true };
-            document.getElementById('winMessage')?.classList.add('hidden');
+        function updateCurrentServing(currentServing) {
+            const element = document.getElementById('nowServing');
+            element.textContent = currentServing || '--';
             
-            const deck = [...cardEmojis, ...cardEmojis];
-            shuffleArray(deck);
+            if (currentServing) {
+                element.classList.add('animate-pulse');
+                setTimeout(() => element.classList.remove('animate-pulse'), 2000);
+            }
+        }
+
+        function checkIfMyTurn(currentServing) {
+            if (currentServing === myQueueNumber && !isMyTurn) {
+                isMyTurn = true;
+                showYourTurnNotification();
+            }
+        }
+
+        function showYourTurnNotification() {
+            // Play notification sound
+            if (notificationSound) {
+                notificationSound.play();
+            }
             
-            const gameBoard = document.getElementById('gameBoard');
-            if (gameBoard) {
-                gameBoard.innerHTML = '';
-                deck.forEach((emoji, index) => {
-                    const card = document.createElement('div');
-                    card.className = 'card bg-gradient-to-r from-purple-400 to-indigo-400 rounded-xl flex items-center justify-center text-2xl cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300';
-                    card.dataset.emoji = emoji;
-                    card.dataset.index = index;
-                    card.innerHTML = '❓';
-                    card.addEventListener('click', flipCard);
-                    gameBoard.appendChild(card);
-                    gameState.cards.push(card);
+            // Show visual notification
+            const statusMessage = document.getElementById('statusMessage');
+            const statusText = document.getElementById('statusText');
+            
+            statusMessage.className = 'p-4 rounded-xl mb-6 bg-green-50 border border-green-200';
+            statusText.textContent = "🎉 It's your turn! Please proceed to the counter.";
+            statusText.className = 'font-bold text-green-700';
+            statusMessage.classList.remove('hidden');
+            
+            // Speech notification
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(`Number ${myQueueNumber}, it's your turn! Please proceed to Counter ${myPrefix}.`);
+                utterance.volume = 0.8;
+                speechSynthesis.speak(utterance);
+            }
+            
+            // Auto-redirect after 3 seconds
+            setTimeout(() => {
+                window.location.href = './your_turn.html';
+            }, 3000);
+        }
+
+        function calculateQueuePosition(allNumbers) {
+            if (!myQueueNumber || !myPrefix) return;
+            
+            // Filter numbers for my counter that are still waiting
+            const myCounterNumbers = Object.entries(allNumbers)
+                .filter(([id, data]) => data.counter === myPrefix && data.status === 'waiting')
+                .map(([id]) => id)
+                .sort((a, b) => {
+                    const numA = parseInt(a.slice(1));
+                    const numB = parseInt(b.slice(1));
+                    return numA - numB;
+                });
+            
+            const myPosition = myCounterNumbers.indexOf(myQueueNumber);
+            const peopleAhead = myPosition >= 0 ? myPosition : 0;
+            
+            // Update UI
+            document.getElementById('peopleAhead').textContent = peopleAhead;
+            
+            // Calculate estimated wait time
+            calculateEstimatedWait(peopleAhead);
+            
+            // Update status message
+            updateStatusMessage(peopleAhead, myCounterNumbers.length);
+        }
+
+        function calculateEstimatedWait(peopleAhead) {
+            if (peopleAhead === 0) {
+                document.getElementById('estimatedWait').textContent = 'Your turn!';
+                return;
+            }
+            
+            // Get average service time from Firebase or use default
+            firebase.database().ref('settings/averageServiceTime').once('value', (snapshot) => {
+                const avgServiceTime = snapshot.val() || 300; // 5 minutes default
+                const estimatedSeconds = peopleAhead * avgServiceTime;
+                const estimatedMinutes = Math.ceil(estimatedSeconds / 60);
+                
+                document.getElementById('estimatedWait').textContent = `${estimatedMinutes} min`;
+            });
+        }
+
+        function updateStatusMessage(peopleAhead, totalWaiting) {
+            const statusMessage = document.getElementById('statusMessage');
+            const statusText = document.getElementById('statusText');
+            
+            if (peopleAhead === 0) {
+                statusMessage.className = 'p-4 rounded-xl mb-6 bg-green-50 border border-green-200';
+                statusText.textContent = "🎉 You're next! Get ready to proceed to the counter.";
+                statusText.className = 'font-bold text-green-700';
+            } else if (peopleAhead <= 3) {
+                statusMessage.className = 'p-4 rounded-xl mb-6 bg-yellow-50 border border-yellow-200';
+                statusText.textContent = "⚡ Almost there! Please stay nearby.";
+                statusText.className = 'font-medium text-yellow-700';
+            } else {
+                statusMessage.className = 'p-4 rounded-xl mb-6 bg-blue-50 border border-blue-200';
+                statusText.textContent = "⏳ Please wait patiently. You can play games while waiting!";
+                statusText.className = 'font-medium text-blue-700';
+            }
+            
+            statusMessage.classList.remove('hidden');
+        }
+
+        function updateLastUpdated() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('lastUpdated').textContent = `Last updated: ${timeString}`;
+        }
+
+        function showError(message) {
+            const statusMessage = document.getElementById('statusMessage');
+            const statusText = document.getElementById('statusText');
+            
+            statusMessage.className = 'p-4 rounded-xl mb-6 bg-red-50 border border-red-200';
+            statusText.textContent = `❌ ${message}`;
+            statusText.className = 'font-medium text-red-700';
+            statusMessage.classList.remove('hidden');
+            
+            // Hide other elements
+            document.getElementById('yourNumberCard').style.display = 'none';
+            document.querySelector('.space-y-4').style.display = 'none';
+        }
+
+        // Navigation functions
+        function initializeNavigation() {
+            const menuToggle = document.getElementById('menuToggle');
+            const menuPanel = document.getElementById('menuPanel');
+            
+            if (menuToggle && menuPanel) {
+                menuToggle.addEventListener('click', function() {
+                    menuPanel.classList.toggle('hidden');
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target)) {
+                        menuPanel.classList.add('hidden');
+                    }
                 });
             }
-            
-            startTimer();
-            updateStats();
         }
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+        
+        // Page visibility handling for notifications
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && isMyTurn) {
+                // Refresh the page if user comes back and it's their turn
+                window.location.reload();
             }
-        }
-
-        function flipCard(event) {
-            if (!gameState.gameActive || gameState.flippedCards.length >= 2) return;
-            
-            const card = event.target;
-            if (card.classList.contains('flipped') || card.classList.contains('matched')) return;
-            
-            card.innerHTML = card.dataset.emoji;
-            card.classList.add('flipped');
-            gameState.flippedCards.push(card);
-            
-            if (gameState.flippedCards.length === 2) {
-                gameState.moves++;
-                updateStats();
-                setTimeout(checkMatch, 1000);
-            }
-        }
-
-        function checkMatch() {
-            const [card1, card2] = gameState.flippedCards;
-            
-            if (card1.dataset.emoji === card2.dataset.emoji) {
-                card1.classList.add('matched');
-                card2.classList.add('matched');
-                gameState.matches++;
-                if (gameState.matches === cardEmojis.length) gameWon();
-            } else {
-                card1.innerHTML = '❓';
-                card2.innerHTML = '❓';
-                card1.classList.remove('flipped');
-                card2.classList.remove('flipped');
-            }
-            
-            gameState.flippedCards = [];
-            updateStats();
-        }
-
-        function gameWon() {
-            gameState.gameActive = false;
-            const endTime = Date.now();
-            const timeElapsed = Math.floor((endTime - gameState.startTime) / 1000);
-            
-            const winMessage = document.getElementById('winMessage');
-            const finalStats = document.getElementById('finalStats');
-            if (winMessage) winMessage.classList.remove('hidden');
-            if (finalStats) finalStats.textContent = `Completed in ${timeElapsed}s with ${gameState.moves} moves!`;
-        }
-
-        function startTimer() {
-            // Existing timer logic unchanged
-        }
-
-        function updateStats() {
-            document.getElementById('moves').textContent = gameState.moves;
-            document.getElementById('matches').textContent = `${gameState.matches}/8`;
-        }
-
-        function pollAdAndServing() {
-            // Existing ad polling logic unchanged
-        }
-
-        function showAd(ad) {
-            const adBanner = document.getElementById('adBanner');
-            if (adBanner) {
-                adBanner.textContent = ad;
-                adBanner.style.display = 'block';
-            }
-        }
+        });
     </script>
 </body>
 </html>

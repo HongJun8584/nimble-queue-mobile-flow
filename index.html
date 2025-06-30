@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -73,7 +74,11 @@
             <!-- Current Queue Status -->
             <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 mb-8 glow-pulse border border-emerald-200">
                 <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Now Serving</p>
-                <p id="currentServing" class="text-4xl font-bold text-emerald-600 mt-2 mb-2">A001</p>
+                <div id="currentServingDisplay" class="text-2xl font-bold text-emerald-600 mt-2 mb-2">
+                    <span id="currentServing_A">A: --</span> | 
+                    <span id="currentServing_B">B: --</span> | 
+                    <span id="currentServing_C">C: --</span>
+                </div>
                 <p class="text-xs text-gray-500 flex items-center justify-center">
                     <span class="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"></span>
                     Live Updates
@@ -94,7 +99,7 @@
                 <p class="text-emerald-600 text-sm mt-1">Redirecting to status page...</p>
             </div>
             <div id="errorMsg" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p class="text-red-700 font-medium">❌ Failed to generate number. Please try again.</p>
+                <p class="text-red-700 font-medium">❌ <span id="errorText">Failed to generate number. Please try again.</span></p>
             </div>
 
             <!-- Queue Info -->
@@ -102,7 +107,7 @@
                 <p class="flex items-center justify-center"><span class="mr-3 text-lg">📱</span>Mobile-optimized experience</p>
                 <p class="flex items-center justify-center"><span class="mr-3 text-lg">🎮</span>Play games while waiting</p>
                 <p class="flex items-center justify-center"><span class="mr-3 text-lg">📊</span>Real-time queue updates</p>
-                <p class="flex items-center justify-center"><span class="mr-3 text-lg">⚡</span>Instant notifications</p>
+                <p class="flex items-center justify-center"><span class="mr-3 text-lg">⚡</span>Round-robin fair distribution</p>
             </div>
         </div>
     </div>
@@ -119,8 +124,8 @@
     
     <!-- Main Script -->
     <script>
-        // Global variables
         let isGenerating = false;
+        let hasGeneratedToday = false;
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Queue Joy initialized');
@@ -130,7 +135,10 @@
                 initializeNavigation();
             }
             
-            // Load current serving number
+            // Check if user already has a number today
+            checkExistingSession();
+            
+            // Load current serving numbers for all counters
             loadCurrentServing();
             
             // Set up generate button
@@ -139,39 +147,65 @@
                 getNumberBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
+                    
+                    if (hasGeneratedToday) {
+                        showError('You already have a queue number today. Check your status page.');
+                        return;
+                    }
+                    
                     console.log('🎯 Button clicked - generating number...');
                     generateQueueNumber();
                 });
-                console.log('✅ Button event listener attached successfully');
-            } else {
-                console.error('❌ Get Number button not found!');
             }
         });
 
+        function checkExistingSession() {
+            const existingNumber = sessionStorage.getItem('queueId');
+            const timestamp = sessionStorage.getItem('queueTimestamp');
+            
+            if (existingNumber && timestamp) {
+                const today = new Date().toDateString();
+                const sessionDate = new Date(parseInt(timestamp)).toDateString();
+                
+                if (today === sessionDate) {
+                    hasGeneratedToday = true;
+                    document.getElementById('statusLink').classList.remove('hidden');
+                    
+                    const button = document.getElementById('getNumberBtn');
+                    const buttonContent = document.getElementById('buttonContent');
+                    button.classList.add('opacity-60');
+                    buttonContent.innerHTML = '<span class="text-3xl mr-3">✅</span>Already Have Number';
+                }
+            }
+        }
+
         function loadCurrentServing() {
             if (typeof firebase !== 'undefined' && firebase.database) {
-                const currentRef = firebase.database().ref('queue/currentServing');
+                const counters = ['A', 'B', 'C'];
                 
-                currentRef.on('value', (snapshot) => {
-                    const current = snapshot.val() || 'A001';
-                    const element = document.getElementById('currentServing');
-                    if (element) {
-                        element.textContent = current;
-                    }
-                }, (error) => {
-                    console.error('❌ Error loading current serving:', error);
+                counters.forEach(counter => {
+                    const currentRef = firebase.database().ref(`queue/currentServing_${counter}`);
+                    
+                    currentRef.on('value', (snapshot) => {
+                        const current = snapshot.val() || '--';
+                        const element = document.getElementById(`currentServing_${counter}`);
+                        if (element) {
+                            element.textContent = `${counter}: ${current}`;
+                        }
+                    }, (error) => {
+                        console.error(`❌ Error loading current serving for ${counter}:`, error);
+                    });
                 });
             }
         }
 
         function generateQueueNumber() {
-            if (isGenerating) {
-                console.log('⚠️ Already generating, ignoring click');
+            if (isGenerating || hasGeneratedToday) {
                 return;
             }
             
             isGenerating = true;
-            console.log('🎯 Starting number generation process...');
+            console.log('🎯 Starting round-robin number generation...');
             
             const button = document.getElementById('getNumberBtn');
             const buttonContent = document.getElementById('buttonContent');
@@ -191,60 +225,52 @@
                 button.disabled = true;
             }
             
-            try {
-                // Check Firebase availability
-                if (typeof firebase === 'undefined' || !firebase.database) {
-                    throw new Error('Firebase not initialized');
-                }
-
-                // Get the last number from Firebase
-                const lastNumberRef = firebase.database().ref('queue/lastNumber');
-                lastNumberRef.transaction((currentValue) => {
-                    let lastNumber = currentValue || 0;
-                    let newNumber = lastNumber + 1;
-                    let queueId = 'A' + String(newNumber).padStart(3, '0');
-                    
-                    // Update Firebase
-                    firebase.database().ref(`queue/numbers/${queueId}`).set({
-                        status: 'waiting',
-                        timestamp: Date.now()
-                    }).catch(err => console.error('Firebase queue update failed:', err));
-                    
-                    lastNumberRef.set(newNumber).catch(err => console.error('Firebase last number update failed:', err));
-                    
-                    // Store in session and localStorage
-                    sessionStorage.setItem('queueId', queueId);
-                    sessionStorage.setItem('myQueueNumber', queueId);
-                    sessionStorage.setItem('prefix', queueId.charAt(0));
-                    sessionStorage.setItem('queueTimestamp', Date.now().toString());
-                    localStorage.setItem('lastQueueNumber', queueId);
-                    
-                    // Show success
-                    if (generatedNumberSpan) generatedNumberSpan.textContent = queueId;
-                    if (statusMsg) statusMsg.classList.remove('hidden');
-                    
-                    console.log('✅ Number generated successfully:', queueId);
-                    setTimeout(() => {
-                        window.location.href = './status.html';
-                    }, 1500);
-                    
-                    return newNumber;
-                }, (error, committed, snapshot) => {
-                    if (error) {
-                        throw error;
-                    }
-                });
-                
-            } catch (error) {
-                console.error('❌ Error generating number:', error);
-                if (errorMsg) errorMsg.classList.remove('hidden');
-            } finally {
-                setTimeout(() => {
-                    if (buttonContent) buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
-                    if (button) button.disabled = false;
-                    isGenerating = false;
-                }, 3000);
+            // Use the round-robin generation function
+            if (window.generateRoundRobinNumber) {
+                window.generateRoundRobinNumber()
+                    .then((result) => {
+                        console.log('✅ Number generated:', result);
+                        
+                        // Store in session and localStorage
+                        sessionStorage.setItem('queueId', result.queueId);
+                        sessionStorage.setItem('myQueueNumber', result.queueId);
+                        sessionStorage.setItem('prefix', result.counter);
+                        sessionStorage.setItem('queueTimestamp', Date.now().toString());
+                        localStorage.setItem('lastQueueNumber', result.queueId);
+                        
+                        // Show success
+                        if (generatedNumberSpan) generatedNumberSpan.textContent = result.queueId;
+                        if (statusMsg) statusMsg.classList.remove('hidden');
+                        
+                        hasGeneratedToday = true;
+                        document.getElementById('statusLink').classList.remove('hidden');
+                        
+                        setTimeout(() => {
+                            window.location.href = './status.html';
+                        }, 1500);
+                    })
+                    .catch((error) => {
+                        console.error('❌ Error generating number:', error);
+                        showError('Failed to generate number. Please try again.');
+                    })
+                    .finally(() => {
+                        setTimeout(() => {
+                            if (buttonContent) buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
+                            if (button) button.disabled = false;
+                            isGenerating = false;
+                        }, 2000);
+                    });
+            } else {
+                showError('System not ready. Please refresh the page.');
+                isGenerating = false;
             }
+        }
+
+        function showError(message) {
+            const errorMsg = document.getElementById('errorMsg');
+            const errorText = document.getElementById('errorText');
+            if (errorText) errorText.textContent = message;
+            if (errorMsg) errorMsg.classList.remove('hidden');
         }
     </script>
 </body>
