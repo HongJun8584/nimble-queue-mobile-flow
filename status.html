@@ -52,7 +52,7 @@
             <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🏠 Home</a>
             <a href="./status.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 bg-purple-50">📊 Status</a>
             <a href="./game.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🎮 Play Game</a>
-            <a href="./admin.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">📊 Analytics</a>
+            <a href="./counter.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🎯 Counter</a>
         </div>
     </div>
 
@@ -196,21 +196,26 @@
 
             const database = firebase.database();
             
-            // Monitor current serving for my counter
+            // Monitor current serving for my counter with real-time updates
             const currentServingRef = database.ref(`queue/currentServing_${myPrefix}`);
             currentServingRef.on('value', (snapshot) => {
                 const currentServing = snapshot.val();
                 updateCurrentServing(currentServing);
                 checkIfMyTurn(currentServing);
+                updateLastUpdated();
+            }, (error) => {
+                console.error('❌ Error monitoring current serving:', error);
             });
             firebaseListeners.push(currentServingRef);
             
-            // Monitor all queue numbers to calculate position
+            // Monitor all queue numbers to calculate position with real-time updates
             const numbersRef = database.ref('queue/numbers');
             numbersRef.on('value', (snapshot) => {
                 const numbers = snapshot.val() || {};
                 calculateQueuePosition(numbers);
                 updateLastUpdated();
+            }, (error) => {
+                console.error('❌ Error monitoring queue numbers:', error);
             });
             firebaseListeners.push(numbersRef);
         }
@@ -267,14 +272,10 @@
             // Filter numbers for my counter that are still waiting
             const myCounterNumbers = Object.entries(allNumbers)
                 .filter(([id, data]) => data.counter === myPrefix && data.status === 'waiting')
-                .map(([id]) => id)
-                .sort((a, b) => {
-                    const numA = parseInt(a.slice(1));
-                    const numB = parseInt(b.slice(1));
-                    return numA - numB;
-                });
+                .map(([id, data]) => ({ id, ...data }))
+                .sort((a, b) => a.timestamp - b.timestamp);
             
-            const myPosition = myCounterNumbers.indexOf(myQueueNumber);
+            const myPosition = myCounterNumbers.findIndex(ticket => ticket.number === myQueueNumber);
             const peopleAhead = myPosition >= 0 ? myPosition : 0;
             
             // Update UI

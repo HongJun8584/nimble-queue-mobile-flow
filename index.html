@@ -54,7 +54,7 @@
         <div id="menuPanel" class="absolute top-20 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 w-52 hidden transform transition-all duration-300">
             <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105 bg-purple-50">🏠 Home</a>
             <a href="./status.html" id="statusLink" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105 hidden">📊 Status</a>
-            <a href="./admin.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">📊 Analytics</a>
+            <a href="./game.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">🎮 Game</a>
             <a href="./counter.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">🎯 Counter</a>
         </div>
     </div>
@@ -71,7 +71,7 @@
                 <p class="text-gray-600 mt-3 text-lg font-medium">Skip the line, enjoy the wait!</p>
             </div>
 
-            <!-- Counter Status Display - 6 Boxes -->
+            <!-- Counter Status Display - Dynamic based on active counters -->
             <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8" id="counterGrid">
                 <!-- Counter boxes will be populated dynamically -->
             </div>
@@ -140,7 +140,7 @@
                 return;
             }
 
-            // Load active counters and setup listeners
+            // Load active counters and setup real-time listeners
             loadActiveCounters();
             loadCurrentServing();
         }
@@ -165,25 +165,43 @@
             }
         }
 
+        // Real-time active counters loading with immediate updates
         function loadActiveCounters() {
             const database = firebase.database();
             const activeCountersRef = database.ref('settings/activeCounters');
             
             activeCountersRef.on('value', (snapshot) => {
-                activeCounters = snapshot.val() || ['A', 'B', 'C'];
+                const newActiveCounters = snapshot.val() || [];
+                activeCounters = newActiveCounters;
+                console.log('📡 Active counters updated:', activeCounters);
                 updateCounterDisplay();
+                updateButtonState();
             }, (error) => {
                 console.error('❌ Error loading active counters:', error);
-                activeCounters = ['A', 'B', 'C']; // Fallback
+                activeCounters = []; // Fallback to empty array
                 updateCounterDisplay();
+                updateButtonState();
             });
         }
 
+        // Update counter display grid with real-time data
         function updateCounterDisplay() {
             const counterGrid = document.getElementById('counterGrid');
             if (!counterGrid) return;
 
             counterGrid.innerHTML = '';
+            
+            // If no active counters, show message
+            if (activeCounters.length === 0) {
+                const noCountersDiv = document.createElement('div');
+                noCountersDiv.className = 'col-span-full bg-yellow-50 border border-yellow-200 rounded-2xl p-6 text-center';
+                noCountersDiv.innerHTML = `
+                    <p class="text-yellow-700 font-medium">⏳ No active counters available</p>
+                    <p class="text-yellow-600 text-sm mt-1">Please wait for staff to activate counters</p>
+                `;
+                counterGrid.appendChild(noCountersDiv);
+                return;
+            }
             
             const counterColors = {
                 'A': 'from-emerald-50 to-teal-50 border-emerald-200 text-emerald-600',
@@ -206,6 +224,25 @@
             });
         }
 
+        // Update button state based on counter availability
+        function updateButtonState() {
+            const getNumberBtn = document.getElementById('getNumberBtn');
+            const buttonContent = document.getElementById('buttonContent');
+            
+            if (hasGeneratedToday) {
+                return; // Keep existing state if already generated
+            }
+            
+            if (activeCounters.length === 0) {
+                getNumberBtn.disabled = true;
+                buttonContent.innerHTML = '<span class="text-3xl mr-3">⏳</span>No Active Counters';
+            } else {
+                getNumberBtn.disabled = false;
+                buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
+            }
+        }
+
+        // Real-time current serving updates
         function loadCurrentServing() {
             if (!firebase.database) return;
 
@@ -227,6 +264,7 @@
             });
         }
 
+        // Generate queue number with round-robin and atomic transactions
         function generateQueueNumber() {
             if (isGenerating || hasGeneratedToday) {
                 if (hasGeneratedToday) {
@@ -280,13 +318,13 @@
                     
                     // Store ticket in Firebase
                     const ticketData = {
-                        status: 'waiting',
-                        timestamp: Date.now(),
+                        number: queueId,
                         counter: selectedCounter,
-                        number: newNumber
+                        status: 'waiting',
+                        timestamp: Date.now()
                     };
                     
-                    return database.ref(`queue/numbers/${queueId}`).set(ticketData).then(() => {
+                    return database.ref(`queue/numbers/${Date.now()}_${queueId}`).set(ticketData).then(() => {
                         // Store in session storage
                         sessionStorage.setItem('queueId', queueId);
                         sessionStorage.setItem('myQueueNumber', queueId);
