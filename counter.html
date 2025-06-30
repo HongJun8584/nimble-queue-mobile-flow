@@ -61,7 +61,7 @@
         <div id="navPanel" class="absolute top-20 left-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 w-52 hidden transform transition-all duration-300">
             <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🏠 Home</a>
             <a href="./status.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">📊 Status</a>
-            <a href="./admin.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">⚙️ Admin</a>
+            <a href="./admin.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">📊 Analytics</a>
             <a href="#" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 bg-purple-50">🎯 Counter</a>
         </div>
     </div>
@@ -92,7 +92,7 @@
 
         <!-- Counter Management -->
         <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 mb-6 slide-up">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Manage Counters</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Active Counters</h2>
             <div class="flex flex-wrap gap-2 mb-4">
                 <div id="counterTags" class="flex flex-wrap gap-2">
                     <!-- Counter tags will be populated here -->
@@ -114,7 +114,7 @@
 
         <!-- Counter Selection -->
         <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 mb-6 slide-up">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Select Active Counter</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Select Counter to Manage</h2>
             <select id="counterSelect" class="w-full p-4 border-2 border-gray-300 rounded-xl text-lg focus:border-purple-500 focus:outline-none">
                 <option value="">-- Choose Counter --</option>
             </select>
@@ -180,6 +180,10 @@
                             <option value="even">Even Numbers (2, 4, 6...)</option>
                         </select>
                     </div>
+                    
+                    <button id="saveSettingsBtn" class="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        💾 Save Settings
+                    </button>
                 </div>
             </div>
         </div>
@@ -238,7 +242,7 @@
 
             function showCounterPanel() {
                 counterPanel.classList.remove('hidden');
-                initializeFirebase();
+                setTimeout(initializeFirebase, 500);
             }
         }
 
@@ -301,18 +305,6 @@
             
             // Load active counters
             loadActiveCounters();
-            
-            // Listen for queue data changes
-            const countersRef = database.ref('queue');
-            countersRef.on('value', (snapshot) => {
-                const queueData = snapshot.val() || {};
-                updateUI(queueData);
-                checkQueueStatus(queueData);
-            }, (error) => {
-                console.error('❌ Firebase read error:', error);
-            });
-
-            firebaseListeners.push({ ref: countersRef, type: 'value' });
         }
 
         // Load and manage active counters
@@ -325,6 +317,7 @@
                 updateCounterTags();
                 updateCounterSelect();
             });
+            firebaseListeners.push(activeCountersRef);
         }
 
         function updateCounterTags() {
@@ -390,8 +383,10 @@
                 if (currentCounter) {
                     enableCounterControls();
                     loadCounterSettings();
+                    startCounterMonitoring();
                 } else {
                     disableCounterControls();
+                    stopCounterMonitoring();
                 }
             });
 
@@ -411,8 +406,36 @@
             // Control buttons
             document.getElementById('callNextBtn').addEventListener('click', callNextNumber);
             document.getElementById('resetQueueBtn').addEventListener('click', resetQueue);
-            document.getElementById('prefixSelect').addEventListener('change', saveCounterSettings);
-            document.getElementById('sequenceType').addEventListener('change', saveCounterSettings);
+            document.getElementById('saveSettingsBtn').addEventListener('click', saveCounterSettings);
+        }
+
+        // Counter monitoring
+        let counterMonitoringRefs = [];
+
+        function startCounterMonitoring() {
+            if (!currentCounter) return;
+
+            stopCounterMonitoring();
+
+            const database = firebase.database();
+            
+            // Monitor queue data for current counter
+            const queueRef = database.ref('queue');
+            queueRef.on('value', (snapshot) => {
+                const queueData = snapshot.val() || {};
+                updateUI(queueData);
+                checkQueueStatus(queueData);
+            });
+            counterMonitoringRefs.push(queueRef);
+        }
+
+        function stopCounterMonitoring() {
+            counterMonitoringRefs.forEach(ref => {
+                if (ref && ref.off) {
+                    ref.off();
+                }
+            });
+            counterMonitoringRefs = [];
         }
 
         // Counter operations
@@ -531,11 +554,14 @@
             const updates = {};
             updates[`settings/counter_${currentCounter}/prefix`] = prefix;
             updates[`settings/counter_${currentCounter}/sequenceType`] = sequenceType;
+            updates[`settings/counter_${currentCounter}/active`] = true;
             
             database.ref().update(updates).then(() => {
                 console.log('⚙️ Settings saved');
+                alert('Settings saved successfully');
             }).catch(error => {
                 console.error('❌ Error saving settings:', error);
+                alert('Failed to save settings');
             });
         }
 
@@ -562,6 +588,7 @@
             const warningBanner = document.getElementById('warningBanner');
             const prefixSelect = document.getElementById('prefixSelect');
             const sequenceType = document.getElementById('sequenceType');
+            const saveSettingsBtn = document.getElementById('saveSettingsBtn');
             
             if (hasActiveQueue) {
                 warningBanner.classList.remove('hidden');
@@ -570,6 +597,7 @@
                     if (hasCounterQueue) {
                         prefixSelect.disabled = true;
                         sequenceType.disabled = true;
+                        saveSettingsBtn.disabled = true;
                     }
                 }
             } else {
@@ -577,6 +605,7 @@
                 if (currentCounter) {
                     prefixSelect.disabled = false;
                     sequenceType.disabled = false;
+                    saveSettingsBtn.disabled = false;
                 }
             }
         }
@@ -586,6 +615,7 @@
             document.getElementById('resetQueueBtn').disabled = false;
             document.getElementById('prefixSelect').disabled = false;
             document.getElementById('sequenceType').disabled = false;
+            document.getElementById('saveSettingsBtn').disabled = false;
         }
 
         function disableCounterControls() {
@@ -593,13 +623,19 @@
             document.getElementById('resetQueueBtn').disabled = true;
             document.getElementById('prefixSelect').disabled = true;
             document.getElementById('sequenceType').disabled = true;
+            document.getElementById('saveSettingsBtn').disabled = true;
         }
 
         // Cleanup on page unload
         window.addEventListener('beforeunload', function() {
-            firebaseListeners.forEach(listener => {
-                if (listener.ref && listener.ref.off) {
-                    listener.ref.off(listener.type);
+            firebaseListeners.forEach(ref => {
+                if (ref && ref.off) {
+                    ref.off();
+                }
+            });
+            counterMonitoringRefs.forEach(ref => {
+                if (ref && ref.off) {
+                    ref.off();
                 }
             });
         });

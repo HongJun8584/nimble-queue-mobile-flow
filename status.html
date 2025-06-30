@@ -52,7 +52,7 @@
             <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🏠 Home</a>
             <a href="./status.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 bg-purple-50">📊 Status</a>
             <a href="./game.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🎮 Play Game</a>
-            <a href="./admin.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">⚙️ Admin</a>
+            <a href="./admin.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">📊 Analytics</a>
         </div>
     </div>
 
@@ -135,6 +135,7 @@
         let myPrefix = null;
         let notificationSound = null;
         let isMyTurn = false;
+        let firebaseListeners = [];
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📊 Status page initialized');
@@ -150,8 +151,8 @@
             // Load user's queue number
             loadUserQueueNumber();
             
-            // Start real-time monitoring
-            startRealTimeMonitoring();
+            // Wait for Firebase to initialize
+            setTimeout(startRealTimeMonitoring, 1000);
         });
 
         function initializeNotificationSound() {
@@ -189,6 +190,7 @@
         function startRealTimeMonitoring() {
             if (!firebase.database || !myQueueNumber || !myPrefix) {
                 console.error('❌ Cannot start monitoring - missing requirements');
+                showError('System not ready. Please refresh the page.');
                 return;
             }
 
@@ -201,6 +203,7 @@
                 updateCurrentServing(currentServing);
                 checkIfMyTurn(currentServing);
             });
+            firebaseListeners.push(currentServingRef);
             
             // Monitor all queue numbers to calculate position
             const numbersRef = database.ref('queue/numbers');
@@ -209,6 +212,7 @@
                 calculateQueuePosition(numbers);
                 updateLastUpdated();
             });
+            firebaseListeners.push(numbersRef);
         }
 
         function updateCurrentServing(currentServing) {
@@ -357,6 +361,15 @@
                 });
             }
         }
+        
+        // Cleanup listeners on page unload
+        window.addEventListener('beforeunload', function() {
+            firebaseListeners.forEach(ref => {
+                if (ref && ref.off) {
+                    ref.off();
+                }
+            });
+        });
         
         // Page visibility handling for notifications
         document.addEventListener('visibilitychange', function() {
