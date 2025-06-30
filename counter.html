@@ -38,16 +38,35 @@
             50% { transform: scale(1.02); }
             100% { transform: scale(1); }
         }
+        .ad-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 2px solid #e5e7eb;
+            padding: 8px;
+            text-align: center;
+            z-index: 40;
+        }
+        .ad-banner img {
+            max-height: 60px;
+            max-width: 100%;
+            object-fit: contain;
+        }
+        .content-with-ad {
+            padding-bottom: 80px;
+        }
     </style>
 </head>
-<body class="gradient-bg min-h-screen">
+<body class="gradient-bg min-h-screen content-with-ad">
     <!-- PIN Modal -->
     <div id="pinModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
         <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 slide-up">
             <h2 class="text-2xl font-bold text-center text-gray-800 mb-2">🔐 Staff Login</h2>
             <p class="text-gray-600 text-center mb-6">Enter PIN to access counter panel</p>
             <input id="pinInput" type="password" maxlength="4" placeholder="0000" class="w-full p-4 text-center text-2xl border-2 border-gray-300 rounded-xl mb-4 focus:border-purple-500 focus:outline-none">
-            <div id="pinError" class="text-red-500 text-center mb-4 hidden">❌ Incorrect PIN. Please try again.</div>
+            <div id="pinError" class="text-red-500 text-center mb-4 hidden">❌ Incorrect PIN. Try again.</div>
             <button id="pinSubmit" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-xl hover:shadow-lg transition-all">Enter</button>
         </div>
     </div>
@@ -67,6 +86,24 @@
         <!-- Warning Banner -->
         <div id="warningBanner" class="bg-red-500 text-white p-4 rounded-2xl mb-6 text-center font-bold pulse-warning hidden">
             ⚠️ Active customers in queue - settings changes restricted
+        </div>
+
+        <!-- Ad Banner Management -->
+        <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 mb-6 slide-up">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">📢 Ad Banner Management</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Banner Image URL (PNG only)</label>
+                    <input id="adUrlInput" type="url" placeholder="https://example.com/banner.png" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none">
+                </div>
+                <button id="updateAdBtn" class="w-full py-3 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition-colors">
+                    Update Ad Banner
+                </button>
+                <div id="adPreview" class="border-2 border-gray-200 rounded-xl p-4 text-center hidden">
+                    <p class="text-sm text-gray-600 mb-2">Current Banner:</p>
+                    <img id="adPreviewImage" src="" alt="Ad Preview" class="max-h-16 mx-auto">
+                </div>
+            </div>
         </div>
 
         <!-- Counter Management -->
@@ -128,6 +165,11 @@
         </div>
     </div>
 
+    <!-- Ad Banner -->
+    <div id="adBanner" class="ad-banner hidden">
+        <img id="adImage" src="" alt="Advertisement" />
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -150,7 +192,7 @@
             initializeAudio();
         });
 
-        // Authentication system - Fixed PIN login
+        // Authentication system - PIN "0108"
         function initializeAuth() {
             const pinModal = document.getElementById('pinModal');
             const pinInput = document.getElementById('pinInput');
@@ -169,7 +211,6 @@
             pinSubmit.addEventListener('click', handlePinSubmit);
             pinInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') handlePinSubmit();
-                // Clear error on typing
                 pinError.classList.add('hidden');
             });
 
@@ -192,7 +233,6 @@
                     pinError.classList.remove('hidden');
                     pinInput.value = '';
                     pinInput.focus();
-                    // Add shake animation
                     pinInput.style.animation = 'shake 0.5s';
                     setTimeout(() => pinInput.style.animation = '', 500);
                 }
@@ -216,7 +256,7 @@
             }
         }
 
-        // Firebase initialization with real-time listeners
+        // Firebase initialization
         function initializeFirebase() {
             if (typeof firebase === 'undefined' || !firebase.database) {
                 console.error('❌ Firebase not available');
@@ -225,12 +265,13 @@
 
             const database = firebase.database();
             
-            // Load active counters with real-time sync
+            // Load active counters and ad banner
             loadActiveCounters();
+            loadAdBanner();
             setupEventListeners();
         }
 
-        // Load and manage active counters with real-time updates
+        // Load and manage active counters
         function loadActiveCounters() {
             const database = firebase.database();
             const activeCountersRef = database.ref('settings/activeCounters');
@@ -243,6 +284,33 @@
                 checkQueueStatus();
             });
             firebaseListeners.push(activeCountersRef);
+        }
+
+        // Load ad banner
+        function loadAdBanner() {
+            const database = firebase.database();
+            const adBannerRef = database.ref('settings/adBanner');
+            
+            adBannerRef.on('value', (snapshot) => {
+                const adUrl = snapshot.val();
+                const adBanner = document.getElementById('adBanner');
+                const adImage = document.getElementById('adImage');
+                const adPreview = document.getElementById('adPreview');
+                const adPreviewImage = document.getElementById('adPreviewImage');
+                const adUrlInput = document.getElementById('adUrlInput');
+                
+                if (adUrl && adUrl.trim()) {
+                    adImage.src = adUrl;
+                    adBanner.classList.remove('hidden');
+                    adPreviewImage.src = adUrl;
+                    adPreview.classList.remove('hidden');
+                    adUrlInput.value = adUrl;
+                } else {
+                    adBanner.classList.add('hidden');
+                    adPreview.classList.add('hidden');
+                }
+            });
+            firebaseListeners.push(adBannerRef);
         }
 
         // Update counter display tags
@@ -280,7 +348,7 @@
                 counterSelect.appendChild(option);
             });
             
-            // Update add counter select (show only inactive counters)
+            // Update add counter select
             const allCounters = ['A', 'B', 'C', 'D', 'E', 'F'];
             addCounterSelect.innerHTML = '<option value="">Add Counter...</option>';
             allCounters.forEach(counter => {
@@ -334,6 +402,23 @@
                 }
             });
 
+            // Ad banner update
+            const updateAdBtn = document.getElementById('updateAdBtn');
+            const adUrlInput = document.getElementById('adUrlInput');
+            
+            updateAdBtn.addEventListener('click', function() {
+                const adUrl = adUrlInput.value.trim();
+                if (adUrl && adUrl.toLowerCase().includes('.png')) {
+                    firebase.database().ref('settings/adBanner').set(adUrl);
+                    alert('✅ Ad banner updated successfully!');
+                } else if (adUrl === '') {
+                    firebase.database().ref('settings/adBanner').remove();
+                    alert('✅ Ad banner removed successfully!');
+                } else {
+                    alert('❌ Please enter a valid PNG image URL');
+                }
+            });
+
             // Control buttons
             document.getElementById('callNextBtn').addEventListener('click', callNextNumber);
             document.getElementById('resetQueueBtn').addEventListener('click', resetQueue);
@@ -350,7 +435,7 @@
             document.getElementById('controlPanel').classList.add('hidden');
         }
 
-        // Counter monitoring with real-time updates
+        // Counter monitoring
         let counterMonitoringRefs = [];
 
         function startCounterMonitoring() {

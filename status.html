@@ -37,9 +37,28 @@
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
         }
+        .ad-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 2px solid #e5e7eb;
+            padding: 8px;
+            text-align: center;
+            z-index: 40;
+        }
+        .ad-banner img {
+            max-height: 60px;
+            max-width: 100%;
+            object-fit: contain;
+        }
+        .content-with-ad {
+            padding-bottom: 80px;
+        }
     </style>
 </head>
-<body class="gradient-bg min-h-screen">
+<body class="gradient-bg min-h-screen content-with-ad">
     <!-- Hamburger Menu -->
     <div class="fixed top-6 right-6 z-50">
         <button id="menuToggle" class="bg-white/90 backdrop-blur-sm p-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110">
@@ -49,10 +68,8 @@
         </button>
         
         <div id="menuPanel" class="absolute top-20 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 w-52 hidden">
-            <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🏠 Home</a>
+            <a href="./game.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🎮 Game</a>
             <a href="./status.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 bg-purple-50">📊 Status</a>
-            <a href="./game.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🎮 Play Game</a>
-            <a href="./counter.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🎯 Counter</a>
         </div>
     </div>
 
@@ -120,15 +137,17 @@
         </div>
     </div>
 
+    <!-- Ad Banner -->
+    <div id="adBanner" class="ad-banner hidden">
+        <img id="adImage" src="" alt="Advertisement" />
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <!-- Firebase Config -->
     <script src="./js/firebase-config.js"></script>
-    
-    <!-- Navigation Script -->
-    <script src="./js/navigation.js"></script>
     
     <script>
         let myQueueNumber = null;
@@ -140,10 +159,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📊 Status page initialized');
             
-            // Initialize navigation
-            if (typeof initializeNavigation === 'function') {
-                initializeNavigation();
-            }
+            // Initialize hamburger menu
+            initializeHamburgerMenu();
             
             // Initialize notification sound
             initializeNotificationSound();
@@ -153,7 +170,28 @@
             
             // Wait for Firebase to initialize
             setTimeout(startRealTimeMonitoring, 1000);
+            
+            // Load ad banner
+            setTimeout(loadAdBanner, 1000);
         });
+
+        function initializeHamburgerMenu() {
+            const menuToggle = document.getElementById('menuToggle');
+            const menuPanel = document.getElementById('menuPanel');
+            
+            if (menuToggle && menuPanel) {
+                menuToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    menuPanel.classList.toggle('hidden');
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target)) {
+                        menuPanel.classList.add('hidden');
+                    }
+                });
+            }
+        }
 
         function initializeNotificationSound() {
             try {
@@ -175,7 +213,6 @@
                 return;
             }
             
-            // Extract prefix if not stored separately
             if (!myPrefix && myQueueNumber) {
                 myPrefix = myQueueNumber.charAt(0);
                 sessionStorage.setItem('prefix', myPrefix);
@@ -196,7 +233,7 @@
 
             const database = firebase.database();
             
-            // Monitor current serving for my counter with real-time updates
+            // Monitor current serving for my counter
             const currentServingRef = database.ref(`queue/currentServing_${myPrefix}`);
             currentServingRef.on('value', (snapshot) => {
                 const currentServing = snapshot.val();
@@ -208,7 +245,7 @@
             });
             firebaseListeners.push(currentServingRef);
             
-            // Monitor all queue numbers to calculate position with real-time updates
+            // Monitor all queue numbers to calculate position
             const numbersRef = database.ref('queue/numbers');
             numbersRef.on('value', (snapshot) => {
                 const numbers = snapshot.val() || {};
@@ -257,7 +294,7 @@
             statusText.className = 'font-bold text-green-700';
             statusMessage.classList.remove('hidden');
             
-            // Speech notification with counter info
+            // Speech notification
             if ('speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(`Number ${myQueueNumber}, please proceed to Counter ${myPrefix}.`);
                 utterance.volume = 0.8;
@@ -345,22 +382,24 @@
             document.querySelector('.space-y-4').style.display = 'none';
         }
 
-        // Initialize navigation
-        function initializeNavigation() {
-            const menuToggle = document.getElementById('menuToggle');
-            const menuPanel = document.getElementById('menuPanel');
+        // Load ad banner
+        function loadAdBanner() {
+            const database = firebase.database();
+            const adBannerRef = database.ref('settings/adBanner');
             
-            if (menuToggle && menuPanel) {
-                menuToggle.addEventListener('click', function() {
-                    menuPanel.classList.toggle('hidden');
-                });
+            adBannerRef.on('value', (snapshot) => {
+                const adUrl = snapshot.val();
+                const adBanner = document.getElementById('adBanner');
+                const adImage = document.getElementById('adImage');
                 
-                document.addEventListener('click', function(e) {
-                    if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target)) {
-                        menuPanel.classList.add('hidden');
-                    }
-                });
-            }
+                if (adUrl && adUrl.trim()) {
+                    adImage.src = adUrl;
+                    adBanner.classList.remove('hidden');
+                } else {
+                    adBanner.classList.add('hidden');
+                }
+            });
+            firebaseListeners.push(adBannerRef);
         }
         
         // Cleanup listeners on page unload
@@ -375,7 +414,6 @@
         // Page visibility handling for notifications
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden && isMyTurn) {
-                // Refresh the page if user comes back and it's their turn
                 window.location.reload();
             }
         });

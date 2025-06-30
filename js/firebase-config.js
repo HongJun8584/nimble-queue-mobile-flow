@@ -36,6 +36,13 @@ function initializeQueueStructure() {
     }
   });
   
+  // Initialize last assigned prefix for round-robin
+  database.ref('settings/lastAssignedPrefix').once('value', (snapshot) => {
+    if (!snapshot.exists()) {
+      database.ref('settings/lastAssignedPrefix').set('C'); // Start with C so first assignment is A
+    }
+  });
+  
   // Initialize all possible counter settings
   allCounters.forEach(counter => {
     database.ref(`queue/lastNumber_${counter}`).once('value', (snapshot) => {
@@ -49,22 +56,19 @@ function initializeQueueStructure() {
         database.ref(`queue/currentServing_${counter}`).set(null);
       }
     });
-    
-    database.ref(`settings/counter_${counter}`).once('value', (snapshot) => {
-      if (!snapshot.exists()) {
-        database.ref(`settings/counter_${counter}`).set({
-          prefix: counter,
-          sequenceType: 'sequential',
-          active: ['A', 'B', 'C'].includes(counter)
-        });
-      }
-    });
   });
   
   // Initialize service time setting
   database.ref('settings/averageServiceTime').once('value', (snapshot) => {
     if (!snapshot.exists()) {
       database.ref('settings/averageServiceTime').set(300); // 5 minutes in seconds
+    }
+  });
+
+  // Initialize ad banner setting
+  database.ref('settings/adBanner').once('value', (snapshot) => {
+    if (!snapshot.exists()) {
+      database.ref('settings/adBanner').set('');
     }
   });
 }
