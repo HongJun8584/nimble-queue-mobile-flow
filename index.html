@@ -72,7 +72,7 @@
         
         <div id="menuPanel" class="absolute top-20 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 w-52 hidden transform transition-all duration-300">
             <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105 bg-purple-50">🏠 Home</a>
-            <a href="./counter.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">🎟️ Counter Panel</a>
+            <a href="./counter.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">🎯 Counter</a>
         </div>
     </div>
 
@@ -88,13 +88,21 @@
                 <p class="text-gray-600 mt-3 text-lg font-medium">Skip the line, enjoy the wait!</p>
             </div>
 
+            <!-- Counter Selection -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Which counter are you visiting?</h2>
+                <select id="counterSelect" class="w-full max-w-md mx-auto p-4 text-lg border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none bg-white">
+                    <option value="">Select a counter...</option>
+                </select>
+            </div>
+
             <!-- Counter Status Display -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8" id="counterGrid">
                 <!-- Counter boxes will be populated dynamically -->
             </div>
 
             <!-- Get Number Button -->
-            <button id="getNumberBtn" class="w-full py-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 mb-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed">
+            <button id="getNumberBtn" class="w-full py-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 mb-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 <span id="buttonContent" class="flex items-center justify-center">
                     <span class="text-3xl mr-3">🎯</span>
                     Get My Number
@@ -128,8 +136,8 @@
     <script>
         let isGenerating = false;
         let hasGeneratedToday = false;
-        let activeCounters = [];
-        let globalRoundRobinIndex = 0;
+        let availableCounters = {};
+        let selectedCounterId = null;
         let firebaseListeners = [];
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -144,11 +152,8 @@
             // Wait for Firebase to initialize
             setTimeout(initializeSystem, 1000);
             
-            // Set up generate button
-            const getNumberBtn = document.getElementById('getNumberBtn');
-            if (getNumberBtn) {
-                getNumberBtn.addEventListener('click', generateQueueNumber);
-            }
+            // Set up event listeners
+            setupEventListeners();
         });
 
         function initializeHamburgerMenu() {
@@ -169,6 +174,22 @@
             }
         }
 
+        function setupEventListeners() {
+            const getNumberBtn = document.getElementById('getNumberBtn');
+            const counterSelect = document.getElementById('counterSelect');
+            
+            if (getNumberBtn) {
+                getNumberBtn.addEventListener('click', generateQueueNumber);
+            }
+            
+            if (counterSelect) {
+                counterSelect.addEventListener('change', function() {
+                    selectedCounterId = this.value;
+                    updateButtonState();
+                });
+            }
+        }
+
         function initializeSystem() {
             if (typeof firebase === 'undefined' || !firebase.database) {
                 console.error('❌ Firebase not initialized');
@@ -176,17 +197,17 @@
                 return;
             }
 
-            // Load active counters and setup real-time listeners
-            loadActiveCounters();
-            loadCurrentServing();
+            // Load available counters and setup real-time listeners
+            loadAvailableCounters();
             loadAdBanner();
         }
 
         function checkExistingSession() {
-            const existingNumber = sessionStorage.getItem('queueId');
-            const timestamp = sessionStorage.getItem('queueTimestamp');
+            const existingNumber = localStorage.getItem('queueId');
+            const existingCounterId = localStorage.getItem('counterId');
+            const timestamp = localStorage.getItem('queueTimestamp');
             
-            if (existingNumber && timestamp) {
+            if (existingNumber && existingCounterId && timestamp) {
                 const today = new Date().toDateString();
                 const sessionDate = new Date(parseInt(timestamp)).toDateString();
                 
@@ -197,28 +218,48 @@
                     const buttonContent = document.getElementById('buttonContent');
                     button.classList.add('opacity-60');
                     buttonContent.innerHTML = '<span class="text-3xl mr-3">✅</span>Already Have Number';
+                    button.disabled = true;
                 }
             }
         }
 
-        // Real-time active counters loading
-        function loadActiveCounters() {
+        // Load available counters
+        function loadAvailableCounters() {
             const database = firebase.database();
-            const activeCountersRef = database.ref('settings/activeCounters');
+            const countersRef = database.ref('settings/counters');
             
-            activeCountersRef.on('value', (snapshot) => {
-                const newActiveCounters = snapshot.val() || [];
-                activeCounters = newActiveCounters;
-                console.log('📡 Active counters updated:', activeCounters);
+            countersRef.on('value', (snapshot) => {
+                const counters = snapshot.val() || {};
+                availableCounters = counters;
+                console.log('📡 Available counters updated:', availableCounters);
+                updateCounterSelect();
                 updateCounterDisplay();
                 updateButtonState();
             }, (error) => {
-                console.error('❌ Error loading active counters:', error);
-                activeCounters = [];
+                console.error('❌ Error loading counters:', error);
+                availableCounters = {};
+                updateCounterSelect();
                 updateCounterDisplay();
                 updateButtonState();
             });
-            firebaseListeners.push(activeCountersRef);
+            firebaseListeners.push(countersRef);
+        }
+
+        // Update counter selection dropdown
+        function updateCounterSelect() {
+            const counterSelect = document.getElementById('counterSelect');
+            if (!counterSelect) return;
+
+            // Clear existing options except the first one
+            counterSelect.innerHTML = '<option value="">Select a counter...</option>';
+            
+            Object.keys(availableCounters).forEach(counterId => {
+                const counter = availableCounters[counterId];
+                const option = document.createElement('option');
+                option.value = counterId;
+                option.textContent = `${counterId.charAt(0).toUpperCase() + counterId.slice(1)} (${counter.prefix})`;
+                counterSelect.appendChild(option);
+            });
         }
 
         // Update counter display grid
@@ -228,7 +269,7 @@
 
             counterGrid.innerHTML = '';
             
-            if (activeCounters.length === 0) {
+            if (Object.keys(availableCounters).length === 0) {
                 const noCountersDiv = document.createElement('div');
                 noCountersDiv.className = 'col-span-full bg-yellow-50 border border-yellow-200 rounded-2xl p-6 text-center';
                 noCountersDiv.innerHTML = `
@@ -240,21 +281,30 @@
             }
             
             const counterColors = {
-                'A': 'from-emerald-50 to-teal-50 border-emerald-200 text-emerald-600',
-                'B': 'from-blue-50 to-cyan-50 border-blue-200 text-blue-600',
-                'C': 'from-purple-50 to-violet-50 border-purple-200 text-purple-600',
-                'D': 'from-orange-50 to-amber-50 border-orange-200 text-orange-600',
-                'E': 'from-pink-50 to-rose-50 border-pink-200 text-pink-600',
-                'F': 'from-gray-50 to-slate-50 border-gray-200 text-gray-600'
+                'counter1': 'from-emerald-50 to-teal-50 border-emerald-200 text-emerald-600',
+                'counter2': 'from-blue-50 to-cyan-50 border-blue-200 text-blue-600',
+                'counter3': 'from-purple-50 to-violet-50 border-purple-200 text-purple-600',
+                'counter4': 'from-orange-50 to-amber-50 border-orange-200 text-orange-600',
+                'counter5': 'from-pink-50 to-rose-50 border-pink-200 text-pink-600',
+                'counter6': 'from-gray-50 to-slate-50 border-gray-200 text-gray-600',
+                'counter7': 'from-red-50 to-rose-50 border-red-200 text-red-600',
+                'counter8': 'from-yellow-50 to-amber-50 border-yellow-200 text-yellow-600',
+                'counter9': 'from-green-50 to-emerald-50 border-green-200 text-green-600',
+                'counter10': 'from-indigo-50 to-blue-50 border-indigo-200 text-indigo-600'
             };
 
-            activeCounters.forEach(counter => {
+            Object.entries(availableCounters).forEach(([counterId, counter]) => {
                 const counterDiv = document.createElement('div');
-                counterDiv.id = `counter${counter}`;
-                counterDiv.className = `bg-gradient-to-r ${counterColors[counter]} rounded-2xl p-4 border`;
+                counterDiv.id = `counter${counterId}`;
+                counterDiv.className = `bg-gradient-to-r ${counterColors[counterId] || counterColors.counter1} rounded-2xl p-4 border`;
+                
+                const displayName = counterId.charAt(0).toUpperCase() + counterId.slice(1);
+                const currentNumber = counter.current > 0 ? 
+                    `${counter.prefix}${counter.current.toString().padStart(3, '0')}` : '--';
+                
                 counterDiv.innerHTML = `
-                    <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Counter ${counter}</p>
-                    <div class="text-xl font-bold mt-2" id="serving_${counter}">--</div>
+                    <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">${displayName}</p>
+                    <div class="text-xl font-bold mt-2" id="serving_${counterId}">${currentNumber}</div>
                 `;
                 counterGrid.appendChild(counterDiv);
             });
@@ -269,36 +319,16 @@
                 return;
             }
             
-            if (activeCounters.length === 0) {
+            if (Object.keys(availableCounters).length === 0) {
                 getNumberBtn.disabled = true;
                 buttonContent.innerHTML = '<span class="text-3xl mr-3">⏳</span>No Active Counters';
+            } else if (!selectedCounterId) {
+                getNumberBtn.disabled = true;
+                buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Select Counter First';
             } else {
                 getNumberBtn.disabled = false;
                 buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
             }
-        }
-
-        // Real-time current serving updates
-        function loadCurrentServing() {
-            if (!firebase.database) return;
-
-            const database = firebase.database();
-            const allCounters = ['A', 'B', 'C', 'D', 'E', 'F'];
-            
-            allCounters.forEach(counter => {
-                const currentRef = database.ref(`queue/currentServing_${counter}`);
-                
-                currentRef.on('value', (snapshot) => {
-                    const current = snapshot.val() || '--';
-                    const element = document.getElementById(`serving_${counter}`);
-                    if (element) {
-                        element.textContent = current;
-                    }
-                }, (error) => {
-                    console.error(`❌ Error loading current serving for ${counter}:`, error);
-                });
-                firebaseListeners.push(currentRef);
-            });
         }
 
         // Load ad banner
@@ -321,22 +351,24 @@
             firebaseListeners.push(adBannerRef);
         }
 
-        // Generate queue number with round-robin
+        // Generate queue number
         function generateQueueNumber() {
-            if (isGenerating || hasGeneratedToday) {
+            if (isGenerating || hasGeneratedToday || !selectedCounterId) {
                 if (hasGeneratedToday) {
                     showError('You already have a queue number today. Check your status page.');
+                } else if (!selectedCounterId) {
+                    showError('Please select a counter first.');
                 }
                 return;
             }
             
-            if (activeCounters.length === 0) {
+            if (Object.keys(availableCounters).length === 0) {
                 showError('No active counters available. Please try again later.');
                 return;
             }
             
             isGenerating = true;
-            console.log('🎯 Starting number generation...');
+            console.log('🎯 Starting number generation for', selectedCounterId);
             
             const button = document.getElementById('getNumberBtn');
             const buttonContent = document.getElementById('buttonContent');
@@ -356,77 +388,73 @@
                 button.disabled = true;
             }
             
-            // Get last assigned prefix from Firebase for round-robin
+            // Get counter configuration
+            const counter = availableCounters[selectedCounterId];
+            if (!counter) {
+                showError('Selected counter is not available.');
+                resetGenerationState();
+                return;
+            }
+            
+            // Use Firebase transaction to safely increment counter
             const database = firebase.database();
-            database.ref('settings/lastAssignedPrefix').once('value', (snapshot) => {
-                const lastPrefix = snapshot.val();
-                let selectedCounter;
-                
-                if (!lastPrefix) {
-                    selectedCounter = activeCounters[0];
+            const counterRef = database.ref(`settings/counters/${selectedCounterId}/lastSuffix`);
+            
+            counterRef.transaction((currentSuffix) => {
+                return (currentSuffix || 0) + 1;
+            }).then((result) => {
+                if (result.committed) {
+                    const newSuffix = result.snapshot.val();
+                    const queueId = `${counter.prefix}${newSuffix.toString().padStart(3, '0')}`;
+                    const today = new Date().toISOString().split('T')[0];
+                    
+                    // Store ticket in Firebase
+                    const ticketData = {
+                        number: queueId,
+                        counterId: selectedCounterId,
+                        status: 'waiting',
+                        timestamp: Date.now()
+                    };
+                    
+                    return database.ref(`queues/${today}/${selectedCounterId}/${Date.now()}_${queueId}`).set(ticketData).then(() => {
+                        // Store in local storage
+                        localStorage.setItem('queueId', queueId);
+                        localStorage.setItem('counterId', selectedCounterId);
+                        localStorage.setItem('queueDate', today);
+                        localStorage.setItem('queueTimestamp', Date.now().toString());
+                        
+                        console.log('✅ Number generated:', queueId);
+                        
+                        // Show success
+                        if (generatedNumberSpan) generatedNumberSpan.textContent = queueId;
+                        if (statusMsg) statusMsg.classList.remove('hidden');
+                        
+                        hasGeneratedToday = true;
+                        
+                        // Redirect after success message
+                        setTimeout(() => {
+                            window.location.href = './status.html';
+                        }, 1500);
+                    });
                 } else {
-                    const lastIndex = activeCounters.indexOf(lastPrefix);
-                    const nextIndex = (lastIndex + 1) % activeCounters.length;
-                    selectedCounter = activeCounters[nextIndex];
+                    throw new Error('Transaction not committed');
                 }
-                
-                console.log(`🎯 Selected counter: ${selectedCounter}`);
-                
-                // Update last assigned prefix
-                database.ref('settings/lastAssignedPrefix').set(selectedCounter);
-                
-                // Use Firebase transaction to safely increment counter
-                const counterRef = database.ref(`queue/lastNumber_${selectedCounter}`);
-                
-                counterRef.transaction((currentNumber) => {
-                    return (currentNumber || 0) + 1;
-                }).then((result) => {
-                    if (result.committed) {
-                        const newNumber = result.snapshot.val();
-                        const queueId = `${selectedCounter}${newNumber.toString().padStart(3, '0')}`;
-                        
-                        // Store ticket in Firebase
-                        const ticketData = {
-                            number: queueId,
-                            counter: selectedCounter,
-                            status: 'waiting',
-                            timestamp: Date.now()
-                        };
-                        
-                        return database.ref(`queue/numbers/${Date.now()}_${queueId}`).set(ticketData).then(() => {
-                            // Store in session storage
-                            sessionStorage.setItem('queueId', queueId);
-                            sessionStorage.setItem('myQueueNumber', queueId);
-                            sessionStorage.setItem('prefix', selectedCounter);
-                            sessionStorage.setItem('queueTimestamp', Date.now().toString());
-                            
-                            console.log('✅ Number generated:', queueId);
-                            
-                            // Show success
-                            if (generatedNumberSpan) generatedNumberSpan.textContent = queueId;
-                            if (statusMsg) statusMsg.classList.remove('hidden');
-                            
-                            hasGeneratedToday = true;
-                            
-                            // Redirect after success message
-                            setTimeout(() => {
-                                window.location.href = './status.html';
-                            }, 1500);
-                        });
-                    } else {
-                        throw new Error('Transaction not committed');
-                    }
-                }).catch((error) => {
-                    console.error('❌ Error generating number:', error);
-                    showError('Failed to generate number. Please try again.');
-                }).finally(() => {
-                    setTimeout(() => {
-                        if (buttonContent) buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
-                        if (button) button.disabled = false;
-                        isGenerating = false;
-                    }, 2000);
-                });
+            }).catch((error) => {
+                console.error('❌ Error generating number:', error);
+                showError('Failed to generate number. Please try again.');
+            }).finally(() => {
+                setTimeout(resetGenerationState, 2000);
             });
+        }
+
+        function resetGenerationState() {
+            const buttonContent = document.getElementById('buttonContent');
+            const button = document.getElementById('getNumberBtn');
+            
+            if (buttonContent) buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
+            if (button && !hasGeneratedToday) button.disabled = false;
+            isGenerating = false;
+            updateButtonState();
         }
 
         function showError(message) {
