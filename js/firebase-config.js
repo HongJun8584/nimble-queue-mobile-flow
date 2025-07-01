@@ -25,39 +25,15 @@ database.ref('.info/connected').on('value', (snapshot) => {
   }
 });
 
-// Initialize queue structure for 6-counter system
+// Initialize queue structure for independent counter system
 function initializeQueueStructure() {
-  const allCounters = ['A', 'B', 'C', 'D', 'E', 'F'];
-  
-  // Initialize active counters list (default: A, B, C)
-  database.ref('settings/activeCounters').once('value', (snapshot) => {
+  // Initialize ad banner setting
+  database.ref('settings/adBanner').once('value', (snapshot) => {
     if (!snapshot.exists()) {
-      database.ref('settings/activeCounters').set(['A', 'B', 'C']);
+      database.ref('settings/adBanner').set('');
     }
   });
-  
-  // Initialize last assigned prefix for round-robin
-  database.ref('settings/lastAssignedPrefix').once('value', (snapshot) => {
-    if (!snapshot.exists()) {
-      database.ref('settings/lastAssignedPrefix').set('C'); // Start with C so first assignment is A
-    }
-  });
-  
-  // Initialize all possible counter settings
-  allCounters.forEach(counter => {
-    database.ref(`queue/lastNumber_${counter}`).once('value', (snapshot) => {
-      if (!snapshot.exists()) {
-        database.ref(`queue/lastNumber_${counter}`).set(0);
-      }
-    });
-    
-    database.ref(`queue/currentServing_${counter}`).once('value', (snapshot) => {
-      if (!snapshot.exists()) {
-        database.ref(`queue/currentServing_${counter}`).set(null);
-      }
-    });
-  });
-  
+
   // Initialize service time setting
   database.ref('settings/averageServiceTime').once('value', (snapshot) => {
     if (!snapshot.exists()) {
@@ -65,26 +41,81 @@ function initializeQueueStructure() {
     }
   });
 
-  // Initialize ad banner setting
-  database.ref('settings/adBanner').once('value', (snapshot) => {
+  // Initialize counters structure if it doesn't exist
+  database.ref('settings/counters').once('value', (snapshot) => {
     if (!snapshot.exists()) {
-      database.ref('settings/adBanner').set('');
+      console.log('🔧 Initializing default counter structure');
+      // Create a sample counter structure (will be populated by counter setup)
+      database.ref('settings/counters').set({});
     }
   });
+
+  // Initialize today's queue structure
+  const today = new Date().toISOString().split('T')[0];
+  database.ref(`queues/${today}`).once('value', (snapshot) => {
+    if (!snapshot.exists()) {
+      database.ref(`queues/${today}`).set({});
+    }
+  });
+
+  console.log('🏗️ Queue structure initialized for independent counters');
 }
 
-// Function to get active counters
-window.getActiveCounters = function() {
+// Function to get available counters
+window.getAvailableCounters = function() {
   return new Promise((resolve) => {
-    database.ref('settings/activeCounters').once('value', (snapshot) => {
-      resolve(snapshot.val() || ['A', 'B', 'C']);
+    database.ref('settings/counters').once('value', (snapshot) => {
+      resolve(snapshot.val() || {});
     });
   });
 };
 
-// Function to update active counters
-window.updateActiveCounters = function(counters) {
-  return database.ref('settings/activeCounters').set(counters);
+// Function to create/update counter
+window.createCounter = function(counterId, prefix) {
+  const counterData = {
+    prefix: prefix,
+    current: 0,
+    lastSuffix: 0,
+    createdAt: Date.now()
+  };
+  
+  return database.ref(`settings/counters/${counterId}`).set(counterData);
+};
+
+// Function to get counter queue status
+window.getCounterQueueStatus = function(counterId, date = null) {
+  const targetDate = date || new Date().toISOString().split('T')[0];
+  
+  return new Promise((resolve) => {
+    database.ref(`queues/${targetDate}/${counterId}`).once('value', (snapshot) => {
+      const queue = snapshot.val() || {};
+      const waiting = Object.values(queue).filter(item => item.status === 'waiting').length;
+      const serving = Object.values(queue).filter(item => item.status === 'serving').length;
+      
+      resolve({
+        waiting: waiting,
+        serving: serving,
+        total: Object.keys(queue).length
+      });
+    });
+  });
+};
+
+// Function to get user's queue position
+window.getUserQueuePosition = function(counterId, queueId, date = null) {
+  const targetDate = date || new Date().toISOString().split('T')[0];
+  
+  return new Promise((resolve) => {
+    database.ref(`queues/${targetDate}/${counterId}`).orderByChild('timestamp').once('value', (snapshot) => {
+      const queue = snapshot.val() || {};
+      const queueArray = Object.entries(queue)
+        .filter(([key, data]) => data.status === 'waiting')
+        .sort(([a, aData], [b, bData]) => aData.timestamp - bData.timestamp);
+      
+      const position = queueArray.findIndex(([key, data]) => data.number === queueId);
+      resolve(position >= 0 ? position + 1 : -1);
+    });
+  });
 };
 
 // Initialize on DOM load

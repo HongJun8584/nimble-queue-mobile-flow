@@ -85,7 +85,42 @@
             <p class="text-gray-600 text-center mb-6">Enter PIN to access counter</p>
             <input id="pinInput" type="password" maxlength="4" placeholder="0000" class="w-full p-4 text-center text-2xl border-2 border-gray-300 rounded-xl mb-4 focus:border-indigo-500 focus:outline-none">
             <div id="pinError" class="text-red-500 text-center mb-4 hidden">❌ Incorrect PIN. Try again.</div>
-            <button id="pinSubmit" class="w-full py-4 bg-indigo-500 text-white font-bold rounded-xl hover:bg-indigo-600 transition-colors">Enter</button>
+            <button id="pinSubmit" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-bold rounded-xl hover:scale-105 transition-all">Enter</button>
+        </div>
+    </div>
+
+    <!-- Counter Setup Modal -->
+    <div id="setupModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 slide-up">
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-2">⚙️ Counter Setup</h2>
+            <p class="text-gray-600 text-center mb-6">Configure your counter</p>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select Counter Number</label>
+                <select id="counterSelect" class="w-full p-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none">
+                    <option value="">Choose Counter...</option>
+                    <option value="counter1">Counter 1</option>
+                    <option value="counter2">Counter 2</option>
+                    <option value="counter3">Counter 3</option>
+                    <option value="counter4">Counter 4</option>
+                    <option value="counter5">Counter 5</option>
+                    <option value="counter6">Counter 6</option>
+                    <option value="counter7">Counter 7</option>
+                    <option value="counter8">Counter 8</option>
+                    <option value="counter9">Counter 9</option>
+                    <option value="counter10">Counter 10</option>
+                </select>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Enter Prefix (A-Z only)</label>
+                <input id="prefixInput" type="text" maxlength="5" placeholder="ABC" class="w-full p-3 text-center text-lg border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none uppercase">
+                <div id="prefixError" class="text-red-500 text-sm mt-1 hidden">Only uppercase letters allowed</div>
+            </div>
+
+            <button id="setupSubmit" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-bold rounded-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                Setup Counter
+            </button>
         </div>
     </div>
 
@@ -94,7 +129,7 @@
         
         <!-- Header -->
         <div class="w-full mb-2">
-            <h1 class="text-2xl font-bold text-gray-800">Counter Management</h1>
+            <h1 class="text-2xl font-bold text-gray-800" id="counterTitle">Counter Management</h1>
             <p class="text-gray-600">Queue Joy System</p>
         </div>
 
@@ -108,31 +143,31 @@
         <div class="w-full grid grid-cols-3 gap-3 mb-4">
             <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs text-gray-600">Prefix</p>
-                <p id="queuePrefix" class="text-lg font-bold text-gray-800">A</p>
+                <p id="queuePrefix" class="text-lg font-bold text-gray-800">-</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
                 <p class="text-xs text-gray-600">Last Called</p>
                 <p id="lastCalled" class="text-lg font-bold text-gray-800">--</p>
             </div>
             <div class="bg-gray-50 rounded-xl p-3">
-                <p class="text-xs text-gray-600">Remaining</p>
-                <p id="peopleRemaining" class="text-lg font-bold text-gray-800">0</p>
+                <p class="text-xs text-gray-600">In Queue</p>
+                <p id="peopleInQueue" class="text-lg font-bold text-gray-800">0</p>
             </div>
         </div>
 
         <!-- Main Action Buttons -->
-        <button id="callNextBtn" class="w-full py-4 bg-indigo-500 text-white text-xl font-bold rounded-xl hover:scale-105 transition-transform shadow-lg">
+        <button id="callNextBtn" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-500 text-white text-xl font-bold rounded-xl hover:scale-105 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
             ▶️ Call Next
         </button>
 
-        <button id="recallBtn" class="w-full py-3 bg-yellow-500 text-white text-lg font-semibold rounded-xl hover:scale-105 transition-transform">
+        <button id="recallBtn" class="w-full py-3 bg-yellow-500 text-white text-lg font-semibold rounded-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
             🔁 Recall Last
         </button>
 
         <!-- Skip to Number -->
         <div class="w-full mt-4">
-            <input id="skipInput" class="w-full text-center border-2 border-gray-300 rounded-xl p-3 mb-2 text-lg" placeholder="Go to number (e.g. A110)">
-            <button id="skipBtn" class="w-full py-3 bg-red-500 text-white font-semibold rounded-xl hover:scale-105 transition-transform">
+            <input id="skipInput" class="w-full text-center border-2 border-gray-300 rounded-xl p-3 mb-2 text-lg focus:border-indigo-500 focus:outline-none" placeholder="Skip to number (e.g. ABC110)">
+            <button id="skipBtn" class="w-full py-3 bg-red-500 text-white font-semibold rounded-xl hover:scale-105 transition-all">
                 ⏩ Skip to Number
             </button>
         </div>
@@ -140,7 +175,7 @@
         <!-- Ad Banner Management -->
         <div class="w-full mt-6 p-4 bg-gray-50 rounded-xl">
             <h3 class="text-sm font-semibold text-gray-700 mb-3">📢 Update Ad Banner</h3>
-            <input id="adUrlInput" type="url" placeholder="https://example.com/banner.png" class="w-full p-2 border border-gray-300 rounded-lg mb-2 text-sm">
+            <input id="adUrlInput" type="url" placeholder="https://example.com/banner.png" class="w-full p-2 border border-gray-300 rounded-lg mb-2 text-sm focus:border-indigo-500 focus:outline-none">
             <button id="updateAdBtn" class="w-full py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors">
                 Update Banner
             </button>
@@ -163,7 +198,8 @@
     
     <script>
         let callSound = null;
-        let currentCounter = 'A';
+        let currentCounterId = null;
+        let counterConfig = null;
         let firebaseListeners = [];
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -202,11 +238,11 @@
             const pinInput = document.getElementById('pinInput');
             const pinSubmit = document.getElementById('pinSubmit');
             const pinError = document.getElementById('pinError');
-            const counterPanel = document.getElementById('counterPanel');
 
             // Check if already authenticated
             if (sessionStorage.getItem('counterAuth') === 'true') {
-                showCounterPanel();
+                pinModal.classList.add('hidden');
+                checkCounterSetup();
                 return;
             }
 
@@ -224,7 +260,7 @@
                     pinModal.style.opacity = '0';
                     setTimeout(() => {
                         pinModal.classList.add('hidden');
-                        showCounterPanel();
+                        checkCounterSetup();
                     }, 300);
                 } else {
                     pinError.classList.remove('hidden');
@@ -232,11 +268,99 @@
                     pinInput.focus();
                 }
             }
+        }
 
-            function showCounterPanel() {
-                counterPanel.classList.remove('hidden');
-                setTimeout(initializeFirebase, 500);
+        // Check if counter is already set up
+        function checkCounterSetup() {
+            const savedCounter = sessionStorage.getItem('currentCounterId');
+            const savedConfig = sessionStorage.getItem('counterConfig');
+            
+            if (savedCounter && savedConfig) {
+                currentCounterId = savedCounter;
+                counterConfig = JSON.parse(savedConfig);
+                showCounterPanel();
+            } else {
+                showSetupModal();
             }
+        }
+
+        // Show setup modal
+        function showSetupModal() {
+            const setupModal = document.getElementById('setupModal');
+            const counterSelect = document.getElementById('counterSelect');
+            const prefixInput = document.getElementById('prefixInput');
+            const setupSubmit = document.getElementById('setupSubmit');
+            const prefixError = document.getElementById('prefixError');
+
+            setupModal.classList.remove('hidden');
+
+            // Validation
+            function validateForm() {
+                const counter = counterSelect.value;
+                const prefix = prefixInput.value.trim();
+                const isValidPrefix = /^[A-Z]+$/.test(prefix);
+                
+                if (!isValidPrefix && prefix.length > 0) {
+                    prefixError.classList.remove('hidden');
+                } else {
+                    prefixError.classList.add('hidden');
+                }
+
+                setupSubmit.disabled = !(counter && prefix && isValidPrefix);
+            }
+
+            counterSelect.addEventListener('change', validateForm);
+            prefixInput.addEventListener('input', function(e) {
+                e.target.value = e.target.value.toUpperCase();
+                validateForm();
+            });
+
+            setupSubmit.addEventListener('click', function() {
+                const counter = counterSelect.value;
+                const prefix = prefixInput.value.trim();
+
+                if (counter && prefix && /^[A-Z]+$/.test(prefix)) {
+                    currentCounterId = counter;
+                    counterConfig = {
+                        prefix: prefix,
+                        current: 0,
+                        lastSuffix: 0
+                    };
+
+                    // Save to Firebase and session
+                    saveCounterConfig().then(() => {
+                        sessionStorage.setItem('currentCounterId', currentCounterId);
+                        sessionStorage.setItem('counterConfig', JSON.stringify(counterConfig));
+                        
+                        setupModal.classList.add('hidden');
+                        showCounterPanel();
+                    });
+                }
+            });
+        }
+
+        // Save counter configuration to Firebase
+        function saveCounterConfig() {
+            const database = firebase.database();
+            return database.ref(`settings/counters/${currentCounterId}`).set(counterConfig);
+        }
+
+        // Show counter panel
+        function showCounterPanel() {
+            const counterPanel = document.getElementById('counterPanel');
+            const counterTitle = document.getElementById('counterTitle');
+            const queuePrefix = document.getElementById('queuePrefix');
+
+            counterTitle.textContent = `${currentCounterId.charAt(0).toUpperCase() + currentCounterId.slice(1)} Management`;
+            queuePrefix.textContent = counterConfig.prefix;
+
+            counterPanel.classList.remove('hidden');
+            
+            setTimeout(() => {
+                initializeFirebase();
+                setupEventListeners();
+                loadCounterData();
+            }, 500);
         }
 
         // Audio system
@@ -259,10 +383,7 @@
                 return;
             }
 
-            const database = firebase.database();
             loadAdBanner();
-            setupEventListeners();
-            loadCounterData();
         }
 
         // Load ad banner
@@ -299,63 +420,89 @@
         function loadCounterData() {
             const database = firebase.database();
             
-            // Monitor current serving
-            const currentServingRef = database.ref(`queue/currentServing_${currentCounter}`);
-            currentServingRef.on('value', (snapshot) => {
-                const serving = snapshot.val() || '--';
-                document.getElementById('nowServing').textContent = serving;
-                document.getElementById('lastCalled').textContent = serving;
+            // Load counter config from Firebase
+            const counterRef = database.ref(`settings/counters/${currentCounterId}`);
+            counterRef.on('value', (snapshot) => {
+                const config = snapshot.val();
+                if (config) {
+                    counterConfig = config;
+                    updateDisplay();
+                    enableButtons();
+                }
             });
-            firebaseListeners.push(currentServingRef);
-            
-            // Monitor last number issued
-            const lastNumberRef = database.ref(`queue/lastNumber_${currentCounter}`);
-            lastNumberRef.on('value', (snapshot) => {
-                const lastNum = snapshot.val() || 0;
-                updateStats();
-            });
-            firebaseListeners.push(lastNumberRef);
+            firebaseListeners.push(counterRef);
 
-            // Update prefix display
-            document.getElementById('queuePrefix').textContent = currentCounter;
+            // Load queue data
+            updateQueueStats();
+        }
+
+        // Update display
+        function updateDisplay() {
+            const nowServing = document.getElementById('nowServing');
+            const lastCalled = document.getElementById('lastCalled');
+            
+            if (counterConfig.current > 0) {
+                const currentNumber = `${counterConfig.prefix}${counterConfig.current.toString().padStart(3, '0')}`;
+                nowServing.textContent = currentNumber;
+                lastCalled.textContent = currentNumber;
+            } else {
+                nowServing.textContent = '--';
+                lastCalled.textContent = '--';
+            }
+        }
+
+        // Enable buttons
+        function enableButtons() {
+            document.getElementById('callNextBtn').disabled = false;
+            document.getElementById('recallBtn').disabled = counterConfig.current === 0;
+        }
+
+        // Update queue statistics
+        function updateQueueStats() {
+            const database = firebase.database();
+            const today = new Date().toISOString().split('T')[0];
+            
+            database.ref(`queues/${today}/${currentCounterId}`).once('value', (snapshot) => {
+                const queue = snapshot.val() || {};
+                const waitingCount = Object.values(queue).filter(item => item.status === 'waiting').length;
+                document.getElementById('peopleInQueue').textContent = waitingCount;
+            });
         }
 
         // Call next number
         function callNextNumber() {
             const database = firebase.database();
+            const today = new Date().toISOString().split('T')[0];
             
-            // Find next waiting number for this counter
-            database.ref('queue/numbers').orderByChild('counter').equalTo(currentCounter).once('value', (snapshot) => {
-                const numbers = snapshot.val() || {};
-                const waitingNumbers = Object.entries(numbers)
-                    .filter(([id, data]) => data.status === 'waiting')
-                    .sort(([a, aData], [b, bData]) => aData.timestamp - bData.timestamp);
-
-                if (waitingNumbers.length === 0) {
+            // Find next waiting number
+            database.ref(`queues/${today}/${currentCounterId}`).orderByChild('status').equalTo('waiting').limitToFirst(1).once('value', (snapshot) => {
+                const queue = snapshot.val();
+                
+                if (queue && Object.keys(queue).length > 0) {
+                    // Call the next waiting number
+                    const nextQueueId = Object.keys(queue)[0];
+                    const nextQueueData = queue[nextQueueId];
+                    
+                    // Update counter and queue status
+                    const updates = {};
+                    updates[`settings/counters/${currentCounterId}/current`] = parseInt(nextQueueData.number.replace(counterConfig.prefix, ''));
+                    updates[`queues/${today}/${currentCounterId}/${nextQueueId}/status`] = 'serving';
+                    updates[`queues/${today}/${currentCounterId}/${nextQueueId}/calledAt`] = Date.now();
+                    
+                    database.ref().update(updates).then(() => {
+                        playCallSound();
+                        showStatus(`✅ Called ${nextQueueData.number}`, 'success');
+                        
+                        // Visual feedback
+                        const servingElement = document.getElementById('nowServing');
+                        servingElement.classList.add('call-animation');
+                        setTimeout(() => servingElement.classList.remove('call-animation'), 500);
+                        
+                        updateQueueStats();
+                    });
+                } else {
                     showStatus('No customers in queue', 'warning');
-                    return;
                 }
-
-                const [nextNumberId, nextNumberData] = waitingNumbers[0];
-                
-                // Update Firebase
-                const updates = {};
-                updates[`queue/currentServing_${currentCounter}`] = nextNumberData.number;
-                updates[`queue/numbers/${nextNumberId}/status`] = 'serving';
-                
-                database.ref().update(updates).then(() => {
-                    playCallSound();
-                    showStatus(`✅ Called ${nextNumberData.number}`, 'success');
-                    
-                    // Visual feedback
-                    const servingElement = document.getElementById('nowServing');
-                    servingElement.classList.add('call-animation');
-                    setTimeout(() => servingElement.classList.remove('call-animation'), 500);
-                    
-                }).catch(error => {
-                    console.error('❌ Error calling next:', error);
-                    showStatus('❌ Failed to call next number', 'error');
-                });
             });
         }
 
@@ -380,20 +527,23 @@
             const skipInput = document.getElementById('skipInput');
             const number = skipInput.value.trim().toUpperCase();
             
-            if (!number || !number.match(/^[A-F]\d{3}$/)) {
-                showStatus('❌ Invalid format. Use A001, B002, etc.', 'error');
+            if (!number || !number.startsWith(counterConfig.prefix)) {
+                showStatus(`❌ Invalid format. Use ${counterConfig.prefix}001, ${counterConfig.prefix}002, etc.`, 'error');
+                return;
+            }
+
+            const suffix = parseInt(number.replace(counterConfig.prefix, ''));
+            if (isNaN(suffix) || suffix < 1) {
+                showStatus('❌ Invalid number', 'error');
                 return;
             }
 
             const database = firebase.database();
-            const updates = {};
-            updates[`queue/currentServing_${currentCounter}`] = number;
-            
-            database.ref().update(updates).then(() => {
+            database.ref(`settings/counters/${currentCounterId}/current`).set(suffix).then(() => {
                 playCallSound();
                 showStatus(`⏩ Skipped to ${number}`, 'success');
                 skipInput.value = '';
-            }).catch(error => {
+            }).catch(() => {
                 showStatus('❌ Failed to skip to number', 'error');
             });
         }
@@ -421,16 +571,6 @@
             }
         }
 
-        // Update stats
-        function updateStats() {
-            const database = firebase.database();
-            database.ref('queue/numbers').orderByChild('counter').equalTo(currentCounter).once('value', (snapshot) => {
-                const numbers = snapshot.val() || {};
-                const waiting = Object.values(numbers).filter(n => n.status === 'waiting').length;
-                document.getElementById('peopleRemaining').textContent = waiting;
-            });
-        }
-
         // Play call sound
         function playCallSound() {
             if (callSound) {
@@ -439,7 +579,8 @@
             
             if ('speechSynthesis' in window) {
                 const serving = document.getElementById('nowServing').textContent;
-                const utterance = new SpeechSynthesisUtterance(`Number ${serving}, please proceed to Counter ${currentCounter}`);
+                const counterName = currentCounterId.replace('counter', 'Counter ');
+                const utterance = new SpeechSynthesisUtterance(`Number ${serving}, please proceed to ${counterName}`);
                 utterance.volume = 0.7;
                 utterance.rate = 0.9;
                 speechSynthesis.speak(utterance);
