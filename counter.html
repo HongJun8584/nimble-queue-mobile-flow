@@ -71,34 +71,15 @@
                 <h2 class="text-xl font-bold text-gray-800 mb-6">Queue Joy</h2>
                 <nav class="space-y-3">
                     <a href="./index.html" class="block px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors font-medium">🏠 Home</a>
-                    <a href="./status.html" id="statusLink" class="block px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors font-medium hidden">📊 Status</a>
-                    <a href="./game.html" id="gameLink" class="block px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors font-medium hidden">🎮 Game</a>
                     <a href="./counter.html" class="block px-4 py-3 bg-indigo-100 text-indigo-600 rounded-xl font-medium">🎯 Counter</a>
+                    <a href="./game.html" class="block px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors font-medium">🎮 Game</a>
                 </nav>
             </div>
         </div>
     </div>
 
-    <!-- PIN Modal -->
-    <div id="pinModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 slide-up">
-            <h2 class="text-2xl font-bold text-center text-gray-800 mb-2">🔐 Counter Access</h2>
-            <p class="text-gray-600 text-center mb-6">Enter PIN to access counter</p>
-            
-            <div class="mb-4">
-                <input id="pinInput" type="password" maxlength="4" placeholder="••••" 
-                       class="w-full p-3 text-center text-2xl border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none">
-                <div id="pinError" class="text-red-500 text-sm mt-2 text-center hidden">❌ Incorrect PIN</div>
-            </div>
-
-            <button id="submitPinBtn" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-bold rounded-xl hover:scale-105 transition-all">
-                Submit
-            </button>
-        </div>
-    </div>
-
     <!-- Counter Setup Modal -->
-    <div id="setupModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+    <div id="setupModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
         <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 slide-up">
             <h2 class="text-2xl font-bold text-center text-gray-800 mb-2">⚙️ Counter Setup</h2>
             <p class="text-gray-600 text-center mb-6">Configure your counter</p>
@@ -122,15 +103,13 @@
             
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Enter Prefix (A-Z only)</label>
-                <input id="prefixInput" type="text" maxlength="5" placeholder="ABC" 
-                       class="w-full p-3 text-center text-lg border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none uppercase">
+                <input id="prefixInput" type="text" maxlength="5" placeholder="ABC" class="w-full p-3 text-center text-lg border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none uppercase">
                 <div id="prefixError" class="text-red-500 text-sm mt-1 hidden">Only uppercase letters allowed</div>
             </div>
 
             <button id="setupSubmit" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-bold rounded-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 Setup Counter
             </button>
-            <div id="setupStatus" class="text-center text-sm mt-2 min-h-[20px]"></div>
         </div>
     </div>
 
@@ -146,7 +125,7 @@
         <!-- Now Serving Display -->
         <div class="w-full bg-indigo-50 rounded-2xl p-6 mb-4">
             <p class="text-sm text-gray-600 mb-2">Now Serving</p>
-            <p id="nowServing" class="text-4xl font-bold text-indigo-600">Ready</p>
+            <p id="nowServing" class="text-4xl font-bold text-indigo-600">--</p>
         </div>
 
         <!-- Quick Stats -->
@@ -166,11 +145,11 @@
         </div>
 
         <!-- Main Action Buttons -->
-        <button id="callNextBtn" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-500 text-white text-xl font-bold rounded-xl hover:scale-105 transition-all shadow-lg">
+        <button id="callNextBtn" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-500 text-white text-xl font-bold rounded-xl hover:scale-105 transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
             ▶️ Call Next
         </button>
 
-        <button id="recallBtn" class="w-full py-3 bg-yellow-500 text-white text-lg font-semibold rounded-xl hover:scale-105 transition-all">
+        <button id="recallBtn" class="w-full py-3 bg-yellow-500 text-white text-lg font-semibold rounded-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
             🔁 Recall Last
         </button>
 
@@ -179,6 +158,15 @@
             <input id="skipInput" class="w-full text-center border-2 border-gray-300 rounded-xl p-3 mb-2 text-lg focus:border-indigo-500 focus:outline-none" placeholder="Skip to number (e.g. ABC110)">
             <button id="skipBtn" class="w-full py-3 bg-red-500 text-white font-semibold rounded-xl hover:scale-105 transition-all">
                 ⏩ Skip to Number
+            </button>
+        </div>
+
+        <!-- Ad Banner Management -->
+        <div class="w-full mt-6 p-4 bg-gray-50 rounded-xl">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">📢 Update Ad Banner</h3>
+            <input id="adUrlInput" type="url" placeholder="https://example.com/banner.png" class="w-full p-2 border border-gray-300 rounded-lg mb-2 text-sm focus:border-indigo-500 focus:outline-none">
+            <button id="updateAdBtn" class="w-full py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors">
+                Update Banner
             </button>
         </div>
 
@@ -200,30 +188,22 @@
     <script>
         let callSound = null;
         let currentCounterId = null;
-        let currentPrefix = null;
-        let currentNumber = 101;
+        let counterConfig = null;
         let firebaseListeners = [];
 
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎯 Counter system initializing...');
             
+            // Check PIN access first
+            if (sessionStorage.getItem('pinAccess') !== 'granted') {
+                window.location.href = './index.html';
+                return;
+            }
+            
             initializeAudio();
             setupNavigation();
-            checkPinAccess();
-            updateMenuVisibility();
+            checkCounterSetup();
         });
-
-        // Initialize audio
-        function initializeAudio() {
-            try {
-                callSound = new Howl({
-                    src: ['data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'],
-                    volume: 0.7
-                });
-            } catch (error) {
-                console.warn('⚠️ Audio initialization failed');
-            }
-        }
 
         // Navigation setup
         function setupNavigation() {
@@ -248,71 +228,18 @@
             });
         }
 
-        // Update menu visibility based on user status
-        function updateMenuVisibility() {
-            const queueId = localStorage.getItem('queueId');
-            const statusLink = document.getElementById('statusLink');
-            const gameLink = document.getElementById('gameLink');
+        // Check if counter is already set up
+        function checkCounterSetup() {
+            const savedCounter = sessionStorage.getItem('currentCounterId');
+            const savedConfig = sessionStorage.getItem('counterConfig');
             
-            if (queueId) {
-                statusLink.classList.remove('hidden');
-                gameLink.classList.remove('hidden');
+            if (savedCounter && savedConfig) {
+                currentCounterId = savedCounter;
+                counterConfig = JSON.parse(savedConfig);
+                showCounterPanel();
             } else {
-                statusLink.classList.add('hidden');
-                gameLink.classList.add('hidden');
+                showSetupModal();
             }
-        }
-
-        // Check PIN access
-        function checkPinAccess() {
-            const pinAccess = sessionStorage.getItem('pinAccess');
-            const savedCounterId = sessionStorage.getItem('counterId');
-            const savedPrefix = sessionStorage.getItem('prefix');
-            
-            if (pinAccess === 'granted') {
-                if (savedCounterId && savedPrefix) {
-                    // Counter already set up
-                    currentCounterId = savedCounterId;
-                    currentPrefix = savedPrefix;
-                    document.getElementById('pinModal').classList.add('hidden');
-                    showCounterPanel();
-                } else {
-                    // Need setup
-                    document.getElementById('pinModal').classList.add('hidden');
-                    showSetupModal();
-                }
-            } else {
-                // Show PIN modal
-                setupPinModal();
-            }
-        }
-
-        // Setup PIN modal
-        function setupPinModal() {
-            const pinInput = document.getElementById('pinInput');
-            const submitBtn = document.getElementById('submitPinBtn');
-            const pinError = document.getElementById('pinError');
-
-            submitBtn.addEventListener('click', function() {
-                const pin = pinInput.value.trim();
-                if (pin === '0108') {
-                    sessionStorage.setItem('pinAccess', 'granted');
-                    document.getElementById('pinModal').classList.add('hidden');
-                    showSetupModal();
-                } else {
-                    pinError.classList.remove('hidden');
-                    pinInput.value = '';
-                    pinInput.focus();
-                }
-            });
-
-            pinInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    submitBtn.click();
-                }
-            });
-
-            pinInput.focus();
         }
 
         // Show setup modal
@@ -322,7 +249,6 @@
             const prefixInput = document.getElementById('prefixInput');
             const setupSubmit = document.getElementById('setupSubmit');
             const prefixError = document.getElementById('prefixError');
-            const setupStatus = document.getElementById('setupStatus');
 
             setupModal.classList.remove('hidden');
 
@@ -332,7 +258,7 @@
                 const prefix = prefixInput.value.trim();
                 const isValidPrefix = /^[A-Z]+$/.test(prefix);
                 
-                if (prefix.length > 0 && !isValidPrefix) {
+                if (!isValidPrefix && prefix.length > 0) {
                     prefixError.classList.remove('hidden');
                 } else {
                     prefixError.classList.add('hidden');
@@ -352,40 +278,33 @@
                 const prefix = prefixInput.value.trim();
 
                 if (counter && prefix && /^[A-Z]+$/.test(prefix)) {
-                    setupStatus.textContent = 'Setting up counter...';
-                    setupStatus.className = 'text-center text-sm mt-2 min-h-[20px] text-blue-600';
-
-                    const database = firebase.database();
-                    const counterData = {
+                    currentCounterId = counter;
+                    counterConfig = {
                         prefix: prefix,
-                        current: 101,
-                        lastSuffix: 101,
+                        current: 0,
+                        lastSuffix: 0,
                         createdAt: Date.now()
                     };
 
-                    database.ref(`settings/counters/${counter}`).set(counterData).then(() => {
-                        currentCounterId = counter;
-                        currentPrefix = prefix;
-                        currentNumber = 101;
+                    // Save to Firebase and session
+                    saveCounterConfig().then(() => {
+                        sessionStorage.setItem('currentCounterId', currentCounterId);
+                        sessionStorage.setItem('counterConfig', JSON.stringify(counterConfig));
                         
-                        // Save to session
-                        sessionStorage.setItem('counterId', counter);
-                        sessionStorage.setItem('prefix', prefix);
-                        
-                        setupStatus.textContent = '✅ Counter setup complete';
-                        setupStatus.className = 'text-center text-sm mt-2 min-h-[20px] text-green-600';
-                        
-                        setTimeout(() => {
-                            setupModal.classList.add('hidden');
-                            showCounterPanel();
-                        }, 1000);
+                        setupModal.classList.add('hidden');
+                        showCounterPanel();
                     }).catch((error) => {
                         console.error('Error saving counter config:', error);
-                        setupStatus.textContent = '❌ Failed to setup counter';
-                        setupStatus.className = 'text-center text-sm mt-2 min-h-[20px] text-red-600';
+                        showStatus('❌ Failed to setup counter', 'error');
                     });
                 }
             });
+        }
+
+        // Save counter configuration to Firebase
+        function saveCounterConfig() {
+            const database = firebase.database();
+            return database.ref(`settings/counters/${currentCounterId}`).set(counterConfig);
         }
 
         // Show counter panel
@@ -393,34 +312,40 @@
             const counterPanel = document.getElementById('counterPanel');
             const counterTitle = document.getElementById('counterTitle');
             const queuePrefix = document.getElementById('queuePrefix');
-            const nowServing = document.getElementById('nowServing');
-            const lastCalled = document.getElementById('lastCalled');
 
             counterTitle.textContent = `${currentCounterId.charAt(0).toUpperCase() + currentCounterId.slice(1)} Management`;
-            queuePrefix.textContent = currentPrefix;
-            
-            // Load current state from Firebase
-            if (typeof firebase !== 'undefined' && firebase.database) {
-                const database = firebase.database();
-                const counterRef = database.ref(`settings/counters/${currentCounterId}`);
-                
-                counterRef.on('value', (snapshot) => {
-                    const config = snapshot.val();
-                    if (config) {
-                        currentNumber = config.current || 101;
-                        const currentNumberStr = `${currentPrefix}${currentNumber.toString().padStart(3, '0')}`;
-                        nowServing.textContent = currentNumber > 101 ? currentNumberStr : 'Ready';
-                        lastCalled.textContent = currentNumber > 101 ? currentNumberStr : '--';
-                    }
-                });
-                firebaseListeners.push(counterRef);
-                
-                loadAdBanner();
-                updateQueueStats();
-            }
+            queuePrefix.textContent = counterConfig.prefix;
 
             counterPanel.classList.remove('hidden');
-            setupEventListeners();
+            
+            setTimeout(() => {
+                initializeFirebase();
+                setupEventListeners();
+                loadCounterData();
+            }, 500);
+        }
+
+        // Audio system
+        function initializeAudio() {
+            try {
+                callSound = new Howl({
+                    src: ['data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'],
+                    volume: 0.7
+                });
+            } catch (error) {
+                console.warn('⚠️ Audio initialization failed');
+            }
+        }
+
+        // Firebase initialization
+        function initializeFirebase() {
+            if (typeof firebase === 'undefined' || !firebase.database) {
+                console.error('❌ Firebase not available');
+                showStatus('❌ System error - please refresh', 'error');
+                return;
+            }
+
+            loadAdBanner();
         }
 
         // Load ad banner
@@ -432,10 +357,12 @@
                 const adUrl = snapshot.val();
                 const adBanner = document.getElementById('adBanner');
                 const adImage = document.getElementById('adImage');
+                const adUrlInput = document.getElementById('adUrlInput');
                 
                 if (adUrl && adUrl.trim()) {
                     adImage.src = adUrl;
                     adBanner.classList.remove('hidden');
+                    if (adUrlInput) adUrlInput.value = adUrl;
                 } else {
                     adBanner.classList.add('hidden');
                 }
@@ -448,6 +375,48 @@
             document.getElementById('callNextBtn').addEventListener('click', callNextNumber);
             document.getElementById('recallBtn').addEventListener('click', recallLastNumber);
             document.getElementById('skipBtn').addEventListener('click', skipToNumber);
+            document.getElementById('updateAdBtn').addEventListener('click', updateAdBanner);
+        }
+
+        // Load counter data
+        function loadCounterData() {
+            const database = firebase.database();
+            
+            // Load counter config from Firebase
+            const counterRef = database.ref(`settings/counters/${currentCounterId}`);
+            counterRef.on('value', (snapshot) => {
+                const config = snapshot.val();
+                if (config) {
+                    counterConfig = config;
+                    updateDisplay();
+                    enableButtons();
+                }
+            });
+            firebaseListeners.push(counterRef);
+
+            // Load queue data
+            updateQueueStats();
+        }
+
+        // Update display
+        function updateDisplay() {
+            const nowServing = document.getElementById('nowServing');
+            const lastCalled = document.getElementById('lastCalled');
+            
+            if (counterConfig.current > 0) {
+                const currentNumber = `${counterConfig.prefix}${counterConfig.current.toString().padStart(3, '0')}`;
+                nowServing.textContent = currentNumber;
+                lastCalled.textContent = currentNumber;
+            } else {
+                nowServing.textContent = 'Ready';
+                lastCalled.textContent = '--';
+            }
+        }
+
+        // Enable buttons
+        function enableButtons() {
+            document.getElementById('callNextBtn').disabled = false;
+            document.getElementById('recallBtn').disabled = counterConfig.current === 0;
         }
 
         // Update queue statistics
@@ -477,9 +446,8 @@
                     const nextQueueData = queue[nextQueueId];
                     
                     // Update counter and queue status
-                    const newCurrent = parseInt(nextQueueData.number.replace(currentPrefix, ''));
                     const updates = {};
-                    updates[`settings/counters/${currentCounterId}/current`] = newCurrent;
+                    updates[`settings/counters/${currentCounterId}/current`] = parseInt(nextQueueData.number.replace(counterConfig.prefix, ''));
                     updates[`queues/${today}/${currentCounterId}/${nextQueueId}/status`] = 'serving';
                     updates[`queues/${today}/${currentCounterId}/${nextQueueId}/calledAt`] = Date.now();
                     
@@ -521,12 +489,12 @@
             const skipInput = document.getElementById('skipInput');
             const number = skipInput.value.trim().toUpperCase();
             
-            if (!number || !number.startsWith(currentPrefix)) {
-                showStatus(`❌ Invalid format. Use ${currentPrefix}001, ${currentPrefix}002, etc.`, 'error');
+            if (!number || !number.startsWith(counterConfig.prefix)) {
+                showStatus(`❌ Invalid format. Use ${counterConfig.prefix}001, ${counterConfig.prefix}002, etc.`, 'error');
                 return;
             }
 
-            const suffix = parseInt(number.replace(currentPrefix, ''));
+            const suffix = parseInt(number.replace(counterConfig.prefix, ''));
             if (isNaN(suffix) || suffix < 1) {
                 showStatus('❌ Invalid number', 'error');
                 return;
@@ -540,6 +508,24 @@
             }).catch(() => {
                 showStatus('❌ Failed to skip to number', 'error');
             });
+        }
+
+        // Update ad banner
+        function updateAdBanner() {
+            const adUrl = document.getElementById('adUrlInput').value.trim();
+            
+            const database = firebase.database();
+            if (adUrl === '') {
+                database.ref('settings/adBanner').remove().then(() => {
+                    showStatus('✅ Ad banner removed', 'success');
+                });
+            } else {
+                database.ref('settings/adBanner').set(adUrl).then(() => {
+                    showStatus('✅ Ad banner updated', 'success');
+                }).catch(() => {
+                    showStatus('❌ Failed to update banner', 'error');
+                });
+            }
         }
 
         // Play call sound
