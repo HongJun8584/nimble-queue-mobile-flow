@@ -1,25 +1,15 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Queue Joy - Get Your Number</title>
+    <title>Queue Joy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .mascot-bounce { animation: bounce 2s infinite; }
-        .glow-pulse { animation: glow-pulse 2s infinite; }
         .slide-up { animation: slideUp 0.6s ease-out; }
         .fade-in { animation: fadeIn 0.8s ease-out; }
-        .loading-spinner { animation: spin 1s linear infinite; }
-        .pulse-success { animation: pulse-success 0.6s ease-out; }
-        
-        @keyframes glow-pulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(147, 51, 234, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(147, 51, 234, 0.6); }
-        }
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -27,15 +17,6 @@
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        @keyframes pulse-success {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
         }
         .gradient-bg {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -63,70 +44,43 @@
 </head>
 <body class="gradient-bg min-h-screen content-with-ad">
     <!-- Hamburger Menu -->
-    <div class="fixed top-6 right-6 z-50">
-        <button id="menuToggle" class="bg-white/90 backdrop-blur-sm p-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110">
-            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
+    <div class="fixed top-4 left-4 z-50">
+        <button id="menuToggle" class="p-3 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg hover:bg-white transition-all duration-200">
+            <div class="w-6 h-6 flex flex-col justify-center space-y-1">
+                <span class="block w-full h-0.5 bg-gray-600"></span>
+                <span class="block w-full h-0.5 bg-gray-600"></span>
+                <span class="block w-full h-0.5 bg-gray-600"></span>
+            </div>
         </button>
-        
-        <div id="menuPanel" class="absolute top-20 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 w-52 hidden">
-            <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 bg-purple-50">🏠 Home</a>
-            <a href="#" id="statusLink" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hidden">📊 Status</a>
-            <a href="./game.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🎮 Game</a>
-            <a href="#" id="counterLink" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🎯 Counter</a>
-            <a href="#" id="adminLink" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">⚙️ Admin</a>
-        </div>
     </div>
 
-    <!-- PIN Modal -->
-    <div id="pinModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 slide-up">
-            <h2 class="text-2xl font-bold text-center text-gray-800 mb-2">🔐 Staff Access</h2>
-            <p class="text-gray-600 text-center mb-6">Enter PIN to continue</p>
-            <input id="pinInput" type="password" maxlength="4" placeholder="0000" class="w-full p-4 text-center text-2xl border-2 border-gray-300 rounded-xl mb-4 focus:border-indigo-500 focus:outline-none">
-            <div id="pinError" class="text-red-500 text-center mb-4 hidden">❌ Incorrect PIN. Try again.</div>
-            <button id="submitPinBtn" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-500 text-white font-bold rounded-xl hover:scale-105 transition-all">Enter</button>
-        </div>
+    <!-- Navigation Menu -->
+    <div id="menuPanel" class="fixed top-20 left-4 bg-white rounded-2xl shadow-2xl p-4 min-w-[200px] z-40 hidden">
+        <nav class="space-y-2">
+            <a href="./index.html" class="block px-4 py-3 bg-indigo-100 text-indigo-600 rounded-xl font-medium">🏠 Home</a>
+            <a href="./status.html" id="statusLink" class="block px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors font-medium hidden">📊 Status</a>
+            <a href="./game.html" id="gameLink" class="block px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors font-medium hidden">🎮 Game</a>
+            <a href="./counter.html" class="block px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors font-medium">🎯 Counter</a>
+        </nav>
     </div>
 
     <!-- Main Content -->
-    <div class="min-h-screen flex flex-col justify-center items-center px-6 py-12">
-        <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-10 max-w-md w-full text-center slide-up">
-            <!-- Logo/Mascot -->
-            <div class="mb-8 fade-in">
-                <div class="w-32 h-32 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full mx-auto flex items-center justify-center text-6xl mascot-bounce shadow-xl">
-                    🎫
-                </div>
-                <h1 class="text-4xl font-bold text-gray-800 mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Queue Joy</h1>
-                <p class="text-gray-600 mt-3 text-lg font-medium">Skip the line, enjoy the wait!</p>
-            </div>
-
-            <!-- Available Counters Display -->
-            <div id="counterDisplay" class="mb-8">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Available Counters</h2>
-                <div id="counterGrid" class="grid grid-cols-1 gap-3 mb-6">
-                    <!-- Counter status will be populated here -->
-                </div>
-            </div>
-
-            <!-- Get Number Button -->
-            <button id="getNumberBtn" class="w-full py-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 mb-6 text-lg">
-                <span id="buttonContent" class="flex items-center justify-center">
-                    <span class="text-3xl mr-3">🎯</span>
-                    Get My Number
-                </span>
-            </button>
-
-            <!-- Status Messages -->
-            <div id="statusMsg" class="hidden mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl pulse-success">
-                <p class="text-emerald-700 font-bold text-lg">✅ Your number: <span id="generatedNumber" class="text-2xl">A000</span></p>
-                <p class="text-emerald-600 text-sm mt-1">Redirecting to status page...</p>
-            </div>
-            <div id="errorMsg" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p class="text-red-700 font-medium">❌ <span id="errorText">Failed to generate number. Please try again.</span></p>
-            </div>
+    <div class="min-h-screen flex flex-col justify-center items-center px-4 py-8 max-w-sm mx-auto text-center bg-white rounded-xl shadow-md gap-6">
+        <div class="w-full mb-4">
+            <h1 class="text-3xl font-bold text-gray-800">Welcome to Queue Joy</h1>
+            <p class="text-gray-600">Get your queue number easily</p>
         </div>
+
+        <div class="bg-indigo-50 rounded-2xl p-6 w-full">
+            <p class="text-sm text-gray-600 mb-2">Your Queue Number</p>
+            <p id="queueNumberDisplay" class="text-5xl font-bold text-indigo-600">--</p>
+        </div>
+
+        <button id="getQueueNumberBtn" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-500 text-white text-xl font-bold rounded-xl hover:scale-105 transition-all shadow-lg">
+            ✨ Get a Number
+        </button>
+
+        <p id="actionStatus" class="text-sm text-gray-500 min-h-[20px]"></p>
     </div>
 
     <!-- Ad Banner -->
@@ -138,377 +92,134 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="./js/firebase-config.js"></script>
+    <script src="./js/navigation.js"></script>
     
     <script>
-        let isGenerating = false;
-        let hasGeneratedToday = false;
-        let availableCounters = {};
-        let currentPinTarget = null;
-        let firebaseListeners = [];
-
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Queue Joy initialized');
+            console.log('🏠 Queue Joy initializing...');
             
-            initializeHamburgerMenu();
-            checkExistingSession();
-            setTimeout(initializeSystem, 1000);
-            setupEventListeners();
+            initializeNavigation();
+            setupQueueSystem();
         });
 
-        function initializeHamburgerMenu() {
-            const menuToggle = document.getElementById('menuToggle');
-            const menuPanel = document.getElementById('menuPanel');
+        // Setup queue system
+        function setupQueueSystem() {
+            const getQueueNumberBtn = document.getElementById('getQueueNumberBtn');
+            const queueNumberDisplay = document.getElementById('queueNumberDisplay');
+            let currentQueueId = localStorage.getItem('queueId');
             
-            if (menuToggle && menuPanel) {
-                menuToggle.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    menuPanel.classList.toggle('hidden');
-                });
+            // Check if user already has a queue number
+            if (currentQueueId) {
+                queueNumberDisplay.textContent = currentQueueId;
+                updateMenuVisibility();
+            }
+
+            // Get queue number button
+            getQueueNumberBtn.addEventListener('click', function() {
+                getQueueNumberBtn.disabled = true;
+                getQueueNumberBtn.textContent = 'Please wait...';
                 
-                document.addEventListener('click', function(e) {
-                    if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target)) {
-                        menuPanel.classList.add('hidden');
+                getAvailableCounters().then(counters => {
+                    const counterIds = Object.keys(counters);
+                    if (counterIds.length === 0) {
+                        showStatus('❌ No counters available. Please try again later.', 'error');
+                        getQueueNumberBtn.disabled = false;
+                        getQueueNumberBtn.textContent = '✨ Get a Number';
+                        return;
                     }
-                });
-            }
-        }
-
-        function setupEventListeners() {
-            const getNumberBtn = document.getElementById('getNumberBtn');
-            const counterLink = document.getElementById('counterLink');
-            const adminLink = document.getElementById('adminLink');
-            const statusLink = document.getElementById('statusLink');
-            const submitPinBtn = document.getElementById('submitPinBtn');
-            const pinInput = document.getElementById('pinInput');
-            
-            if (getNumberBtn) {
-                getNumberBtn.addEventListener('click', generateQueueNumber);
-            }
-            
-            if (counterLink) {
-                counterLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    currentPinTarget = 'counter';
-                    showPinModal();
-                });
-            }
-            
-            if (adminLink) {
-                adminLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    currentPinTarget = 'admin';
-                    showPinModal();
-                });
-            }
-            
-            if (statusLink) {
-                statusLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    window.location.href = './status.html';
-                });
-            }
-            
-            if (submitPinBtn) {
-                submitPinBtn.addEventListener('click', handlePinSubmit);
-            }
-            
-            if (pinInput) {
-                pinInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        handlePinSubmit();
-                    }
-                });
-            }
-        }
-
-        function showPinModal() {
-            const pinModal = document.getElementById('pinModal');
-            const pinInput = document.getElementById('pinInput');
-            const pinError = document.getElementById('pinError');
-            
-            pinModal.classList.remove('hidden');
-            pinInput.value = '';
-            pinError.classList.add('hidden');
-            
-            setTimeout(() => {
-                pinInput.focus();
-            }, 300);
-        }
-
-        function handlePinSubmit() {
-            const pinInput = document.getElementById('pinInput');
-            const pinError = document.getElementById('pinError');
-            const pinModal = document.getElementById('pinModal');
-            const pin = pinInput.value.trim();
-            
-            if (pin === '0108') {
-                sessionStorage.setItem('pinAccess', 'granted');
-                pinModal.classList.add('hidden');
-                
-                if (currentPinTarget === 'counter') {
-                    window.location.href = './counter.html';
-                } else if (currentPinTarget === 'admin') {
-                    window.location.href = './admin.html';
-                }
-            } else {
-                pinError.classList.remove('hidden');
-                pinInput.value = '';
-                pinInput.focus();
-            }
-        }
-
-        function checkExistingSession() {
-            const existingNumber = localStorage.getItem('queueId');
-            const existingCounterId = localStorage.getItem('counterId');
-            const timestamp = localStorage.getItem('queueTimestamp');
-            
-            if (existingNumber && existingCounterId && timestamp) {
-                const today = new Date().toDateString();
-                const sessionDate = new Date(parseInt(timestamp)).toDateString();
-                
-                if (today === sessionDate) {
-                    hasGeneratedToday = true;
-                    document.getElementById('statusLink').classList.remove('hidden');
                     
-                    const button = document.getElementById('getNumberBtn');
-                    const buttonContent = document.getElementById('buttonContent');
-                    button.classList.add('opacity-60');
-                    buttonContent.innerHTML = '<span class="text-3xl mr-3">✅</span>Already Have Number - Check Status';
-                    button.disabled = true;
-                }
-            }
-        }
-
-        function initializeSystem() {
-            if (typeof firebase === 'undefined' || !firebase.database) {
-                console.error('❌ Firebase not initialized');
-                showError('System not ready. Please refresh the page.');
-                return;
-            }
-
-            loadAvailableCounters();
-            loadAdBanner();
-        }
-
-        function loadAvailableCounters() {
-            const database = firebase.database();
-            const countersRef = database.ref('settings/counters');
-            
-            countersRef.on('value', (snapshot) => {
-                const counters = snapshot.val() || {};
-                availableCounters = counters;
-                console.log('📡 Available counters updated:', availableCounters);
-                updateCounterDisplay();
-                updateButtonState();
-            }, (error) => {
-                console.error('❌ Error loading counters:', error);
-                availableCounters = {};
-                updateCounterDisplay();
-                updateButtonState();
+                    // Select a random counter
+                    const randomCounterId = counterIds[Math.floor(Math.random() * counterIds.length)];
+                    const prefix = counters[randomCounterId].prefix;
+                    
+                    // Generate a unique queue number
+                    generateQueueNumber(randomCounterId, prefix).then(queueNumber => {
+                        queueNumberDisplay.textContent = queueNumber;
+                        localStorage.setItem('queueId', queueNumber);
+                        showStatus(`✅ Your queue number is ${queueNumber}`, 'success');
+                        currentQueueId = queueNumber;
+                        updateMenuVisibility();
+                    }).catch(error => {
+                        console.error('Error getting queue number:', error);
+                        showStatus('❌ Failed to get queue number. Please try again.', 'error');
+                    }).finally(() => {
+                        getQueueNumberBtn.disabled = false;
+                        getQueueNumberBtn.textContent = '✨ Get a Number';
+                    });
+                });
             });
-            firebaseListeners.push(countersRef);
-        }
 
-        function updateCounterDisplay() {
-            const counterGrid = document.getElementById('counterGrid');
-            if (!counterGrid) return;
-
-            counterGrid.innerHTML = '';
-            
-            if (Object.keys(availableCounters).length === 0) {
-                const noCountersDiv = document.createElement('div');
-                noCountersDiv.className = 'bg-yellow-50 border border-yellow-200 rounded-2xl p-4 text-center';
-                noCountersDiv.innerHTML = `
-                    <p class="text-yellow-700 font-medium">⚠️ No active counters</p>
-                    <p class="text-yellow-600 text-sm mt-1">Please wait for staff to setup counters</p>
-                `;
-                counterGrid.appendChild(noCountersDiv);
-                return;
-            }
-            
-            const counterColors = [
-                'from-emerald-50 to-teal-50 border-emerald-200 text-emerald-600',
-                'from-blue-50 to-cyan-50 border-blue-200 text-blue-600',
-                'from-purple-50 to-violet-50 border-purple-200 text-purple-600',
-                'from-orange-50 to-amber-50 border-orange-200 text-orange-600',
-                'from-pink-50 to-rose-50 border-pink-200 text-pink-600'
-            ];
-
-            Object.entries(availableCounters).forEach(([counterId, counter], index) => {
-                const counterDiv = document.createElement('div');
-                const colorClass = counterColors[index % counterColors.length];
-                const displayName = counterId.charAt(0).toUpperCase() + counterId.slice(1).replace('counter', 'Counter ');
-                const currentNumber = counter.current > 0 ? 
-                    `${counter.prefix}${counter.current.toString().padStart(3, '0')}` : 'Ready';
-                
-                counterDiv.className = `bg-gradient-to-r ${colorClass} rounded-xl p-3 border text-center`;
-                counterDiv.innerHTML = `
-                    <p class="text-sm font-medium">${displayName}</p>
-                    <p class="text-xs text-gray-600">Now Serving</p>
-                    <div class="text-lg font-bold mt-1">${currentNumber}</div>
-                `;
-                counterGrid.appendChild(counterDiv);
-            });
-        }
-
-        function updateButtonState() {
-            const getNumberBtn = document.getElementById('getNumberBtn');
-            const buttonContent = document.getElementById('buttonContent');
-            
-            if (hasGeneratedToday) {
-                return;
-            }
-            
-            if (Object.keys(availableCounters).length === 0) {
-                getNumberBtn.disabled = true;
-                buttonContent.innerHTML = '<span class="text-3xl mr-3">⏳</span>Waiting for Active Counters';
-            } else {
-                getNumberBtn.disabled = false;
-                buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
-            }
-        }
-
-        function generateQueueNumber() {
-            if (isGenerating || hasGeneratedToday) {
-                if (hasGeneratedToday) {
-                    showError('You already have a queue number today. Check your status page.');
-                }
-                return;
-            }
-            
-            if (Object.keys(availableCounters).length === 0) {
-                showError('No active counters available. Please try again later.');
-                return;
-            }
-            
-            isGenerating = true;
-            console.log('🎯 Starting auto-assignment of counter');
-            
-            const button = document.getElementById('getNumberBtn');
-            const buttonContent = document.getElementById('buttonContent');
-            const statusMsg = document.getElementById('statusMsg');
-            const errorMsg = document.getElementById('errorMsg');
-            const generatedNumberSpan = document.getElementById('generatedNumber');
-            
-            // Reset UI
-            if (statusMsg) statusMsg.classList.add('hidden');
-            if (errorMsg) errorMsg.classList.add('hidden');
-            
-            // Show loading state
-            if (buttonContent) {
-                buttonContent.innerHTML = '<span class="loading-spinner text-3xl mr-3">🔄</span>Assigning Counter...';
-            }
-            if (button) {
-                button.disabled = true;
-            }
-            
-            // Auto-assign first available counter (sorted by key)
-            const sortedCounters = Object.keys(availableCounters).sort();
-            const assignedCounterId = sortedCounters[0];
-            const counter = availableCounters[assignedCounterId];
-            
-            if (!counter) {
-                showError('No counters available for assignment.');
-                resetGenerationState();
-                return;
-            }
-            
-            // Use Firebase transaction to safely increment counter
-            const database = firebase.database();
-            const counterRef = database.ref(`settings/counters/${assignedCounterId}/lastSuffix`);
-            
-            counterRef.transaction((currentSuffix) => {
-                return (currentSuffix || 0) + 1;
-            }).then((result) => {
-                if (result.committed) {
-                    const newSuffix = result.snapshot.val();
-                    const queueId = `${counter.prefix}${newSuffix.toString().padStart(3, '0')}`;
+            // Generate queue number
+            function generateQueueNumber(counterId, prefix) {
+                return new Promise((resolve, reject) => {
+                    const database = firebase.database();
                     const today = new Date().toISOString().split('T')[0];
+                    const newQueueRef = database.ref(`queues/${today}/${counterId}`).push();
+                    const queueNumber = `${prefix}${Date.now().toString().slice(-3)}`;
                     
-                    // Store ticket in Firebase
-                    const ticketData = {
-                        number: queueId,
-                        counterId: assignedCounterId,
+                    newQueueRef.set({
+                        number: queueNumber,
                         status: 'waiting',
                         timestamp: Date.now()
-                    };
-                    
-                    return database.ref(`queues/${today}/${assignedCounterId}/${Date.now()}_${queueId}`).set(ticketData).then(() => {
-                        // Store in local storage
-                        localStorage.setItem('queueId', queueId);
-                        localStorage.setItem('counterId', assignedCounterId);
-                        localStorage.setItem('queueDate', today);
-                        localStorage.setItem('queueTimestamp', Date.now().toString());
-                        
-                        console.log('✅ Number generated and assigned:', queueId, 'to', assignedCounterId);
-                        
-                        // Show success
-                        if (generatedNumberSpan) generatedNumberSpan.textContent = queueId;
-                        if (statusMsg) statusMsg.classList.remove('hidden');
-                        
-                        hasGeneratedToday = true;
-                        document.getElementById('statusLink').classList.remove('hidden');
-                        
-                        // Redirect after success message
-                        setTimeout(() => {
-                            window.location.href = './status.html';
-                        }, 1500);
+                    }).then(() => {
+                        resolve(queueNumber);
+                    }).catch(error => {
+                        reject(error);
                     });
-                } else {
-                    throw new Error('Transaction not committed');
-                }
-            }).catch((error) => {
-                console.error('❌ Error generating number:', error);
-                showError('Failed to generate number. Please try again.');
-            }).finally(() => {
-                setTimeout(resetGenerationState, 2000);
+                });
+            }
+        }
+
+        // Get available counters
+        function getAvailableCounters() {
+            return new Promise((resolve) => {
+                const database = firebase.database();
+                database.ref('settings/counters').once('value', (snapshot) => {
+                    resolve(snapshot.val() || {});
+                });
             });
         }
 
-        function resetGenerationState() {
-            const buttonContent = document.getElementById('buttonContent');
-            const button = document.getElementById('getNumberBtn');
+        // Update menu visibility based on user status
+        function updateMenuVisibility() {
+            const queueId = localStorage.getItem('queueId');
+            const statusLink = document.getElementById('statusLink');
+            const gameLink = document.getElementById('gameLink');
             
-            if (buttonContent) buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
-            if (button && !hasGeneratedToday) button.disabled = false;
-            isGenerating = false;
-            updateButtonState();
-        }
-
-        function showError(message) {
-            const errorMsg = document.getElementById('errorMsg');
-            const errorText = document.getElementById('errorText');
-            if (errorText) errorText.textContent = message;
-            if (errorMsg) errorMsg.classList.remove('hidden');
-        }
-
-        function loadAdBanner() {
-            const database = firebase.database();
-            const adBannerRef = database.ref('settings/adBanner');
-            
-            adBannerRef.on('value', (snapshot) => {
-                const adUrl = snapshot.val();
-                const adBanner = document.getElementById('adBanner');
-                const adImage = document.getElementById('adImage');
-                
-                if (adUrl && adUrl.trim()) {
-                    adImage.src = adUrl;
-                    adBanner.classList.remove('hidden');
+            if (statusLink) {
+                if (queueId) {
+                    statusLink.classList.remove('hidden');
                 } else {
-                    adBanner.classList.add('hidden');
+                    statusLink.classList.add('hidden');
                 }
-            });
-            firebaseListeners.push(adBannerRef);
+            }
+            
+            if (gameLink) {
+                if (queueId) {
+                    gameLink.classList.remove('hidden');
+                } else {
+                    gameLink.classList.add('hidden');
+                }
+            }
         }
 
-        // Cleanup listeners on page unload
-        window.addEventListener('beforeunload', function() {
-            firebaseListeners.forEach(ref => {
-                if (ref && ref.off) {
-                    ref.off();
-                }
-            });
-        });
+        // Show status message
+        function showStatus(message, type = 'info') {
+            const statusElement = document.getElementById('actionStatus');
+            statusElement.textContent = message;
+            statusElement.className = `text-sm min-h-[20px] ${
+                type === 'success' ? 'text-green-600' :
+                type === 'error' ? 'text-red-600' :
+                type === 'warning' ? 'text-yellow-600' :
+                'text-gray-500'
+            }`;
+            
+            // Clear after 3 seconds
+            setTimeout(() => {
+                statusElement.textContent = '';
+                statusElement.className = 'text-sm text-gray-500 min-h-[20px]';
+            }, 3000);
+        }
     </script>
 </body>
 </html>
