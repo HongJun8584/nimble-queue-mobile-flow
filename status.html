@@ -7,8 +7,6 @@
     <title>Queue Status - Queue Joy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Howler.js for notifications -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
     
     <style>
@@ -68,6 +66,7 @@
         </button>
         
         <div id="menuPanel" class="absolute top-20 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 w-52 hidden">
+            <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🏠 Home</a>
             <a href="./game.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200">🎮 Game</a>
             <a href="./status.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 bg-purple-50">📊 Status</a>
         </div>
@@ -145,13 +144,11 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
-    <!-- Firebase Config -->
     <script src="./js/firebase-config.js"></script>
     
     <script>
         let myQueueNumber = null;
-        let myPrefix = null;
+        let myCounterId = null;
         let notificationSound = null;
         let isMyTurn = false;
         let firebaseListeners = [];
@@ -159,19 +156,12 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📊 Status page initialized');
             
-            // Initialize hamburger menu
             initializeHamburgerMenu();
-            
-            // Initialize notification sound
             initializeNotificationSound();
-            
-            // Load user's queue number
             loadUserQueueNumber();
             
             // Wait for Firebase to initialize
             setTimeout(startRealTimeMonitoring, 1000);
-            
-            // Load ad banner
             setTimeout(loadAdBanner, 1000);
         });
 
@@ -205,27 +195,30 @@
         }
 
         function loadUserQueueNumber() {
-            myQueueNumber = sessionStorage.getItem('queueId') || sessionStorage.getItem('myQueueNumber');
-            myPrefix = sessionStorage.getItem('prefix');
+            myQueueNumber = localStorage.getItem('queueId');
+            myCounterId = localStorage.getItem('counterId');
+            const queueDate = localStorage.getItem('queueDate');
             
-            if (!myQueueNumber) {
+            if (!myQueueNumber || !myCounterId) {
                 showError('No queue number found. Please get a number first.');
                 return;
             }
             
-            if (!myPrefix && myQueueNumber) {
-                myPrefix = myQueueNumber.charAt(0);
-                sessionStorage.setItem('prefix', myPrefix);
+            // Check if queue is for today
+            const today = new Date().toISOString().split('T')[0];
+            if (queueDate !== today) {
+                showError('Queue number expired. Please get a new number.');
+                return;
             }
             
             document.getElementById('yourNumber').textContent = myQueueNumber;
-            document.getElementById('counterInfo').textContent = `Counter ${myPrefix}`;
+            document.getElementById('counterInfo').textContent = `Assigned to ${myCounterId.replace('counter', 'Counter ')}`;
             
-            console.log(`📋 Loaded queue number: ${myQueueNumber} (Counter ${myPrefix})`);
+            console.log(`📋 Loaded queue: ${myQueueNumber} for ${myCounterId}`);
         }
 
         function startRealTimeMonitoring() {
-            if (!firebase.database || !myQueueNumber || !myPrefix) {
+            if (!firebase.database || !myQueueNumber || !myCounterId) {
                 console.error('❌ Cannot start monitoring - missing requirements');
                 showError('System not ready. Please refresh the page.');
                 return;
@@ -234,41 +227,50 @@
             const database = firebase.database();
             
             // Monitor current serving for my counter
-            const currentServingRef = database.ref(`queue/currentServing_${myPrefix}`);
-            currentServingRef.on('value', (snapshot) => {
-                const currentServing = snapshot.val();
-                updateCurrentServing(currentServing);
-                checkIfMyTurn(currentServing);
+            const counterRef = database.ref(`settings/counters/${myCounterId}`);
+            counterRef.on('value', (snapshot) => {
+                const counterData = snapshot.val();
+                if (counterData) {
+                    updateCurrentServing(counterData.current, counterData.prefix);
+                    checkIfMyTurn(counterData.current, counterData.prefix);
+                }
                 updateLastUpdated();
             }, (error) => {
-                console.error('❌ Error monitoring current serving:', error);
+                console.error('❌ Error monitoring counter:', error);
             });
-            firebaseListeners.push(currentServingRef);
+            firebaseListeners.push(counterRef);
             
-            // Monitor all queue numbers to calculate position
-            const numbersRef = database.ref('queue/numbers');
-            numbersRef.on('value', (snapshot) => {
-                const numbers = snapshot.val() || {};
-                calculateQueuePosition(numbers);
+            // Monitor queue for my counter to calculate position
+            const today = new Date().toISOString().split('T')[0];
+            const queueRef = database.ref(`queues/${today}/${myCounterId}`);
+            queueRef.on('value', (snapshot) => {
+                const queue = snapshot.val() || {};
+                calculateQueuePosition(queue);
                 updateLastUpdated();
             }, (error) => {
-                console.error('❌ Error monitoring queue numbers:', error);
+                console.error('❌ Error monitoring queue:', error);
             });
-            firebaseListeners.push(numbersRef);
+            firebaseListeners.push(queueRef);
         }
 
-        function updateCurrentServing(currentServing) {
+        function updateCurrentServing(currentNumber, prefix) {
             const element = document.getElementById('nowServing');
-            element.textContent = currentServing || '--';
             
-            if (currentServing) {
-                element.classList.add('animate-pulse');
-                setTimeout(() => element.classList.remove('animate-pulse'), 2000);
+            if (currentNumber > 0) {
+                const servingNumber = `${prefix}${currentNumber.toString().padStart(3, '0')}`;
+                element.textContent = servingNumber;
+            } else {
+                element.textContent = 'Ready';
             }
+            
+            element.classList.add('animate-pulse');
+            setTimeout(() => element.classList.remove('animate-pulse'), 2000);
         }
 
-        function checkIfMyTurn(currentServing) {
-            if (currentServing === myQueueNumber && !isMyTurn) {
+        function checkIfMyTurn(currentNumber, prefix) {
+            const servingNumber = currentNumber > 0 ? `${prefix}${currentNumber.toString().padStart(3, '0')}` : null;
+            
+            if (servingNumber === myQueueNumber && !isMyTurn) {
                 isMyTurn = true;
                 playYourTurnNotification();
                 
@@ -296,23 +298,23 @@
             
             // Speech notification
             if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(`Number ${myQueueNumber}, please proceed to Counter ${myPrefix}.`);
+                const counterName = myCounterId.replace('counter', 'Counter ');
+                const utterance = new SpeechSynthesisUtterance(`Number ${myQueueNumber}, please proceed to ${counterName}.`);
                 utterance.volume = 0.8;
                 utterance.rate = 0.9;
                 speechSynthesis.speak(utterance);
             }
         }
 
-        function calculateQueuePosition(allNumbers) {
-            if (!myQueueNumber || !myPrefix) return;
+        function calculateQueuePosition(queueData) {
+            if (!myQueueNumber) return;
             
-            // Filter numbers for my counter that are still waiting
-            const myCounterNumbers = Object.entries(allNumbers)
-                .filter(([id, data]) => data.counter === myPrefix && data.status === 'waiting')
-                .map(([id, data]) => ({ id, ...data }))
+            // Get all waiting tickets for this counter
+            const waitingTickets = Object.values(queueData)
+                .filter(ticket => ticket.status === 'waiting')
                 .sort((a, b) => a.timestamp - b.timestamp);
             
-            const myPosition = myCounterNumbers.findIndex(ticket => ticket.number === myQueueNumber);
+            const myPosition = waitingTickets.findIndex(ticket => ticket.number === myQueueNumber);
             const peopleAhead = myPosition >= 0 ? myPosition : 0;
             
             // Update UI
@@ -322,7 +324,7 @@
             calculateEstimatedWait(peopleAhead);
             
             // Update status message
-            updateStatusMessage(peopleAhead, myCounterNumbers.length);
+            updateStatusMessage(peopleAhead, waitingTickets.length);
         }
 
         function calculateEstimatedWait(peopleAhead) {
