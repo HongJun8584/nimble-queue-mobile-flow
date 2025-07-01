@@ -67,8 +67,9 @@ function closeMenu() {
 }
 
 function updateMenuVisibility() {
-    const queueId = sessionStorage.getItem('queueId');
+    const queueId = localStorage.getItem('queueId');
     const statusLink = document.getElementById('statusLink');
+    const gameLink = document.getElementById('gameLink');
     
     console.log('🔍 Updating menu visibility, queueId:', queueId);
     
@@ -79,6 +80,16 @@ function updateMenuVisibility() {
         } else {
             statusLink.classList.add('hidden');
             console.log('❌ Status link hidden');
+        }
+    }
+    
+    if (gameLink) {
+        if (queueId) {
+            gameLink.classList.remove('hidden');
+            console.log('✅ Game link visible');
+        } else {
+            gameLink.classList.add('hidden');
+            console.log('❌ Game link hidden');
         }
     }
 }

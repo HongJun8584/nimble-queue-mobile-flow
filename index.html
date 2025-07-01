@@ -1,25 +1,15 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Queue Joy - Get Your Number</title>
+    <title>Queue Joy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .mascot-bounce { animation: bounce 2s infinite; }
-        .glow-pulse { animation: glow-pulse 2s infinite; }
         .slide-up { animation: slideUp 0.6s ease-out; }
         .fade-in { animation: fadeIn 0.8s ease-out; }
-        .loading-spinner { animation: spin 1s linear infinite; }
-        .pulse-success { animation: pulse-success 0.6s ease-out; }
-        
-        @keyframes glow-pulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(147, 51, 234, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(147, 51, 234, 0.6); }
-        }
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -27,15 +17,6 @@
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        @keyframes pulse-success {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
         }
         .gradient-bg {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -63,53 +44,43 @@
 </head>
 <body class="gradient-bg min-h-screen content-with-ad">
     <!-- Hamburger Menu -->
-    <div class="fixed top-6 right-6 z-50">
-        <button id="menuToggle" class="bg-white/90 backdrop-blur-sm p-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110">
-            <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
+    <div class="fixed top-4 left-4 z-50">
+        <button id="menuToggle" class="p-3 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg hover:bg-white transition-all duration-200">
+            <div class="w-6 h-6 flex flex-col justify-center space-y-1">
+                <span class="block w-full h-0.5 bg-gray-600"></span>
+                <span class="block w-full h-0.5 bg-gray-600"></span>
+                <span class="block w-full h-0.5 bg-gray-600"></span>
+            </div>
         </button>
-        
-        <div id="menuPanel" class="absolute top-20 right-0 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-6 w-52 hidden transform transition-all duration-300">
-            <a href="./index.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105 bg-purple-50">🏠 Home</a>
-            <a href="./counter.html" class="block py-3 px-4 text-gray-700 hover:bg-purple-50 rounded-xl transition-all duration-200 hover:scale-105">🎟️ Counter Panel</a>
-        </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <div id="menuPanel" class="fixed top-20 left-4 bg-white rounded-2xl shadow-2xl p-4 min-w-[200px] z-40 hidden">
+        <nav class="space-y-2">
+            <a href="./index.html" class="block px-4 py-3 bg-indigo-100 text-indigo-600 rounded-xl font-medium">🏠 Home</a>
+            <a href="./status.html" id="statusLink" class="block px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors font-medium hidden">📊 Status</a>
+            <a href="./game.html" id="gameLink" class="block px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors font-medium hidden">🎮 Game</a>
+            <a href="./counter.html" class="block px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors font-medium">🎯 Counter</a>
+        </nav>
     </div>
 
     <!-- Main Content -->
-    <div class="min-h-screen flex flex-col justify-center items-center px-6 py-12">
-        <div class="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-10 max-w-4xl w-full text-center slide-up">
-            <!-- Logo/Mascot -->
-            <div class="mb-8 fade-in">
-                <div class="w-32 h-32 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full mx-auto flex items-center justify-center text-6xl mascot-bounce shadow-xl">
-                    🎫
-                </div>
-                <h1 class="text-4xl font-bold text-gray-800 mt-6 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">Queue Joy</h1>
-                <p class="text-gray-600 mt-3 text-lg font-medium">Skip the line, enjoy the wait!</p>
-            </div>
-
-            <!-- Counter Status Display -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8" id="counterGrid">
-                <!-- Counter boxes will be populated dynamically -->
-            </div>
-
-            <!-- Get Number Button -->
-            <button id="getNumberBtn" class="w-full py-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 mb-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed">
-                <span id="buttonContent" class="flex items-center justify-center">
-                    <span class="text-3xl mr-3">🎯</span>
-                    Get My Number
-                </span>
-            </button>
-
-            <!-- Status Messages -->
-            <div id="statusMsg" class="hidden mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl pulse-success">
-                <p class="text-emerald-700 font-bold text-lg">✅ Your number: <span id="generatedNumber" class="text-2xl">A000</span></p>
-                <p class="text-emerald-600 text-sm mt-1">Redirecting to status page...</p>
-            </div>
-            <div id="errorMsg" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-                <p class="text-red-700 font-medium">❌ <span id="errorText">Failed to generate number. Please try again.</span></p>
-            </div>
+    <div class="min-h-screen flex flex-col justify-center items-center px-4 py-8 max-w-sm mx-auto text-center bg-white rounded-xl shadow-md gap-6">
+        <div class="w-full mb-4">
+            <h1 class="text-3xl font-bold text-gray-800">Welcome to Queue Joy</h1>
+            <p class="text-gray-600">Get your queue number easily</p>
         </div>
+
+        <div class="bg-indigo-50 rounded-2xl p-6 w-full">
+            <p class="text-sm text-gray-600 mb-2">Your Queue Number</p>
+            <p id="queueNumberDisplay" class="text-5xl font-bold text-indigo-600">--</p>
+        </div>
+
+        <button id="getQueueNumberBtn" class="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-500 text-white text-xl font-bold rounded-xl hover:scale-105 transition-all shadow-lg">
+            ✨ Get a Number
+        </button>
+
+        <p id="actionStatus" class="text-sm text-gray-500 min-h-[20px]"></p>
     </div>
 
     <!-- Ad Banner -->
@@ -120,330 +91,135 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
-    <!-- Firebase Config -->
     <script src="./js/firebase-config.js"></script>
+    <script src="./js/navigation.js"></script>
     
-    <!-- Main Script -->
     <script>
-        let isGenerating = false;
-        let hasGeneratedToday = false;
-        let activeCounters = [];
-        let globalRoundRobinIndex = 0;
-        let firebaseListeners = [];
-
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Queue Joy initialized');
+            console.log('🏠 Queue Joy initializing...');
             
-            // Initialize hamburger menu
-            initializeHamburgerMenu();
-            
-            // Check if user already has a number today
-            checkExistingSession();
-            
-            // Wait for Firebase to initialize
-            setTimeout(initializeSystem, 1000);
-            
-            // Set up generate button
-            const getNumberBtn = document.getElementById('getNumberBtn');
-            if (getNumberBtn) {
-                getNumberBtn.addEventListener('click', generateQueueNumber);
-            }
+            initializeNavigation();
+            setupQueueSystem();
         });
 
-        function initializeHamburgerMenu() {
-            const menuToggle = document.getElementById('menuToggle');
-            const menuPanel = document.getElementById('menuPanel');
+        // Setup queue system
+        function setupQueueSystem() {
+            const getQueueNumberBtn = document.getElementById('getQueueNumberBtn');
+            const queueNumberDisplay = document.getElementById('queueNumberDisplay');
+            let currentQueueId = localStorage.getItem('queueId');
             
-            if (menuToggle && menuPanel) {
-                menuToggle.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    menuPanel.classList.toggle('hidden');
-                });
+            // Check if user already has a queue number
+            if (currentQueueId) {
+                queueNumberDisplay.textContent = currentQueueId;
+                updateMenuVisibility();
+            }
+
+            // Get queue number button
+            getQueueNumberBtn.addEventListener('click', function() {
+                getQueueNumberBtn.disabled = true;
+                getQueueNumberBtn.textContent = 'Please wait...';
                 
-                document.addEventListener('click', function(e) {
-                    if (!menuPanel.contains(e.target) && !menuToggle.contains(e.target)) {
-                        menuPanel.classList.add('hidden');
+                getAvailableCounters().then(counters => {
+                    const counterIds = Object.keys(counters);
+                    if (counterIds.length === 0) {
+                        showStatus('❌ No counters available. Please try again later.', 'error');
+                        getQueueNumberBtn.disabled = false;
+                        getQueueNumberBtn.textContent = '✨ Get a Number';
+                        return;
                     }
-                });
-            }
-        }
-
-        function initializeSystem() {
-            if (typeof firebase === 'undefined' || !firebase.database) {
-                console.error('❌ Firebase not initialized');
-                showError('System not ready. Please refresh the page.');
-                return;
-            }
-
-            // Load active counters and setup real-time listeners
-            loadActiveCounters();
-            loadCurrentServing();
-            loadAdBanner();
-        }
-
-        function checkExistingSession() {
-            const existingNumber = sessionStorage.getItem('queueId');
-            const timestamp = sessionStorage.getItem('queueTimestamp');
-            
-            if (existingNumber && timestamp) {
-                const today = new Date().toDateString();
-                const sessionDate = new Date(parseInt(timestamp)).toDateString();
-                
-                if (today === sessionDate) {
-                    hasGeneratedToday = true;
                     
-                    const button = document.getElementById('getNumberBtn');
-                    const buttonContent = document.getElementById('buttonContent');
-                    button.classList.add('opacity-60');
-                    buttonContent.innerHTML = '<span class="text-3xl mr-3">✅</span>Already Have Number';
-                }
-            }
-        }
-
-        // Real-time active counters loading
-        function loadActiveCounters() {
-            const database = firebase.database();
-            const activeCountersRef = database.ref('settings/activeCounters');
-            
-            activeCountersRef.on('value', (snapshot) => {
-                const newActiveCounters = snapshot.val() || [];
-                activeCounters = newActiveCounters;
-                console.log('📡 Active counters updated:', activeCounters);
-                updateCounterDisplay();
-                updateButtonState();
-            }, (error) => {
-                console.error('❌ Error loading active counters:', error);
-                activeCounters = [];
-                updateCounterDisplay();
-                updateButtonState();
-            });
-            firebaseListeners.push(activeCountersRef);
-        }
-
-        // Update counter display grid
-        function updateCounterDisplay() {
-            const counterGrid = document.getElementById('counterGrid');
-            if (!counterGrid) return;
-
-            counterGrid.innerHTML = '';
-            
-            if (activeCounters.length === 0) {
-                const noCountersDiv = document.createElement('div');
-                noCountersDiv.className = 'col-span-full bg-yellow-50 border border-yellow-200 rounded-2xl p-6 text-center';
-                noCountersDiv.innerHTML = `
-                    <p class="text-yellow-700 font-medium">⚠️ No active counters available</p>
-                    <p class="text-yellow-600 text-sm mt-1">Please wait for staff to activate counters</p>
-                `;
-                counterGrid.appendChild(noCountersDiv);
-                return;
-            }
-            
-            const counterColors = {
-                'A': 'from-emerald-50 to-teal-50 border-emerald-200 text-emerald-600',
-                'B': 'from-blue-50 to-cyan-50 border-blue-200 text-blue-600',
-                'C': 'from-purple-50 to-violet-50 border-purple-200 text-purple-600',
-                'D': 'from-orange-50 to-amber-50 border-orange-200 text-orange-600',
-                'E': 'from-pink-50 to-rose-50 border-pink-200 text-pink-600',
-                'F': 'from-gray-50 to-slate-50 border-gray-200 text-gray-600'
-            };
-
-            activeCounters.forEach(counter => {
-                const counterDiv = document.createElement('div');
-                counterDiv.id = `counter${counter}`;
-                counterDiv.className = `bg-gradient-to-r ${counterColors[counter]} rounded-2xl p-4 border`;
-                counterDiv.innerHTML = `
-                    <p class="text-sm text-gray-600 font-medium uppercase tracking-wide">Counter ${counter}</p>
-                    <div class="text-xl font-bold mt-2" id="serving_${counter}">--</div>
-                `;
-                counterGrid.appendChild(counterDiv);
-            });
-        }
-
-        // Update button state
-        function updateButtonState() {
-            const getNumberBtn = document.getElementById('getNumberBtn');
-            const buttonContent = document.getElementById('buttonContent');
-            
-            if (hasGeneratedToday) {
-                return;
-            }
-            
-            if (activeCounters.length === 0) {
-                getNumberBtn.disabled = true;
-                buttonContent.innerHTML = '<span class="text-3xl mr-3">⏳</span>No Active Counters';
-            } else {
-                getNumberBtn.disabled = false;
-                buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
-            }
-        }
-
-        // Real-time current serving updates
-        function loadCurrentServing() {
-            if (!firebase.database) return;
-
-            const database = firebase.database();
-            const allCounters = ['A', 'B', 'C', 'D', 'E', 'F'];
-            
-            allCounters.forEach(counter => {
-                const currentRef = database.ref(`queue/currentServing_${counter}`);
-                
-                currentRef.on('value', (snapshot) => {
-                    const current = snapshot.val() || '--';
-                    const element = document.getElementById(`serving_${counter}`);
-                    if (element) {
-                        element.textContent = current;
-                    }
-                }, (error) => {
-                    console.error(`❌ Error loading current serving for ${counter}:`, error);
+                    // Select a random counter
+                    const randomCounterId = counterIds[Math.floor(Math.random() * counterIds.length)];
+                    const prefix = counters[randomCounterId].prefix;
+                    
+                    // Generate a unique queue number
+                    generateQueueNumber(randomCounterId, prefix).then(queueNumber => {
+                        queueNumberDisplay.textContent = queueNumber;
+                        localStorage.setItem('queueId', queueNumber);
+                        showStatus(`✅ Your queue number is ${queueNumber}`, 'success');
+                        currentQueueId = queueNumber;
+                        updateMenuVisibility();
+                    }).catch(error => {
+                        console.error('Error getting queue number:', error);
+                        showStatus('❌ Failed to get queue number. Please try again.', 'error');
+                    }).finally(() => {
+                        getQueueNumberBtn.disabled = false;
+                        getQueueNumberBtn.textContent = '✨ Get a Number';
+                    });
                 });
-                firebaseListeners.push(currentRef);
             });
+
+            // Generate queue number
+            function generateQueueNumber(counterId, prefix) {
+                return new Promise((resolve, reject) => {
+                    const database = firebase.database();
+                    const today = new Date().toISOString().split('T')[0];
+                    const newQueueRef = database.ref(`queues/${today}/${counterId}`).push();
+                    const queueNumber = `${prefix}${Date.now().toString().slice(-3)}`;
+                    
+                    newQueueRef.set({
+                        number: queueNumber,
+                        status: 'waiting',
+                        timestamp: Date.now()
+                    }).then(() => {
+                        resolve(queueNumber);
+                    }).catch(error => {
+                        reject(error);
+                    });
+                });
+            }
         }
 
-        // Load ad banner
-        function loadAdBanner() {
-            const database = firebase.database();
-            const adBannerRef = database.ref('settings/adBanner');
-            
-            adBannerRef.on('value', (snapshot) => {
-                const adUrl = snapshot.val();
-                const adBanner = document.getElementById('adBanner');
-                const adImage = document.getElementById('adImage');
-                
-                if (adUrl && adUrl.trim()) {
-                    adImage.src = adUrl;
-                    adBanner.classList.remove('hidden');
-                } else {
-                    adBanner.classList.add('hidden');
-                }
-            });
-            firebaseListeners.push(adBannerRef);
-        }
-
-        // Generate queue number with round-robin
-        function generateQueueNumber() {
-            if (isGenerating || hasGeneratedToday) {
-                if (hasGeneratedToday) {
-                    showError('You already have a queue number today. Check your status page.');
-                }
-                return;
-            }
-            
-            if (activeCounters.length === 0) {
-                showError('No active counters available. Please try again later.');
-                return;
-            }
-            
-            isGenerating = true;
-            console.log('🎯 Starting number generation...');
-            
-            const button = document.getElementById('getNumberBtn');
-            const buttonContent = document.getElementById('buttonContent');
-            const statusMsg = document.getElementById('statusMsg');
-            const errorMsg = document.getElementById('errorMsg');
-            const generatedNumberSpan = document.getElementById('generatedNumber');
-            
-            // Reset UI
-            if (statusMsg) statusMsg.classList.add('hidden');
-            if (errorMsg) errorMsg.classList.add('hidden');
-            
-            // Show loading state
-            if (buttonContent) {
-                buttonContent.innerHTML = '<span class="loading-spinner text-3xl mr-3">🔄</span>Generating...';
-            }
-            if (button) {
-                button.disabled = true;
-            }
-            
-            // Get last assigned prefix from Firebase for round-robin
-            const database = firebase.database();
-            database.ref('settings/lastAssignedPrefix').once('value', (snapshot) => {
-                const lastPrefix = snapshot.val();
-                let selectedCounter;
-                
-                if (!lastPrefix) {
-                    selectedCounter = activeCounters[0];
-                } else {
-                    const lastIndex = activeCounters.indexOf(lastPrefix);
-                    const nextIndex = (lastIndex + 1) % activeCounters.length;
-                    selectedCounter = activeCounters[nextIndex];
-                }
-                
-                console.log(`🎯 Selected counter: ${selectedCounter}`);
-                
-                // Update last assigned prefix
-                database.ref('settings/lastAssignedPrefix').set(selectedCounter);
-                
-                // Use Firebase transaction to safely increment counter
-                const counterRef = database.ref(`queue/lastNumber_${selectedCounter}`);
-                
-                counterRef.transaction((currentNumber) => {
-                    return (currentNumber || 0) + 1;
-                }).then((result) => {
-                    if (result.committed) {
-                        const newNumber = result.snapshot.val();
-                        const queueId = `${selectedCounter}${newNumber.toString().padStart(3, '0')}`;
-                        
-                        // Store ticket in Firebase
-                        const ticketData = {
-                            number: queueId,
-                            counter: selectedCounter,
-                            status: 'waiting',
-                            timestamp: Date.now()
-                        };
-                        
-                        return database.ref(`queue/numbers/${Date.now()}_${queueId}`).set(ticketData).then(() => {
-                            // Store in session storage
-                            sessionStorage.setItem('queueId', queueId);
-                            sessionStorage.setItem('myQueueNumber', queueId);
-                            sessionStorage.setItem('prefix', selectedCounter);
-                            sessionStorage.setItem('queueTimestamp', Date.now().toString());
-                            
-                            console.log('✅ Number generated:', queueId);
-                            
-                            // Show success
-                            if (generatedNumberSpan) generatedNumberSpan.textContent = queueId;
-                            if (statusMsg) statusMsg.classList.remove('hidden');
-                            
-                            hasGeneratedToday = true;
-                            
-                            // Redirect after success message
-                            setTimeout(() => {
-                                window.location.href = './status.html';
-                            }, 1500);
-                        });
-                    } else {
-                        throw new Error('Transaction not committed');
-                    }
-                }).catch((error) => {
-                    console.error('❌ Error generating number:', error);
-                    showError('Failed to generate number. Please try again.');
-                }).finally(() => {
-                    setTimeout(() => {
-                        if (buttonContent) buttonContent.innerHTML = '<span class="text-3xl mr-3">🎯</span>Get My Number';
-                        if (button) button.disabled = false;
-                        isGenerating = false;
-                    }, 2000);
+        // Get available counters
+        function getAvailableCounters() {
+            return new Promise((resolve) => {
+                const database = firebase.database();
+                database.ref('settings/counters').once('value', (snapshot) => {
+                    resolve(snapshot.val() || {});
                 });
             });
         }
 
-        function showError(message) {
-            const errorMsg = document.getElementById('errorMsg');
-            const errorText = document.getElementById('errorText');
-            if (errorText) errorText.textContent = message;
-            if (errorMsg) errorMsg.classList.remove('hidden');
+        // Update menu visibility based on user status
+        function updateMenuVisibility() {
+            const queueId = localStorage.getItem('queueId');
+            const statusLink = document.getElementById('statusLink');
+            const gameLink = document.getElementById('gameLink');
+            
+            if (statusLink) {
+                if (queueId) {
+                    statusLink.classList.remove('hidden');
+                } else {
+                    statusLink.classList.add('hidden');
+                }
+            }
+            
+            if (gameLink) {
+                if (queueId) {
+                    gameLink.classList.remove('hidden');
+                } else {
+                    gameLink.classList.add('hidden');
+                }
+            }
         }
 
-        // Cleanup listeners on page unload
-        window.addEventListener('beforeunload', function() {
-            firebaseListeners.forEach(ref => {
-                if (ref && ref.off) {
-                    ref.off();
-                }
-            });
-        });
+        // Show status message
+        function showStatus(message, type = 'info') {
+            const statusElement = document.getElementById('actionStatus');
+            statusElement.textContent = message;
+            statusElement.className = `text-sm min-h-[20px] ${
+                type === 'success' ? 'text-green-600' :
+                type === 'error' ? 'text-red-600' :
+                type === 'warning' ? 'text-yellow-600' :
+                'text-gray-500'
+            }`;
+            
+            // Clear after 3 seconds
+            setTimeout(() => {
+                statusElement.textContent = '';
+                statusElement.className = 'text-sm text-gray-500 min-h-[20px]';
+            }, 3000);
+        }
     </script>
 </body>
 </html>
