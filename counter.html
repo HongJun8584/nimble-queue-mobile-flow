@@ -31,6 +31,37 @@
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
     
+    <!-- Hamburger Menu -->
+    <div class="fixed top-4 left-4 z-50">
+        <button id="hamburgerBtn" class="p-3 bg-white/90 backdrop-blur-sm rounded-xl shadow-lg hover:bg-white transition-all duration-200">
+            <div class="w-6 h-6 flex flex-col justify-center space-y-1">
+                <span class="block w-full h-0.5 bg-gray-600 transform transition-transform"></span>
+                <span class="block w-full h-0.5 bg-gray-600 transform transition-transform"></span>
+                <span class="block w-full h-0.5 bg-gray-600 transform transition-transform"></span>
+            </div>
+        </button>
+    </div>
+
+    <!-- Navigation Menu -->
+    <div id="navMenu" class="fixed inset-0 bg-black/50 z-40 hidden">
+        <div class="fixed left-0 top-0 h-full w-64 bg-white shadow-2xl transform -translate-x-full transition-transform duration-300" id="navPanel">
+            <div class="p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">Queue Joy</h2>
+                <nav class="space-y-3">
+                    <a href="./index.html" class="block px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors font-medium">
+                        🏠 Home
+                    </a>
+                    <button id="setupCounterBtn" class="block w-full text-left px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors font-medium">
+                        🎯 Setup Counter
+                    </button>
+                    <button id="editSetupBtn" class="block w-full text-left px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors font-medium hidden">
+                        ✏️ Edit Setup
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </div>
+
     <!-- PIN Modal -->
     <div id="pinModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
         <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 slide-up">
@@ -110,11 +141,33 @@
             <div id="counterCards" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 <!-- Counter cards will be generated here -->
             </div>
-            
-            <div class="text-center mt-8">
-                <button id="backToSetupBtn" class="px-6 py-3 bg-gray-500 text-white font-semibold rounded-xl hover:bg-gray-600 transition-colors">
-                    🔧 Edit Setup
-                </button>
+        </div>
+    </div>
+
+    <!-- Edit Setup Panel -->
+    <div id="editPanel" class="min-h-screen flex flex-col justify-center items-center px-4 py-8 max-w-sm mx-auto text-center bg-white rounded-xl shadow-md gap-4 hidden">
+        <div class="w-full mb-4">
+            <h1 class="text-2xl font-bold text-gray-800">Edit Counter Setup</h1>
+            <p class="text-gray-600">Modify existing counters</p>
+        </div>
+
+        <div id="editCounterList" class="w-full space-y-3">
+            <!-- Edit counter items will be generated here -->
+        </div>
+
+        <button id="backToDashboardBtn" class="w-full py-3 bg-gray-500 text-white font-semibold rounded-xl hover:scale-105 transition-all">
+            Back to Dashboard
+        </button>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 slide-up">
+            <h2 class="text-xl font-bold text-center text-gray-800 mb-4">⚠️ Confirm Action</h2>
+            <p id="confirmMessage" class="text-gray-600 text-center mb-6"></p>
+            <div class="flex gap-3">
+                <button id="confirmCancel" class="flex-1 py-3 bg-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-400 transition-colors">Cancel</button>
+                <button id="confirmOk" class="flex-1 py-3 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 transition-colors">Confirm</button>
             </div>
         </div>
     </div>
@@ -135,12 +188,13 @@
         let selectedCounters = new Set();
         let counterPrefixes = {};
         let currentCounters = {};
+        let confirmCallback = null;
 
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🎯 [INIT] Counter Management System initializing...');
+            console.log('🎯 Counter Management System initializing...');
             initializeAudio();
+            setupNavigation();
             checkAccess();
-            setupPinModal();
             generateCounterCheckboxes();
         });
 
@@ -151,118 +205,111 @@
                     src: ['data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT'],
                     volume: 0.7
                 });
-                console.log('🔊 [AUDIO] Sound initialized');
             } catch (error) {
-                console.warn('⚠️ [AUDIO] Initialization failed:', error);
+                console.warn('⚠️ Audio initialization failed');
             }
+        }
+
+        // Setup navigation
+        function setupNavigation() {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const navMenu = document.getElementById('navMenu');
+            const navPanel = document.getElementById('navPanel');
+            const setupCounterBtn = document.getElementById('setupCounterBtn');
+            const editSetupBtn = document.getElementById('editSetupBtn');
+
+            hamburgerBtn.addEventListener('click', function() {
+                navMenu.classList.remove('hidden');
+                setTimeout(() => {
+                    navPanel.style.transform = 'translateX(0)';
+                }, 10);
+            });
+
+            navMenu.addEventListener('click', function(e) {
+                if (e.target === navMenu) {
+                    navPanel.style.transform = 'translateX(-100%)';
+                    setTimeout(() => {
+                        navMenu.classList.add('hidden');
+                    }, 300);
+                }
+            });
+
+            setupCounterBtn.addEventListener('click', function() {
+                closeNavigation();
+                showPinModal('setup');
+            });
+
+            editSetupBtn.addEventListener('click', function() {
+                closeNavigation();
+                showPinModal('edit');
+            });
+        }
+
+        function closeNavigation() {
+            const navMenu = document.getElementById('navMenu');
+            const navPanel = document.getElementById('navPanel');
+            navPanel.style.transform = 'translateX(-100%)';
+            setTimeout(() => {
+                navMenu.classList.add('hidden');
+            }, 300);
         }
 
         // Check access and determine what to show
         function checkAccess() {
             const hasAccess = sessionStorage.getItem('counterAccess') === 'granted';
-            console.log('🔐 [SESSION] Access check:', hasAccess);
             
             if (hasAccess) {
-                hidePinModal();
+                document.getElementById('editSetupBtn').classList.remove('hidden');
                 loadExistingSetup();
             } else {
-                showPinModal();
+                showPinModal('setup');
             }
         }
 
-        // Setup PIN modal
-        function setupPinModal() {
-            const pinInput = document.getElementById('pinInput');
-            const pinSubmit = document.getElementById('pinSubmit');
-
-            pinSubmit.addEventListener('click', handlePinSubmit);
-            pinInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') handlePinSubmit();
-                document.getElementById('pinError').classList.add('hidden');
-            });
-        }
-
         // Show PIN modal
-        function showPinModal() {
-            console.log('🔐 [PIN] Showing PIN modal');
+        function showPinModal(action) {
             const pinModal = document.getElementById('pinModal');
             const pinInput = document.getElementById('pinInput');
+            const pinSubmit = document.getElementById('pinSubmit');
             const pinError = document.getElementById('pinError');
 
             pinModal.classList.remove('hidden');
             pinInput.value = '';
             pinError.classList.add('hidden');
-            setTimeout(() => pinInput.focus(), 100);
-        }
+            pinInput.focus();
 
-        // Hide PIN modal
-        function hidePinModal() {
-            console.log('🔐 [PIN] Hiding PIN modal');
-            document.getElementById('pinModal').classList.add('hidden');
+            // Remove existing listeners
+            pinSubmit.replaceWith(pinSubmit.cloneNode(true));
+            const newPinSubmit = document.getElementById('pinSubmit');
+
+            newPinSubmit.addEventListener('click', () => handlePinSubmit(action));
+            pinInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handlePinSubmit(action);
+                pinError.classList.add('hidden');
+            });
         }
 
         // Handle PIN submission
-        function handlePinSubmit() {
+        function handlePinSubmit(action) {
             const pinInput = document.getElementById('pinInput');
             const pinError = document.getElementById('pinError');
             const pin = pinInput.value.trim();
 
-            console.log('🔐 [PIN] Entered:', pin);
-
             if (pin === '0108') {
-                console.log('🔐 [PIN] Access granted');
                 sessionStorage.setItem('counterAccess', 'granted');
-                hidePinModal();
-                loadExistingSetup();
+                document.getElementById('pinModal').classList.add('hidden');
+                document.getElementById('editSetupBtn').classList.remove('hidden');
+                
+                if (action === 'setup') {
+                    loadExistingSetup();
+                } else if (action === 'edit') {
+                    showEditPanel();
+                }
             } else {
-                console.log('🔐 [PIN] Access denied');
                 pinError.classList.remove('hidden');
                 pinInput.value = '';
                 pinInput.focus();
             }
-        }
-
-        // Load existing setup
-        function loadExistingSetup() {
-            console.log('📊 [LOAD] Checking existing setup...');
-            
-            if (typeof firebase === 'undefined' || !firebase.database) {
-                console.log('📊 [LOAD] Firebase not available, showing setup');
-                showSetupPanel();
-                return;
-            }
-
-            const database = firebase.database();
-            database.ref('settings/counters').once('value', (snapshot) => {
-                const counters = snapshot.val();
-                console.log('📊 [LOAD] Firebase counters:', counters);
-                
-                if (counters && Object.keys(counters).length > 0) {
-                    currentCounters = counters;
-                    showDashboard();
-                } else {
-                    showSetupPanel();
-                }
-            }).catch(error => {
-                console.error('📊 [LOAD] Firebase error:', error);
-                showSetupPanel();
-            });
-        }
-
-        // Show setup panel
-        function showSetupPanel() {
-            console.log('🧱 [UI] Showing setup panel');
-            document.getElementById('setupPanel').classList.remove('hidden');
-            document.getElementById('dashboardPanel').classList.add('hidden');
-        }
-
-        // Show dashboard
-        function showDashboard() {
-            console.log('📊 [UI] Showing dashboard');
-            document.getElementById('setupPanel').classList.add('hidden');
-            document.getElementById('dashboardPanel').classList.remove('hidden');
-            generateCounterCards();
-            setupRealtimeListeners();
         }
 
         // Generate counter checkboxes
@@ -270,7 +317,7 @@
             const container = document.getElementById('counterCheckboxes');
             container.innerHTML = '';
 
-            for (let i = 1; i <= 10; i++) {
+            for (let i = 1; i <= 7; i++) {
                 const checkboxDiv = document.createElement('div');
                 checkboxDiv.className = 'flex items-center space-x-2 p-2 border rounded-lg hover:bg-gray-100 cursor-pointer';
                 
@@ -286,9 +333,6 @@
             }
 
             document.getElementById('saveSetupBtn').addEventListener('click', saveCounterSetup);
-            document.getElementById('backToSetupBtn').addEventListener('click', () => {
-                showSetupPanel();
-            });
         }
 
         // Handle counter selection
@@ -412,23 +456,8 @@
 
         // Save counter setup
         function saveCounterSetup() {
-            console.log('🚀 [SETUP] Saving counter setup...');
-            
             if (typeof firebase === 'undefined' || !firebase.database) {
-                console.log('🚀 [SETUP] Firebase not available, using localStorage');
-                const setupData = {};
-                Array.from(selectedCounters).forEach(counterId => {
-                    const prefix = counterPrefixes[counterId];
-                    setupData[counterId] = {
-                        prefix: prefix,
-                        nowServing: 1,
-                        lastIssued: 1
-                    };
-                });
-                localStorage.setItem('counters', JSON.stringify(setupData));
-                currentCounters = setupData;
-                showStatus('✅ Counter setup saved successfully', 'success');
-                showDashboard();
+                showStatus('❌ Firebase not available', 'error');
                 return;
             }
 
@@ -446,13 +475,46 @@
             });
 
             database.ref().update(setupData).then(() => {
-                console.log('🚀 [SETUP] Saved to Firebase');
                 showStatus('✅ Counter setup saved successfully', 'success');
-                loadExistingSetup();
+                loadCounterDashboard();
             }).catch(error => {
-                console.error('🚀 [SETUP] Firebase error:', error);
+                console.error('Setup save error:', error);
                 showStatus('❌ Failed to save setup', 'error');
             });
+        }
+
+        // Load existing setup
+        function loadExistingSetup() {
+            if (typeof firebase === 'undefined' || !firebase.database) {
+                document.getElementById('setupPanel').classList.remove('hidden');
+                return;
+            }
+
+            const database = firebase.database();
+            database.ref('settings/counters').once('value', (snapshot) => {
+                const counters = snapshot.val();
+                
+                if (counters && Object.keys(counters).length > 0) {
+                    currentCounters = counters;
+                    loadCounterDashboard();
+                } else {
+                    document.getElementById('setupPanel').classList.remove('hidden');
+                }
+            });
+        }
+
+        // Load counter dashboard
+        function loadCounterDashboard() {
+            const dashboardPanel = document.getElementById('dashboardPanel');
+            const setupPanel = document.getElementById('setupPanel');
+            const editPanel = document.getElementById('editPanel');
+            
+            setupPanel.classList.add('hidden');
+            editPanel.classList.add('hidden');
+            dashboardPanel.classList.remove('hidden');
+
+            generateCounterCards();
+            setupRealtimeListeners();
         }
 
         // Generate counter cards for dashboard
@@ -463,7 +525,7 @@
             Object.entries(currentCounters).forEach(([counterId, counterData]) => {
                 const counterNum = counterId.replace('counter', '');
                 const card = document.createElement('div');
-                card.className = 'bg-white rounded-xl shadow-lg p-6 border border-gray-200 fade-in';
+                card.className = 'bg-white rounded-xl shadow-lg p-6 border border-gray-200';
                 
                 card.innerHTML = `
                     <div class="text-center mb-6">
@@ -559,23 +621,7 @@
 
         // Call next number for a counter
         function callNext(counterId) {
-            console.log('🔔 [CALL] Calling next for:', counterId);
-            
-            if (typeof firebase === 'undefined' || !firebase.database) {
-                // Use localStorage fallback
-                const counter = currentCounters[counterId];
-                if (counter.nowServing >= counter.lastIssued) {
-                    showStatus('⚠️ No customers waiting', 'warning');
-                    return;
-                }
-                
-                counter.nowServing += 1;
-                localStorage.setItem('counters', JSON.stringify(currentCounters));
-                updateCounterCards();
-                playCallSound();
-                showStatus(`✅ Called ${counter.prefix}${String(counter.nowServing).padStart(3, '0')}`, 'success');
-                return;
-            }
+            if (typeof firebase === 'undefined' || !firebase.database) return;
 
             const database = firebase.database();
             const counter = currentCounters[counterId];
@@ -598,7 +644,7 @@
                     setTimeout(() => servingEl.classList.remove('pulse-call'), 500);
                 }
             }).catch(error => {
-                console.error('🔔 [CALL] Error:', error);
+                console.error('Call next error:', error);
                 showStatus('❌ Failed to call next number', 'error');
             });
         }
@@ -621,22 +667,7 @@
 
         // Skip current number
         function skipCurrent(counterId) {
-            console.log('⏭️ [SKIP] Skipping for:', counterId);
-            
-            if (typeof firebase === 'undefined' || !firebase.database) {
-                // Use localStorage fallback
-                const counter = currentCounters[counterId];
-                if (counter.nowServing >= counter.lastIssued) {
-                    showStatus('⚠️ No customers to skip', 'warning');
-                    return;
-                }
-                
-                counter.nowServing += 1;
-                localStorage.setItem('counters', JSON.stringify(currentCounters));
-                updateCounterCards();
-                showStatus(`⏭️ Skipped to ${counter.prefix}${String(counter.nowServing).padStart(3, '0')}`, 'success');
-                return;
-            }
+            if (typeof firebase === 'undefined' || !firebase.database) return;
 
             const database = firebase.database();
             const counter = currentCounters[counterId];
@@ -651,7 +682,7 @@
             database.ref(`settings/counters/${counterId}/nowServing`).set(newNowServing).then(() => {
                 showStatus(`⏭️ Skipped to ${counter.prefix}${String(newNowServing).padStart(3, '0')}`, 'success');
             }).catch(error => {
-                console.error('⏭️ [SKIP] Error:', error);
+                console.error('Skip current error:', error);
                 showStatus('❌ Failed to skip number', 'error');
             });
         }
@@ -661,31 +692,158 @@
             const counter = currentCounters[counterId];
             const counterNum = counterId.replace('counter', '');
             
-            if (confirm(`Are you sure you want to reset the queue for Counter ${counterNum}? This will set both serving and issued numbers back to 1.`)) {
-                console.log('🔄 [RESET] Resetting queue for:', counterId);
-                
-                if (typeof firebase === 'undefined' || !firebase.database) {
-                    // Use localStorage fallback
-                    counter.nowServing = 1;
-                    counter.lastIssued = 1;
-                    localStorage.setItem('counters', JSON.stringify(currentCounters));
-                    updateCounterCards();
-                    showStatus(`✅ Queue reset for Counter ${counterNum}`, 'success');
-                    return;
-                }
+            showConfirmModal(
+                `Are you sure you want to reset the queue for Counter ${counterNum}? This will set both serving and issued numbers back to 1.`,
+                () => {
+                    if (typeof firebase === 'undefined' || !firebase.database) return;
 
-                const database = firebase.database();
-                const updates = {};
-                updates[`settings/counters/${counterId}/nowServing`] = 1;
-                updates[`settings/counters/${counterId}/lastIssued`] = 1;
+                    const database = firebase.database();
+                    const updates = {};
+                    updates[`settings/counters/${counterId}/nowServing`] = 1;
+                    updates[`settings/counters/${counterId}/lastIssued`] = 1;
+                    
+                    database.ref().update(updates).then(() => {
+                        showStatus(`✅ Queue reset for Counter ${counterNum}`, 'success');
+                    }).catch(error => {
+                        console.error('Reset queue error:', error);
+                        showStatus('❌ Failed to reset queue', 'error');
+                    });
+                }
+            );
+        }
+
+        // Show edit panel
+        function showEditPanel() {
+            const editPanel = document.getElementById('editPanel');
+            const dashboardPanel = document.getElementById('dashboardPanel');
+            
+            dashboardPanel.classList.add('hidden');
+            editPanel.classList.remove('hidden');
+            
+            generateEditCounterList();
+            
+            document.getElementById('backToDashboardBtn').addEventListener('click', () => {
+                editPanel.classList.add('hidden');
+                loadCounterDashboard();
+            });
+        }
+
+        // Generate edit counter list
+        function generateEditCounterList() {
+            const container = document.getElementById('editCounterList');
+            container.innerHTML = '';
+
+            Object.entries(currentCounters).forEach(([counterId, counterData]) => {
+                const counterNum = counterId.replace('counter', '');
+                const item = document.createElement('div');
+                item.className = 'bg-gray-50 rounded-xl p-4 border border-gray-200';
                 
-                database.ref().update(updates).then(() => {
-                    showStatus(`✅ Queue reset for Counter ${counterNum}`, 'success');
-                }).catch(error => {
-                    console.error('🔄 [RESET] Error:', error);
-                    showStatus('❌ Failed to reset queue', 'error');
+                item.innerHTML = `
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-semibold text-gray-800">Counter ${counterNum}</h4>
+                        <button onclick="deleteCounter('${counterId}')" class="text-red-500 hover:text-red-700 font-medium text-sm">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="text-sm text-gray-600">Prefix:</label>
+                        <input type="text" 
+                               id="editPrefix_${counterId}" 
+                               value="${counterData.prefix}"
+                               maxlength="5"
+                               class="flex-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 uppercase">
+                        <button onclick="savePrefix('${counterId}')" class="px-3 py-2 bg-indigo-500 text-white text-sm font-medium rounded hover:bg-indigo-600 transition-colors">
+                            Save
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(item);
+                
+                // Setup prefix input handler
+                const prefixInput = item.querySelector(`#editPrefix_${counterId}`);
+                prefixInput.addEventListener('input', function(e) {
+                    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 });
+            });
+        }
+
+        // Save prefix changes
+        function savePrefix(counterId) {
+            const input = document.getElementById(`editPrefix_${counterId}`);
+            const newPrefix = input.value.trim();
+            
+            if (!newPrefix || !/^[A-Z0-9]+$/.test(newPrefix)) {
+                showStatus('❌ Invalid prefix format', 'error');
+                return;
             }
+
+            // Check for duplicates
+            const otherPrefixes = Object.entries(currentCounters)
+                .filter(([id]) => id !== counterId)
+                .map(([_, data]) => data.prefix);
+            
+            if (otherPrefixes.includes(newPrefix)) {
+                showStatus('❌ Prefix already in use', 'error');
+                return;
+            }
+
+            if (typeof firebase === 'undefined' || !firebase.database) return;
+
+            const database = firebase.database();
+            database.ref(`settings/counters/${counterId}/prefix`).set(newPrefix).then(() => {
+                showStatus('✅ Prefix updated successfully', 'success');
+            }).catch(error => {
+                console.error('Save prefix error:', error);
+                showStatus('❌ Failed to update prefix', 'error');
+            });
+        }
+
+        // Delete counter
+        function deleteCounter(counterId) {
+            const counterNum = counterId.replace('counter', '');
+            
+            showConfirmModal(
+                `Are you sure you want to delete Counter ${counterNum}? This action cannot be undone.`,
+                () => {
+                    if (typeof firebase === 'undefined' || !firebase.database) return;
+
+                    const database = firebase.database();
+                    database.ref(`settings/counters/${counterId}`).remove().then(() => {
+                        showStatus(`✅ Counter ${counterNum} deleted`, 'success');
+                        delete currentCounters[counterId];
+                        generateEditCounterList();
+                    }).catch(error => {
+                        console.error('Delete counter error:', error);
+                        showStatus('❌ Failed to delete counter', 'error');
+                    });
+                }
+            );
+        }
+
+        // Show confirmation modal
+        function showConfirmModal(message, callback) {
+            const modal = document.getElementById('confirmModal');
+            const messageEl = document.getElementById('confirmMessage');
+            const cancelBtn = document.getElementById('confirmCancel');
+            const okBtn = document.getElementById('confirmOk');
+
+            messageEl.textContent = message;
+            modal.classList.remove('hidden');
+            confirmCallback = callback;
+
+            cancelBtn.onclick = () => {
+                modal.classList.add('hidden');
+                confirmCallback = null;
+            };
+
+            okBtn.onclick = () => {
+                modal.classList.add('hidden');
+                if (confirmCallback) {
+                    confirmCallback();
+                    confirmCallback = null;
+                }
+            };
         }
 
         // Play call sound
@@ -713,18 +871,6 @@
             setTimeout(() => {
                 statusMessage.classList.add('hidden');
             }, 4000);
-        }
-
-        // Load localStorage data on refresh if Firebase is not available
-        if (typeof firebase === 'undefined') {
-            const savedCounters = localStorage.getItem('counters');
-            if (savedCounters) {
-                try {
-                    currentCounters = JSON.parse(savedCounters);
-                } catch (error) {
-                    console.error('Failed to parse saved counters:', error);
-                }
-            }
         }
 
         // Cleanup on page unload
